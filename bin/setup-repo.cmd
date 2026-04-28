@@ -45,11 +45,6 @@ if not exist "%REPO%\.github\COPILOT-SETUP.md" (
     echo   created COPILOT-SETUP.md      ^(team onboarding doc^)
 )
 
-if not exist "%REPO%\.github\customize-agents.prompt.md" (
-    copy /y "%TPL%\customize-agents.prompt.md" "%REPO%\.github\customize-agents.prompt.md" >nul
-    echo   created customize-agents.prompt.md  ^(paste into Copilot Chat^)
-)
-
 call "%BIN%copy-agents.cmd" "%REPO%"
 call "%BIN%link-copilot.cmd" "%REPO%"
 
@@ -57,8 +52,8 @@ echo.
 echo === %REPO% ready ===
 echo   1. Edit .github\copilot-instructions.md        ^(project overview^)
 echo   2. Edit .github\instructions-local\*.md         ^(project rules^)
-echo   3. Open the repo in JetBrains, then paste the contents of:
-echo        .github\customize-agents.prompt.md
-echo      into Copilot Chat to auto-customise .github\agents\ for THIS repo.
+echo   3. Open the repo in JetBrains and ask Copilot Chat:
+echo        "Run the customize-agents skill on this repo."
+echo      It will tailor .github\agents\ for THIS repo.
 echo   4. Read .github\COPILOT-SETUP.md for full team onboarding instructions.
 exit /b 0

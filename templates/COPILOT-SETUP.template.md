@@ -147,9 +147,14 @@ Then:
 
 1. Edit `.github/copilot-instructions.md` (project overview).
 2. Edit `.github/instructions-local/project-rules.instructions.md` (hard rules).
-3. Open the repo in JetBrains and paste the contents of
-   `.github/customize-agents.prompt.md` into Copilot Chat. Copilot will
-   rewrite each agent for this repo's conventions.
+3. Open the repo in JetBrains and ask Copilot Chat:
+   ```
+   Run the customize-agents skill on this repo.
+   ```
+   The **customize-agents** skill (in `.github/skills/customize-agents/`)
+   will read your two files above and rewrite each agent's placeholder
+   tokens (`<DomainEntity>`, `<ProjectException>`, `<calling-service>`, ...)
+   with this repo's actual values.
 4. Review the diffs, then `git add .github/agents/ && git commit`.
 
 ### Adopting the layout in a repo that already has `.github/`
@@ -292,8 +297,8 @@ A: Replace junctions with symlinks:
    ```
 
 **Q: An agent gives advice that contradicts our coding standard.**
-A: The agent template wasn't customised for this repo. Paste
-   `.github/customize-agents.prompt.md` into Copilot Chat to fix it.
+A: The agent template wasn't customised for this repo. In Copilot Chat say:
+   `Run the customize-agents skill on this repo.`
 
 ---
 
