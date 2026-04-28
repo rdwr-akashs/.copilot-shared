@@ -16,7 +16,7 @@ if "%~1"=="" (
 )
 set "REPO=%~1"
 
-for %%N in (skills instructions prompts) do (
+for %%N in (skills instructions prompts plans) do (
     set "T=%REPO%\.github\%%N"
     if exist "!T!" (
         fsutil reparsepoint query "!T!" >nul 2>&1

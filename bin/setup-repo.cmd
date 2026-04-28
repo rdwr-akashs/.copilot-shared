@@ -46,5 +46,7 @@ echo.
 echo === %REPO% ready ===
 echo   1. Edit .github\copilot-instructions.md        ^(project overview^)
 echo   2. Edit .github\instructions-local\*.md         ^(project rules^)
-echo   3. Customise .github\agents\*.agent.md          ^(per-repo conventions^)
+echo   3. Open the repo in JetBrains, then paste the contents of:
+echo        %TPL%\customize-agents.prompt.md
+echo      into Copilot Chat to auto-customise .github\agents\ for THIS repo.
 exit /b 0

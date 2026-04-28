@@ -48,6 +48,7 @@ set "REFRESHED="
 call :LinkOne skills
 call :LinkOne instructions
 call :LinkOne prompts
+call :LinkOne plans
 
 call :EnsureGitignore
 
@@ -103,9 +104,14 @@ REM ----------------------------------------------------------------------------
 set "GI=%REPO%\.gitignore"
 if not exist "%GI%" type nul > "%GI%"
 
-REM Marker block lets us update entries safely.
+REM If our marker block exists but is missing .github/plans, rewrite the block.
 findstr /c:"# >>> copilot-shared junctions" "%GI%" >nul 2>&1
-if not errorlevel 1 exit /b 0
+if not errorlevel 1 (
+    findstr /c:".github/plans" "%GI%" >nul 2>&1
+    if not errorlevel 1 exit /b 0
+    REM Strip old block and fall through to rewrite
+    powershell -NoProfile -Command "$p='%GI%'; $c=Get-Content -Raw $p; $c=[regex]::Replace($c, '(?ms)# >>> copilot-shared junctions.*?# <<< copilot-shared junctions\r?\n?', ''); Set-Content -Path $p -Value $c -NoNewline"
+)
 
 (
   echo.
@@ -113,6 +119,7 @@ if not errorlevel 1 exit /b 0
   echo .github/skills
   echo .github/instructions
   echo .github/prompts
+  echo .github/plans
   echo # ^<^<^< copilot-shared junctions
 ) >> "%GI%"
 exit /b 0

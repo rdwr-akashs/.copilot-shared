@@ -3,4 +3,5 @@
 .github/skills
 .github/instructions
 .github/prompts
+.github/plans
 # <<< copilot-shared junctions
