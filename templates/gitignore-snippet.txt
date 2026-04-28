@@ -1,0 +1,6 @@
+
+# >>> copilot-shared junctions (managed by .copilot-shared/bin/link-copilot.cmd)
+.github/skills
+.github/instructions
+.github/prompts
+# <<< copilot-shared junctions
