@@ -2,9 +2,10 @@
 REM ============================================================================
 REM setup-repo.cmd  --  One-shot setup for a repo that has no .github yet.
 REM   1. Creates .github\, copies copilot-instructions template
-REM   2. Copies agents from agent-templates/
-REM   3. Creates instructions-local/ for repo-specific overrides
-REM   4. Junctions skills/instructions/prompts
+REM   2. Creates instructions-local/ for repo-specific overrides
+REM   3. Drops in COPILOT-SETUP.md and customize-agents.prompt.md
+REM   4. Copies agents from agent-templates/
+REM   5. Junctions skills/instructions/prompts/plans
 REM
 REM Usage:  setup-repo.cmd <full-path-to-repo>
 REM ============================================================================
@@ -39,6 +40,16 @@ if not exist "%REPO%\.github\instructions-local" (
     echo   created instructions-local\  ^(repo-specific rules go here^)
 )
 
+if not exist "%REPO%\.github\COPILOT-SETUP.md" (
+    copy /y "%TPL%\COPILOT-SETUP.template.md" "%REPO%\.github\COPILOT-SETUP.md" >nul
+    echo   created COPILOT-SETUP.md      ^(team onboarding doc^)
+)
+
+if not exist "%REPO%\.github\customize-agents.prompt.md" (
+    copy /y "%TPL%\customize-agents.prompt.md" "%REPO%\.github\customize-agents.prompt.md" >nul
+    echo   created customize-agents.prompt.md  ^(paste into Copilot Chat^)
+)
+
 call "%BIN%copy-agents.cmd" "%REPO%"
 call "%BIN%link-copilot.cmd" "%REPO%"
 
@@ -47,6 +58,7 @@ echo === %REPO% ready ===
 echo   1. Edit .github\copilot-instructions.md        ^(project overview^)
 echo   2. Edit .github\instructions-local\*.md         ^(project rules^)
 echo   3. Open the repo in JetBrains, then paste the contents of:
-echo        %TPL%\customize-agents.prompt.md
+echo        .github\customize-agents.prompt.md
 echo      into Copilot Chat to auto-customise .github\agents\ for THIS repo.
+echo   4. Read .github\COPILOT-SETUP.md for full team onboarding instructions.
 exit /b 0
