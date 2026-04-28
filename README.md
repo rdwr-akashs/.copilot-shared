@@ -25,7 +25,9 @@ once, all repos updated instantly.
     ├── link-copilot.cmd    # (Re)create junctions for one repo
     ├── link-all-copilot.cmd# Walk parent folder; link every repo
     ├── unlink-copilot.cmd  # Remove junctions from one repo
-    └── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
+    ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
+    ├── doctor.cmd          # Health-check one repo's Copilot wiring
+    └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ```
 
 ## What's shared vs per-repo
@@ -115,6 +117,33 @@ Local-only git repo (no remote). Commit after every meaningful edit so you
 can roll back if a change breaks Copilot in any repo.
 
 ## Troubleshooting
+
+**Q: How do I check if a repo is wired up correctly?**
+
+```cmd
+C:\rdwr-intelij\.copilot-shared\bin\doctor.cmd C:\rdwr-intelij\<repo>
+```
+
+Reports PASS/WARN/FAIL on: `.github/` layout, junctions pointing into
+`copilot-shared\shared`, `.gitignore` marker block, unresolved
+`<placeholder>` tokens in agents, and old template terms left over from
+a partial `customize-agents` run. Exit 0 = clean, 1 = warnings, 2 = failures.
+
+**Q: I improved an agent template centrally. How do I push that into existing repos?**
+
+```cmd
+C:\rdwr-intelij\.copilot-shared\bin\refresh-agents.cmd C:\rdwr-intelij\<repo>
+```
+
+For each `agent-templates/*.agent.md`:
+- **NEW** — repo is missing it; copied in (then run `customize-agents` skill).
+- **SAME** — repo's copy is byte-identical to the template; nothing to do.
+- **CONFLICT** — repo's copy was customised; saved upstream as
+  `<agent>.agent.md.template.new` next to the live file. Diff the two,
+  merge wanted changes manually, delete the `.template.new`, then re-run
+  the `customize-agents` skill in Copilot Chat to fix any new placeholders.
+
+Never overwrites a customised agent.
 
 **Q: JetBrains Copilot doesn't see the shared skills.**
 - Verify the junction: `dir C:\rdwr-intelij\<repo>\.github` should show
