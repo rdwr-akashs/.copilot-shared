@@ -19,7 +19,7 @@ description: Use when you have a spec or requirements for a multi-step task, bef
 
 Write comprehensive implementation plans assuming the engineer has zero context for our codebase and questionable taste. Document everything they need to know: which modules and files to touch for each task, code, testing, how to verify. Give them the whole plan as bite-sized tasks. DRY. YAGNI. TDD. Frequent commits.
 
-Assume they are a skilled Java developer, but know almost nothing about this multi-module Maven project or DefenseFlow domain.
+Assume they are a skilled Java developer, but know almost nothing about this multi-module Maven project or <product-suite> domain.
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
@@ -111,7 +111,7 @@ git commit -m "CYCON-XXXXX: Add specific feature"
 When plan touches multiple modules, order tasks by Maven build dependency:
 
 ```
-1. policy-bom (if dependency changes)
+1. <root-bom> (if dependency changes)
 2. driver-api (if contract changes)
 3. drivers/<version> (all affected versions, can be parallel)
 4. util (if shared utility changes)

@@ -23,7 +23,7 @@ Determine which layers are affected:
 - **`driver-api/`** — interface change → ALL 13 `drivers/<version>/Driver.java` files must be updated
 - **`service/`** — business logic, REST endpoints, JPA entities, repositories
 - **`drivers/<version>/`** — version-specific DTO or FTL template change
-- **`ui/policy-app-<version>/`** — frontend React component change
+- **`ui/<frontend-app>-<version>/`** — frontend React component change
 - **`feeds/`** — feed management change
 
 ### 2. Search the codebase
@@ -64,7 +64,7 @@ Output a filled-in map using this structure:
 | File | Pattern |
 |------|---------|
 | drivers/10_13_0_0/Driver.java | Follow same method structure |
-| service/.../PolicyTemplateService.java | Exception handling pattern |
+| service/.../<DomainService>.java | Exception handling pattern |
 
 ### Risk Assessment
 - [ ] `driver-api/` change → all 13 driver modules must implement or build fails

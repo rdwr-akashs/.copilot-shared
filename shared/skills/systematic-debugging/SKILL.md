@@ -70,7 +70,7 @@ Use for ANY technical issue:
    - `git log --oneline -10`
    - `git diff HEAD~3`
    - Did driver-api contracts change? Check all driver modules
-   - New dependencies added without `policy-bom`?
+   - New dependencies added without `<root-bom>`?
 
 4. **Gather Evidence in Multi-Module Systems**
    ```
@@ -233,7 +233,7 @@ void setup() {
 - **Always use this skill** for any failure — no exceptions, no "quick fixes"
 - **Don't skip Phase 1** even when the fix seems obvious
 - **Combine with `dispatching-parallel-agents`** when 3+ independent failures exist
-- Example: "NPE in PolicyTemplateService" → use this skill (trace data flow)
+- Example: "NPE in <DomainService>" → use this skill (trace data flow)
 - Example: "All 13 driver modules fail to compile" → use this skill (check driver-api contract)
 - Example: "3 unrelated test classes failing" → use `dispatching-parallel-agents`, each agent uses this skill
 

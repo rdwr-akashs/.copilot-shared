@@ -17,7 +17,7 @@ description: Use when encountering npm install, build, or test failures in the U
 
 ## Overview
 
-The Policy Editor UI is split into multiple **independent** npm projects. Each `ui/policy-app-<version>/` is its own package — errors often stem from running npm in the wrong directory or from the two-step build requirement before the example app can start.
+The the frontend is split into multiple **independent** npm projects. Each `ui/<frontend-app>-<version>/` is its own package — errors often stem from running npm in the wrong directory or from the two-step build requirement before the example app can start.
 
 ## When to Use
 
@@ -39,13 +39,13 @@ cd <repo-root> && npm install
 cd ui && npm install
 
 # CORRECT
-cd ui/policy-app-10.13.0.0 && npm install
-cd ui/policy-app-8.35.1.0 && npm install
+cd <frontend-app-dir> && npm install
+cd <frontend-app-dir> && npm install
 ```
 
 For the **example (dev) app**, run npm from within `example/`:
 ```bash
-cd ui/policy-app-10.13.0.0/example && npm install
+cd <frontend-app-dir>/example && npm install
 ```
 
 ## Step 2: Two-Terminal Dev Workflow
@@ -54,12 +54,12 @@ The library build (`dist/`) **must exist** before the example app can start. Vio
 
 ```
 Terminal 1 — library (keep running):
-  cd ui/policy-app-<version>
+  cd ui/<frontend-app>-<version>
   npm install
   npm start           # builds dist/ and watches for changes
 
 Terminal 2 — app (starts after dist/ exists):
-  cd ui/policy-app-<version>/example
+  cd ui/<frontend-app>-<version>/example
   npm install
   npm run dev         # proxied to live backend
   # OR
@@ -75,7 +75,7 @@ Terminal 2 — app (starts after dist/ exists):
 | `ERESOLVE` / peer dep conflict | React/styled-components version mismatch | Use `npm install --legacy-peer-deps` |
 | `Cannot find module '../../dist'` | Library not built yet | Run `npm start` in the library folder first |
 | `404 Not Found: webui-design-system@dev-latest` | Registry unreachable or tag missing | Check VPN/registry access; try `npm install --prefer-offline` |
-| `ENOENT .../react-scripts/bin/react-scripts.js` | `node_modules` missing in lib folder | Run `npm install` in `ui/policy-app-<version>/`, NOT in `example/` |
+| `ENOENT .../react-scripts/bin/react-scripts.js` | `node_modules` missing in lib folder | Run `npm install` in `ui/<frontend-app>-<version>/`, NOT in `example/` |
 | `Cannot find module '@radware/policy-lib'` | Local `.tgz` not resolved | Run `npm install` from the lib folder where `policy-lib-*.tgz` lives |
 | `EINTEGRITY` | Corrupt cache | `npm cache clean --force && npm install` |
 | Tests fail: `Cannot find module 'react'` | Peer deps not installed | Run `npm install` in the lib folder, not the example |
@@ -87,11 +87,11 @@ The `@radware/policy-lib` dependency is a **local file reference**:
 "@radware/policy-lib": "file:./policy-lib-1.2.71.tgz"
 ```
 
-This means `npm install` **must be run from `ui/policy-app-<version>/`** — the directory where the `.tgz` file lives. Running from a parent directory will fail with `ENOENT` on the tarball.
+This means `npm install` **must be run from `ui/<frontend-app>-<version>/`** — the directory where the `.tgz` file lives. Running from a parent directory will fail with `ENOENT` on the tarball.
 
 If the `.tgz` file itself is missing:
 ```bash
-ls ui/policy-app-<version>/policy-lib-*.tgz
+ls ui/<frontend-app>-<version>/policy-lib-*.tgz
 # If absent, ask team for the correct artifact or check the build artifacts
 ```
 
@@ -119,7 +119,7 @@ npm install --legacy-peer-deps
 For the full dev setup from scratch:
 ```bash
 # Step 1 — library
-cd ui/policy-app-<version>
+cd ui/<frontend-app>-<version>
 rm -rf node_modules dist
 npm install --legacy-peer-deps
 npm start &   # background watch
@@ -149,7 +149,7 @@ Restart the dev server after any `config.js` change.
 node -v && npm -v
 
 # Is dist/ built?
-ls ui/policy-app-<version>/dist/
+ls ui/<frontend-app>-<version>/dist/
 
 # What does the registry see for a package?
 npm view webui-design-system dist-tags
@@ -184,7 +184,7 @@ git diff package-lock.json | head -40
 
 ## Quick Start
 
-1. Verify working directory: `pwd` — must be inside `ui/policy-app-<version>/`
+1. Verify working directory: `pwd` — must be inside `ui/<frontend-app>-<version>/`
 2. Check the error against the Common Error → Fix Table
 3. If `dist/` missing → start Terminal 1 first (`npm start` in lib folder)
 4. If peer dep conflict → `npm install --legacy-peer-deps`

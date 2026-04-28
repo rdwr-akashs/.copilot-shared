@@ -8,7 +8,7 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 > **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for planning and architecture tasks. Do not self-activate — wait for task classification.
 
-You are a strategic planning and architecture assistant for the **DefenseFlow Policy Editor** project. Your job is to think deeply before any implementation begins — understand the codebase, clarify requirements, and produce a concrete, actionable plan.
+You are a strategic planning and architecture assistant for the **the project** project. Your job is to think deeply before any implementation begins — understand the codebase, clarify requirements, and produce a concrete, actionable plan.
 
 ---
 
@@ -66,16 +66,16 @@ When planning any new feature that touches driver logic:
 1. ✅ Update `driver-api/` interface + DTOs first
 2. ✅ Implement in **all active** `drivers/<version>/Driver.java` (currently 13 versions)
 3. ✅ Expose via `service/` REST endpoint
-4. ✅ Update corresponding `ui/policy-app-<version>/` for each affected DP version
+4. ✅ Update corresponding `ui/<frontend-app>-<version>/` for each affected DP version
 5. ✅ Check if `BackupServiceImpl` needs updating (export/import/clear)
 6. ✅ Check if `SharedTemplatePart` pattern applies (VLAN / UDF style)
 
 ### Exceptions and errors
 
-- Services throw `PolicyTemplateException(RuntimeException)` with an HTTP status constant
+- Services throw `<ProjectException>(RuntimeException)` with an HTTP status constant
 - `ServerExceptionMapper` (JAX-RS `@Provider`) converts all exceptions to JSON automatically
 - Never return `null` from service methods — use `Optional<T>` or throw
-- Never create new exception classes — reuse `PolicyTemplateException`
+- Never create new exception classes — reuse `<ProjectException>`
 
 ### Dependency injection
 
@@ -136,7 +136,7 @@ Every plan must follow this structure. Skip sections that don't apply but explic
 
 ## 4. API Design
 - Method: POST/GET/PUT/DELETE
-- URL: /rest/v2/policy-editor/api/...
+- URL: <rest-base>/<this-project>/api/...
 - Request: [JSON shape with types]
 - Response: [JSON shape with types]
 - Validation: [required fields, format constraints]
@@ -166,7 +166,7 @@ Every plan must follow this structure. Skip sections that don't apply but explic
 - Downstream service failure (Config Service, DP device)
 - DB failure / constraint violation
 - Partial success cases
-- How errors propagate through layers (→ PolicyTemplateException → ServerExceptionMapper → JSON)
+- How errors propagate through layers (→ <ProjectException> → ServerExceptionMapper → JSON)
 
 ## 9. Performance Considerations
 - Expected load / payload size
@@ -181,7 +181,7 @@ Every plan must follow this structure. Skip sections that don't apply but explic
 - (or "No security changes")
 
 ## 11. Backward Compatibility
-- Does this break dpInline, VRM, or Cyber Controller callers?
+- Does this break <calling-service>, <reporter-service>, or <orchestrator-service> callers?
 - Does driver upgrade handle missing fields with defaults?
 - Versioning required?
 - (or "Fully backward compatible")
@@ -223,7 +223,7 @@ All commands use Git Bash syntax (Unix paths, `./mvnw`):
 ./mvnw -pl service test -Dtest="<ClassName>#<methodName>"
 
 # Frontend (always cd into the specific version first)
-cd ui/policy-app-10.13.0.0 && npm install && npm test
+cd <frontend-app-dir> && npm install && npm test
 ```
 
 ---

@@ -67,12 +67,12 @@ Review each staged file against these criteria:
 - [ ] **No field injection** - Use constructor injection only
   ```java
   // WRONG
-  @Autowired private PolicyTemplateRepository repository;
+  @Autowired private <DomainRepository> repository;
 
   // CORRECT
   @RequiredArgsConstructor
-  public class PolicyTemplateService {
-      private final PolicyTemplateRepository repository;
+  public class <DomainService> {
+      private final <DomainRepository> repository;
   }
   ```
 
@@ -93,7 +93,7 @@ Review each staged file against these criteria:
   }
   ```
 
-- [ ] **No null returns from services** - Use `Optional<T>` or throw `PolicyTemplateException`
+- [ ] **No null returns from services** - Use `Optional<T>` or throw `<ProjectException>`
 
 - [ ] **Driver-api changes implemented in ALL driver modules** - Build will fail otherwise
 
@@ -103,7 +103,7 @@ Review each staged file against these criteria:
 
 - [ ] **Lombok annotations used** - `@Data`, `@Builder`, `@RequiredArgsConstructor` to reduce boilerplate
 
-- [ ] **Correct exception handling** - Throw `PolicyTemplateException` (or `PolicyEditorException` for lower-level errors) with status codes, don't create new exception classes
+- [ ] **Correct exception handling** - Throw `<ProjectException>` (or `<LowLevelException>` for lower-level errors) with status codes, don't create new exception classes
 
 - [ ] **Tests use `@SpringBootTest` for services/repos** - Only use `@ExtendWith(MockitoExtension.class)` for pure utilities or driver classes with no Spring dependencies
 
@@ -113,7 +113,7 @@ Review each staged file against these criteria:
 
 - [ ] **Service follows interface+Impl pattern** - New services must have an interface (`PolicyXService`) and a separate `@Service`-annotated implementation (`PolicyXServiceImpl`)
 
-- [ ] **Dependencies in policy-bom** - No version declarations in child module poms
+- [ ] **Dependencies in <root-bom>** - No version declarations in child module poms
 
 - [ ] **Module boundary respected** - No cross-module shortcuts, use driver-api interfaces
 
@@ -166,7 +166,7 @@ Review each staged file against these criteria:
 
 ### Java/Spring Patterns
 - [ ] Constructor injection (no `@Autowired` on fields)
-- [ ] `PolicyTemplateException` or `PolicyEditorException` for errors (no new exception classes)
+- [ ] `<ProjectException>` or `<LowLevelException>` for errors (no new exception classes)
 - [ ] `Optional<T>` returns from services
 - [ ] Lombok for boilerplate reduction
 - [ ] Service interface + `ServiceImpl` pattern followed
@@ -183,7 +183,7 @@ Review each staged file against these criteria:
 - [ ] `should_X_when_Y()` naming convention
 
 ### Dependencies
-- [ ] Versions managed in `policy-bom/`
+- [ ] Versions managed in `<root-bom>/`
 - [ ] No version declarations in child poms
 
 ## Agent Integration

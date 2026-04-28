@@ -21,8 +21,8 @@ Task tool (use requesting-code-review/code-reviewer.md template):
 **Additional Java/Spring checks:**
 - Constructor injection used (no @Autowired on fields)?
 - Lombok annotations applied (`@Data`, `@Builder`, `@RequiredArgsConstructor`)?
-- `PolicyTemplateException` with status codes (no new exception classes)?
+- `<ProjectException>` with status codes (no new exception classes)?
 - `Optional<T>` returns, never null?
 - Tests use `@ExtendWith(MockitoExtension.class)` not `@SpringBootTest` for unit tests?
-- Dependencies managed in `policy-bom/` (no version declarations in child pom)?
+- Dependencies managed in `<root-bom>/` (no version declarations in child pom)?
 - `should_X_when_Y()` test naming?

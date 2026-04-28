@@ -69,7 +69,7 @@ BEFORE implementing:
   1. Check: Technically correct for THIS codebase?
   2. Check: Breaks existing driver contracts or module boundaries?
   3. Check: Reason for current implementation?
-  4. Check: Works across all DefensePro driver versions?
+  4. Check: Works across all driver versions?
   5. Check: Does reviewer understand the multi-module architecture?
 
 IF suggestion seems wrong:
@@ -109,7 +109,7 @@ Push back when:
 - Reviewer lacks multi-module context
 - Violates YAGNI
 - Would require changing ALL driver versions for no benefit
-- Conflicts with established `PolicyTemplateException` error handling pattern
+- Conflicts with established `<ProjectException>` error handling pattern
 - Suggestion adds field injection where constructor injection is required
 
 ## Acknowledging Correct Feedback

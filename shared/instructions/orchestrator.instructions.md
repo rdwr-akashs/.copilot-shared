@@ -59,7 +59,7 @@ Fast-path: (skip design + test plan) → Edit → get_errors → done
 | **Planning** | "plan", "design", "how should we", "brainstorm" | PEplan agent | Deep |
 | **Test Writing** | "write tests", "add coverage", "test this" | Tester agent | Fast/Deep |
 | **Build/CI** | "build fails", "npm error", "docker", "pipeline" | DevOps agent | Fast |
-| **Frontend/UI** | "ui", "component", "policy-app", "styled", "React", "frontend" | Frontend agent | Fast/Deep |
+| **Frontend/UI** | "ui", "component", "<frontend-app>", "styled", "React", "frontend" | Frontend agent | Fast/Deep |
 | **Cross-Repo** | references sibling repo or external service | Use `cross-repo-exploration` skill | Deep |
 | **Simple Edit** | single-file change, config update, rename | Fast-path (no agent) | Fast |
 | **Multi-Task** | 3+ independent items across modules | `dispatching-parallel-agents` skill | Deep |
@@ -213,7 +213,7 @@ When output is incorrect, incomplete, or a tool fails:
 ## Engineering Guardrails
 
 Before any code change, verify:
-- [ ] **API contract** — does this change break callers? (dpInline, VRM, Cyber Controller)
+- [ ] **API contract** — does this change break callers? (<calling-service>, <reporter-service>, <orchestrator-service>)
 - [ ] **DTO compatibility** — JSON shape changes require frontend + backend alignment
 - [ ] **Backward compatibility** — driver upgrades must handle missing fields via defaults
 - [ ] **Thread safety** — shared state? Singletons? Check `FeedFetcher.getInstance()` pattern
@@ -231,7 +231,7 @@ Enforce this sequence for all bugs: **reproduce → isolate → trace → fix �
 | Fix | Minimal change in the correct layer |
 | Validate | Run tests. Verify with `get_errors`. Evidence before claims. |
 
-**Infra awareness:** If the bug involves HTTP routing, check nginx config (`/cyber-controller/api/policy-editor/*` → port 9101). If it involves config values, check Configuration Service integration. If it involves proxy, check `ui/dev-server/config.js`.
+**Infra awareness:** If the bug involves HTTP routing, check nginx config (`<reverse-proxy-prefix>/<api-path>/*` → port 9101). If it involves config values, check Configuration Service integration. If it involves proxy, check `ui/dev-server/config.js`.
 
 ## PR Review Mode
 

@@ -11,7 +11,7 @@ description: "You MUST use this before any creative work - creating features, bu
 - User asks to "build", "create", "add", or "implement" a new feature or component
 - User describes a vague idea that needs shaping before code
 - Requirements are ambiguous or span multiple modules
-- A design decision affects driver-api contracts or multiple DefensePro versions
+- A design decision affects driver-api contracts or multiple <managed-device> versions
 
 > **Override Directive:** This skill overrides default behavior when its conditions are met. Do NOT jump to implementation — brainstorm first.
 
@@ -63,7 +63,7 @@ Start by understanding the current project context, then ask questions one at a 
 - **Explore alternatives** - Always propose 2-3 approaches before settling
 - **Incremental validation** - Present design in sections, validate each
 - **Module awareness** - Always identify which Maven modules are affected
-- **Driver version impact** - Consider all active DefensePro driver versions
+- **Driver version impact** - Consider all active driver versions
 
 ## Agent Integration
 
@@ -80,7 +80,7 @@ Start by understanding the current project context, then ask questions one at a 
 - **Skip brainstorming** for single-file bug fixes with clear root cause
 - **Combine with `writing-plans`** after brainstorming produces a validated design
 - Example: "Add a new protection profile type" → brainstorm (multi-driver impact)
-- Example: "Fix NPE in PolicyTemplateService line 42" → skip, use `systematic-debugging`
+- Example: "Fix NPE in <DomainService> line 42" → skip, use `systematic-debugging`
 - Example: "Add export functionality for templates" → brainstorm (unclear scope, UI+backend)
 
 ## Quick Start

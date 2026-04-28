@@ -79,7 +79,7 @@ cd ".worktrees/$BRANCH_NAME"
 ./mvnw clean install -DskipTests
 
 # If UI changes involved
-cd ui/policy-app-<version> && npm install
+cd ui/<frontend-app>-<version> && npm install
 ```
 
 ### 3. Verify Clean Baseline

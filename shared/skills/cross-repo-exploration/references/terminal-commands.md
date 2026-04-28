@@ -1,6 +1,6 @@
 # Terminal Commands Reference — Cross-Repo Exploration
 
-Since `run_in_terminal` is the only tool that works for sibling repos, use these shell commands for all operations. Substitute `<REPO>` with the actual repo name (e.g., `kvision_dp_inline_config`).
+Since `run_in_terminal` is the only tool that works for sibling repos, use these shell commands for all operations. Substitute `<REPO>` with the actual repo name (e.g., `<sibling-repo>`).
 
 ## List Directory Structure
 
@@ -119,20 +119,20 @@ echo "=== Controllers ===" && \
 grep -rln "@RestController\|@Path" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
 echo "=== DTOs ===" && \
 grep -rln "class.*Dto\|class.*Request\|class.*Response" "C:\rdwr-intelij\<REPO>\src" --include="*.java" | head -15 && \
-echo "=== PE Clients ===" && \
-grep -rln "policy-editor\|PolicyEditor\|WebClient\|RestTemplate" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
+echo "=== this project Clients ===" && \
+grep -rln "<domain-keyword>\|WebClient\|RestTemplate" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
 echo "=== Config ===" && \
-grep -rn "policy.editor\|policy-editor" "C:\rdwr-intelij\<REPO>\src\main\resources" -r 2>/dev/null
+grep -rn "<api-keyword-1>\|<api-keyword-2>" "C:\rdwr-intelij\<REPO>\src\main\resources" -r 2>/dev/null
 ```
 
 ## Question → Command Mapping
 
 | Question | Command |
 |----------|---------|
-| What endpoint does X call on PE? | `grep -rn "policy-editor\|/rest/v2/policy" <REPO>/src --include="*.java"` |
-| What DTO shape does X send to PE? | Find the client class first, then read its request builder |
-| How does X authenticate with PE? | `grep -rn "Authorization\|Bearer\|token\|auth" <REPO>/src --include="*.java" -l` |
-| What config connects X to PE? | `grep -rn "policy.editor\|policy-editor" <REPO>/src/main/resources -r` |
+| What endpoint does X call on this project? | `grep -rn "<api-keyword>\|<api-base-path>" <REPO>/src --include="*.java"` |
+| What DTO shape does X send to this project? | Find the client class first, then read its request builder |
+| How does X authenticate with this project? | `grep -rn "Authorization\|Bearer\|token\|auth" <REPO>/src --include="*.java" -l` |
+| What config connects X to this project? | `grep -rn "<api-keyword-1>\|<api-keyword-2>" <REPO>/src/main/resources -r` |
 | Find controllers + DTOs (L1 scan) | `grep -rln "@RestController\|@Path\|class.*Dto" <REPO>/src --include="*.java" \| head -20` |
-| Find service classes using PE (L2) | `grep -rln "policy-editor\|PolicyEditor\|po-template" <REPO>/src --include="*.java"` |
+| Find service classes calling this project (L2) | `grep -rln "<domain-keyword-1>\|<domain-keyword-2>" <REPO>/src --include="*.java"` |
 

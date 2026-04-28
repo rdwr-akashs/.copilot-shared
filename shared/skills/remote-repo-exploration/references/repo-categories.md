@@ -3,17 +3,16 @@
 > **Last updated:** 2026-04-27 | **Total repos:** 90+
 > Use this to quickly filter which repos to search for a given question.
 
-## Category: Core Services (DefenseFlow)
+## Category: Core Services (<product-suite>)
 
 These are the main application backend services. **Search these first** for API contracts, business logic, and service integrations.
 
-| Repo | Description | PE-Related? |
-|---|---|---|
-| the current repo | Policy Editor — current workspace | ✅ Self |
-| `kvision_cyber_controller_core` | Cyber Controller (DefenseFlow) core | ✅ Calls PE |
-| `kvision_dp_inline_config` | DP Inline Configurator | ✅ Calls PE |
-| `kvision_configuration_service` | Configuration Service — RBAC, config proxy | ✅ Calls PE |
-| `kvision_vrm` | VRM — Vision Reporter Module | ✅ Calls PE |
+| Repo | Description |
+|---|---|
+| `<orchestrator-repo>` | <orchestrator-service> (<product-suite>) core |
+| `<sibling-repo>` | DP Inline Configurator |
+| `kvision_configuration_service` | Configuration Service — RBAC, config proxy |
+| `kvision_vrm` | <reporter-service> — Vision Reporter Module |
 | `kvision_reporter` | Reporting service | ⚠️ Maybe |
 | `kvision_collector` | Data collector | ⚠️ Maybe |
 | `kvision_formatter` | Data formatter | ❌ |
@@ -34,31 +33,31 @@ These are the main application backend services. **Search these first** for API 
 
 Shared libraries and API definitions. **Search these** when tracing shared DTOs, utilities, or driver contracts.
 
-| Repo | Description | PE-Related? |
-|---|---|---|
-| `df_core` | DefenseFlow core library | ✅ Shared DTOs |
-| `kvision_libs` | Shared Java libraries (kvision) | ✅ Common utils |
-| `vision_libs` | Shared Java libraries (vision) | ⚠️ Maybe |
-| `vision_core` | Vision core library | ⚠️ Maybe |
-| `df-driver-api` | DefenseFlow driver API definitions | ✅ Driver contracts |
-| `common_pe_drivers` | PE driver packages | ✅ Direct |
-| `df_dppack` | DP package management | ⚠️ Maybe |
+| Repo | Description |
+|---|---|
+| `<core-lib-repo>` | <product-suite> core library |
+| `kvision_libs` | Shared Java libraries (kvision) |
+| `vision_libs` | Shared Java libraries (vision) |
+| `vision_core` | Vision core library |
+| `<driver-api-repo>` | <product-suite> driver API definitions |
+| `common_pe_drivers` | Driver packages (project-specific) |
+| `df_dppack` | DP package management |
 
 ## Category: UI / Frontend
 
 Frontend applications and component libraries. **Search these** for UI patterns, component usage, and frontend integration.
 
-| Repo | Description | PE-Related? |
-|---|---|---|
-| `webui_components` | Shared UI components (legacy) | ✅ UI dependency |
-| `webui_design_sys` | Design system (`webui-design-system`) | ✅ UI dependency |
-| `webui_core` | Core web UI framework | ✅ UI dependency |
-| `kvision_webui` | Main kvision web UI shell | ✅ Embeds PE |
-| `df_ui_components` | DefenseFlow UI components | ⚠️ Maybe |
-| `kvision_alteon_automation_ui` | Alteon automation UI | ❌ |
-| `webui_policy_editor_poc` | PE UI proof of concept | ⚠️ Legacy/POC |
-| `webui_base_images` | Base images for UI builds | ❌ |
-| `df-dashboard` | DefenseFlow dashboard | ⚠️ Maybe |
+| Repo | Description |
+|---|---|
+| `webui_components` | Shared UI components (legacy) |
+| `webui_design_sys` | Design system (`webui-design-system`) |
+| `webui_core` | Core web UI framework |
+| `kvision_webui` | Main kvision web UI shell |
+| `<ui-components-repo>` | <product-suite> UI components |
+| `kvision_alteon_automation_ui` | Alteon automation UI |
+| `webui_policy_editor_poc` | Frontend POC (project-specific) |
+| `webui_base_images` | Base images for UI builds |
+| `<dashboard-repo>` | <product-suite> dashboard |
 
 ## Category: Infrastructure & Deployment
 
@@ -139,7 +138,7 @@ Build tools, testing infra, and automation.
 | `vision_scheduler` | Vision scheduler |
 | `vision_dependency_manager` | Vision dependency manager |
 | `vision_health` | Vision health check |
-| `vision_vrm` | Vision VRM |
+| `vision_vrm` | Vision <reporter-service> |
 | `kvision_health` | kvision health check |
 | `kvision_ha_operator` | HA Kubernetes operator |
 | `kvision_ha_orchestrator` | HA orchestrator |
@@ -153,7 +152,7 @@ Build tools, testing infra, and automation.
 |---|---|
 | `ai_resources` | AI/ML resources |
 | `ams_docs` | AMS documentation |
-| `cybercontroller_docs` | Cyber Controller docs |
+| `cybercontroller_docs` | <orchestrator-service> docs |
 | `visionhelp` | Vision help content |
 | `kvision_help` | kvision help content |
 | `aae_vdirect_workflows` | vDirect workflow docs |
@@ -164,9 +163,9 @@ Build tools, testing infra, and automation.
 
 | Question | Search These Categories |
 |---|---|
-| Who calls PE's API? | Core Services (PE-related ✅ only) |
+| Who calls this project's API? | Core Services (likely callers) |
 | Who uses this shared DTO? | Core Libraries + Core Services |
-| How is PE deployed? | Infrastructure, Deployment |
+| How is this project deployed? | Infrastructure, Deployment |
 | Where is this UI component used? | UI / Frontend |
 | Who uses RabbitMQ? | Core Services + Infrastructure |
 | Who depends on this Maven artifact? | Core Libraries + Core Services (read pom.xml) |

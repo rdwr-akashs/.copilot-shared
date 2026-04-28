@@ -6,7 +6,7 @@ description: >-
 name: Debugger
 tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
 ---
-# Debugger Agent — DefenseFlow Policy Editor
+# Debugger Agent — the project
 
 > **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for bug investigation tasks. Do not self-activate — wait for task classification.
 
@@ -24,7 +24,7 @@ For non-trivial bugs, produce this before any fix is attempted:
 
 ## Impacted Areas
 - [List files/modules affected by the bug]
-- [List callers that may exhibit the symptom: dpInline, VRM, CC, UI]
+- [List callers that may exhibit the symptom: <calling-service>, <reporter-service>, <orchestrator-service>, UI]
 
 ## Fix Plan
 - **File:** [exact path]
@@ -59,17 +59,17 @@ HTTP Request → Controller → Service → Driver → FreeMarker/Repository →
 
 | Symptom | Likely layer |
 |---------|-------------|
-| 400 Bad Request | Controller validation or `driver.validatePolicyTemplateObject()` |
+| 400 Bad Request | Controller validation or ``driver.validate<DomainObject>()`` |
 | 404 Not Found | Service — entity lookup failed |
 | 500 Internal Server Error | Service or driver — unhandled exception |
 | Wrong CLI text output | FreeMarker `.ftl` in `drivers/<version>/src/main/resources/` |
 | DB constraint error | JPA entity or repository |
-| JSON deserialization error | Driver `PolicyTemplate` DTO |
+| JSON deserialization error | Driver `<DomainEntity>` DTO |
 | Upgrade/downgrade failure | Driver `convert()` method |
 
 ## Known Pitfalls
 
-- Two `PolicyTemplate` classes (driver DTO vs JPA entity) — debug the right one
+- Two `<DomainEntity>` classes (driver DTO vs JPA entity) — debug the right one
 - `convert()` in `Driver.java` — adds defaults during upgrade; missing fields often trace here
 - `FeedFetcher.getInstance()` — singleton, in-memory geo data, can be stale
 - `BackupServiceImpl` — known bugs: UDF not cleared/exported on restore
@@ -81,7 +81,7 @@ Not all bugs are in Java code. Check these when symptoms don't match application
 
 | Symptom | Check |
 |---------|-------|
-| 502/504 from browser | nginx config — `/cyber-controller/api/policy-editor/*` → port 9101 |
+| 502/504 from browser | nginx config — `<reverse-proxy-prefix>/<api-path>/*` → port 9101 |
 | Config value wrong at runtime | Configuration Service integration — `configurationServiceApi` |
 | CORS / proxy errors in UI dev | `ui/dev-server/config.js` — `TARGET`, `PROXY_PATHS` |
 | Template not found after deploy | Docker volume mounts — `CM/`, `docker-compose.yaml` |

@@ -1,6 +1,6 @@
 ---
 name: adding-rest-endpoints
-description: Use when adding a new REST API endpoint to the policy editor service. Covers the full end-to-end checklist: REST resource, JerseyConfig registration, security, service layer, and tests.
+description: Use when adding a new REST API endpoint to the project service. Covers the full end-to-end checklist: REST resource, JerseyConfig registration, security, service layer, and tests.
 ---
 
 # Adding a New REST Endpoint
@@ -88,10 +88,10 @@ In `service/src/main/java/com/radware/dfc/policy/service/`:
 
 ```java
 public interface MyResourceService {
-    /** Get a resource by its ID. Throws PolicyTemplateException(NOT_FOUND) if missing. */
+    /** Get a resource by its ID. Throws <ProjectException>(NOT_FOUND) if missing. */
     MyResource findById(Long id);
 
-    /** Create a new resource. Throws PolicyTemplateException(BAD_REQUEST) on invalid input. */
+    /** Create a new resource. Throws <ProjectException>(BAD_REQUEST) on invalid input. */
     MyResource create(MyResourceRequest request);
 }
 ```
@@ -112,7 +112,7 @@ public class MyResourceServiceImpl implements MyResourceService {
     @Override
     public MyResource findById(Long id) {
         return repository.findById(id)
-            .orElseThrow(() -> new PolicyTemplateException(PolicyTemplateException.NOT_FOUND,
+            .orElseThrow(() -> new <ProjectException>(<ProjectException>.NOT_FOUND,
                 "MyResource not found: " + id));
     }
 
@@ -149,7 +149,7 @@ class MyResourceServiceImplTest {
     @Test
     void should_throwNotFound_when_resourceDoesNotExist() {
         assertThatThrownBy(() -> myResourceService.findById(-1L))
-            .isInstanceOf(PolicyTemplateException.class);
+            .isInstanceOf(<ProjectException>.class);
     }
 }
 ```
@@ -189,7 +189,7 @@ class MyResourceRestServiceTest {
 - [ ] `@Operation` and `@ApiResponse` Swagger annotations present
 - [ ] Service interface defined (not just implementation)
 - [ ] `@Service`-annotated `ServiceImpl` class
-- [ ] `PolicyTemplateException` (or `PolicyEditorException`) for error cases
+- [ ] `<ProjectException>` (or `<LowLevelException>`) for error cases
 - [ ] `@SpringBootTest` integration test for service
 - [ ] `@SpringBootTest(webEnvironment=DEFINED_PORT)` REST test with `HaStandaloneStateEvent`
 - [ ] All maven modules compile: `./mvnw clean install -DskipTests`

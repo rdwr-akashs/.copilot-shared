@@ -20,7 +20,7 @@ description: Use when you need to search, read, or understand code across ALL Bi
 
 ## Overview
 
-The DefenseFlow ecosystem has 90+ repos in Bitbucket (`rdwr` workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
+The <product-suite> ecosystem has 90+ repos in Bitbucket (`rdwr` workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
 
 1. **Bitbucket MCP API** (`mcp_bitbucket-mcp_get_file_content`) — read any file from any repo without cloning
 2. **Shallow git clones** — `git clone --depth 1` to a temp dir for `grep` across a repo's code
@@ -54,7 +54,7 @@ The DefenseFlow ecosystem has 90+ repos in Bitbucket (`rdwr` workspace). Most ar
 
 | Question Type | Relevant Repo Categories | Typical Count |
 |---|---|---|
-| Who calls PE's API? | `service`, `orchestration` | 5-8 repos |
+| Who calls this project's API? | `service`, `orchestration` | 5-8 repos |
 | Who uses this DTO/library? | `service`, `libs` | 8-12 repos |
 | Where is this UI component used? | `ui` | 4-6 repos |
 | How is this deployed? | `infra`, `deploy` | 5-8 repos |
@@ -102,7 +102,7 @@ wait  # Wait for all background clones to finish
 grep -rn "pattern" "$TEMP_DIR"/*/src --include="*.java" -l
 
 # Search with context
-grep -rn -B3 -A3 "PolicyTemplate\|policyTemplate" \
+grep -rn -B3 -A3 "<DomainEntity>\|<domainEntity>" \
   "$TEMP_DIR"/*/src --include="*.java" | head -50
 
 # Find all REST endpoints
@@ -211,13 +211,13 @@ After all subagents return:
 
 ## Common Exploration Patterns
 
-### Pattern 1: "Who calls PE's REST API?"
+### Pattern 1: "Who calls this project's REST API?"
 
 ```
-1. Filter: service repos (kvision_dp_inline_config, kvision_cyber_controller_core, 
+1. Filter: service repos (<sibling-repo>, <orchestrator-repo>, 
    kvision_configuration_service, kvision_vrm, etc.)
 2. Shallow clone 5-8 repos
-3. grep -rn "policy-editor\|/api/policy-editor\|/rest/v2/policy" */src --include="*.java" -l
+3. grep -rn "<api-keyword>\|<api-path>\|<rest-base>" */src --include="*.java" -l
 4. Read matching files via Bitbucket MCP
 ```
 

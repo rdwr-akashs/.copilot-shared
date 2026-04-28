@@ -159,10 +159,10 @@ Next failing test for next behavior.
 
 ```bash
 # Single test method
-./mvnw test -pl service -Dtest="PolicyTemplateServiceTest#should_returnTemplate_when_idExists"
+./mvnw test -pl service -Dtest="<DomainService>Test#should_returnTemplate_when_idExists"
 
 # Single test class
-./mvnw test -pl service -Dtest=PolicyTemplateServiceTest
+./mvnw test -pl service -Dtest=<DomainService>Test
 
 # Module tests
 ./mvnw test -pl service
@@ -194,7 +194,7 @@ Next failing test for next behavior.
 - **Always use TDD** for new service methods, repository queries, and business logic
 - **Skip TDD** for trivial changes (config files, Lombok annotations, imports)
 - **Combine with `writing-plans`** — plans include TDD steps by default
-- Example: "Add findByName to PolicyTemplateService" → TDD (write test first)
+- Example: "Add findByName to <DomainService>" → TDD (write test first)
 - Example: "Add @Builder to DTO" → skip TDD (trivial Lombok annotation)
 - Example: "Fix NPE in driver" → TDD (write failing test reproducing the NPE)
 

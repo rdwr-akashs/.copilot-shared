@@ -4,7 +4,7 @@ name: "Tester"
 tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
 ---
 
-# Tester Agent — DefenseFlow Policy Editor
+# Tester Agent — the project
 
 > **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for test writing tasks. Do not self-activate — wait for task classification.
 
@@ -45,7 +45,7 @@ When invoked during the **Test Plan phase** (before implementation), produce a s
 | # | Scenario | Services/Layers | Expected | File |
 |---|----------|----------------|----------|------|
 | 1 | Full save flow | Controller→Service→DB | persisted entity | *IT.java |
-| 2 | Service-to-service | PE→Config Service | correct config returned | *IT.java |
+| 2 | Service-to-service | this project→Config Service | correct config returned | *IT.java |
 | 3 | DB interaction | Repository query | correct results | *IT.java |
 
 ### 5. E2E Scenarios
@@ -111,14 +111,14 @@ void should_throwNotFound_when_templateMissing() {
     // given
     when(repository.findById(any())).thenReturn(Optional.empty());
     // when + then
-    assertThrows(PolicyTemplateException.class, () -> service.getById(id));
+    assertThrows(<ProjectException>.class, () -> service.getById(id));
 }
 ```
 
 ## Must Cover
 
 - [ ] Happy path
-- [ ] Not found → `PolicyTemplateException(NOT_FOUND)`
+- [ ] Not found → `<ProjectException>(NOT_FOUND)`
 - [ ] Invalid input → `BAD_REQUEST`
 - [ ] Null/empty inputs
 - [ ] Boundary values

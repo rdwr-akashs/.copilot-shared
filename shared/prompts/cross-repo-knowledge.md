@@ -17,11 +17,11 @@ Store findings in memory-bank/cross-repo/<repo>.md.
 **Examples:**
 ```
 Generate cross-repo knowledge for DP Inline Configurator.
-Repository: kvision_dp_inline_config
+Repository: <sibling-repo>
 ```
 ```
-Generate cross-repo knowledge for Cyber Controller.
-Repository: kvision_cyber_controller_core
+Generate cross-repo knowledge for <orchestrator-service>.
+Repository: <orchestrator-repo>
 ```
 
 ---
@@ -39,7 +39,7 @@ Check memory-bank/cross-repo/<repo>.md and update stale sections.
 ## Targeted Question (uses cached knowledge first)
 
 ```
-How does <service> call PE's <endpoint/feature>?
+How does <service> call this project's <endpoint/feature>?
 Check memory-bank/cross-repo/ first, explore only if not cached.
 ```
 

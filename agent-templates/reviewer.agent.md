@@ -5,7 +5,7 @@ description: >-
 name: Reviewer
 tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
 ---
-# Reviewer Agent — DefenseFlow Policy Editor
+# Reviewer Agent — the project
 
 > **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for code review tasks. Do not self-activate — wait for task classification.
 
@@ -42,7 +42,7 @@ When reviewing a design doc and test plan (before implementation):
 
 **Code quality:**
 - [ ] Constructor injection only (`@RequiredArgsConstructor`)
-- [ ] `PolicyTemplateException` with status constant (no new exception classes)
+- [ ] `<ProjectException>` with status constant (no new exception classes)
 - [ ] No `null` returns — `Optional<T>` or throw
 - [ ] No commented-out code
 
@@ -71,7 +71,7 @@ When reviewing a design doc and test plan (before implementation):
 - **Correctness:** Does the logic actually solve the stated problem? Trace the happy path mentally.
 - **Edge cases:** null/empty inputs, missing entities, concurrent access, boundary values
 - **Performance:** N+1 queries? Unbounded loops? Large payload without pagination?
-- **API contract:** Does this change break dpInline, VRM, or Cyber Controller callers?
+- **API contract:** Does this change break <calling-service>, <reporter-service>, or <orchestrator-service> callers?
 - **DTO compatibility:** JSON shape changes aligned between frontend and backend?
 - **Backward compatibility:** Driver upgrades handle missing fields with defaults?
 - **Thread safety:** Shared mutable state? Singleton patterns like `FeedFetcher`?

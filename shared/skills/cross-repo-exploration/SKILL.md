@@ -1,6 +1,6 @@
 ---
 name: cross-repo-exploration
-description: Use when you need to read, search, or understand code in sibling repositories outside the current workspace — covers kvision_dp_inline_config, kvision_cyber_controller_core, df_core, webui_components, and other repos under the workspace root
+description: Use when you need to read, search, or understand code in sibling repositories outside the current workspace — covers <sibling-repo>, <orchestrator-repo>, <core-lib-repo>, webui_components, and other repos under the workspace root
 ---
 
 # Cross-Repo Exploration
@@ -12,18 +12,18 @@ description: Use when you need to read, search, or understand code in sibling re
 **Triggers:**
 - Need to read, search, or understand code in a sibling repository (not the current repo)
 - Tracing an API contract to its caller/callee in another service
-- Implementing a cross-service feature (PE ↔ dpInline, PE ↔ Cyber Controller)
+- Implementing a cross-service feature (PE ↔ <calling-service>, this project ↔ <orchestrator-service>)
 - Checking DTO shapes or endpoint signatures in a consuming/producing service
 
 > **Override Directive:** This skill overrides default behavior when its conditions are met. ALL file tools except `run_in_terminal` will fail on sibling repos.
 
 ## Overview
 
-The DefenseFlow ecosystem spans multiple repositories under a shared workspace root. When working on cross-service features, you need to read and search code in sibling repos that are **not** part of the current IDE workspace.
+The <product-suite> ecosystem spans multiple repositories under a shared workspace root. When working on cross-service features, you need to read and search code in sibling repos that are **not** part of the current IDE workspace.
 
 **Core principle:** All sibling repos live under `C:\rdwr-intelij\`. The IDE tools (`list_dir`, `read_file`, `file_search`, `grep_search`, `semantic_search`) are **workspace-restricted** and WILL FAIL on any path outside the current repo. Use `run_in_terminal` for ALL cross-repo access.
 
-In examples below, substitute `<REPO>` with the actual repo name (e.g., `kvision_dp_inline_config`). Full path: `C:\rdwr-intelij\<REPO>`.
+In examples below, substitute `<REPO>` with the actual repo name (e.g., `<sibling-repo>`). Full path: `C:\rdwr-intelij\<REPO>`.
 
 ## Critical Constraint
 
@@ -41,7 +41,7 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `kvision
 ## When to Use
 
 **Use when:**
-- Implementing a feature that spans PE and another service (dpInline, Cyber Controller, VRM, etc.)
+- Implementing a feature that spans this project and another service (<calling-service>, <orchestrator-service>, <reporter-service>, etc.)
 - Tracing an API contract to see how the caller/callee implements it
 - Understanding DTOs, endpoints, or DB schemas in a sibling service
 - Checking how a shared library (`kvision_libs`, `webui_components`) is used
@@ -57,17 +57,17 @@ All repos live under the workspace root: **`C:\rdwr-intelij\`**
 
 | Repository | Description |
 |---|---|
-| the current repo | Policy Editor — current workspace |
-| `kvision_dp_inline_config` | DP Inline Configurator — manages inline DefensePro devices |
-| `kvision_cyber_controller_core` | Cyber Controller (DefenseFlow) core service |
+| the current repo | the project — current workspace |
+| `<sibling-repo>` | DP Inline Configurator — manages inline <managed-device> devices |
+| `<orchestrator-repo>` | <orchestrator-service> (<product-suite>) core service |
 | `kvision_configuration_service` | Configuration Service — platform config, RBAC proxy |
-| `kvision_vrm` | VRM — Vision Reporter Module |
+| `kvision_vrm` | <reporter-service> — Vision Reporter Module |
 | `kvision_deploy` | Deployment orchestration |
 | `kvision_ha_orchestrator` | HA Orchestrator |
 | `kvision_libs` | Shared Java libraries |
 | `kvision_manifest` | Service manifest definitions |
 | `kvision_upgrade` | Upgrade service |
-| `df_core` | DefenseFlow core library |
+| `<core-lib-repo>` | <product-suite> core library |
 | `webui_components` | Shared UI design system (`webui-design-system`) |
 
 > **Tip:** Run `ls "C:\rdwr-intelij"` to discover all repos — this list may not be exhaustive.
@@ -136,8 +136,8 @@ Record key discoveries in the memory bank (`activeContext.md`, plan files) so fu
 - **Use this skill** when ANY code outside the current repo is needed
 - **Don't use** when all code is within the current workspace
 - **Combine with `brainstorming`** when designing cross-service features
-- Example: "Check how dpInline calls PE's template API" → use this skill
-- Example: "Fix a bug in PolicyTemplateService" → don't need this skill
+- Example: "Check how <calling-service> calls this project's template API" → use this skill
+- Example: "Fix a bug in <DomainService>" → don't need this skill
 - Example: "Verify DTO contract with Configuration Service" → use this skill
 
 ## Quick Start
@@ -255,8 +255,8 @@ Cross-repo exploration is expensive. **Always check memory before running termin
 ### Memory Location
 
 Store cross-repo findings in `memory-bank/cross-repo/` with one file per repo:
-- `memory-bank/cross-repo/kvision_dp_inline_config.md`
-- `memory-bank/cross-repo/kvision_cyber_controller_core.md`
+- `memory-bank/cross-repo/<sibling-repo>.md`
+- `memory-bank/cross-repo/<orchestrator-repo>.md`
 - etc.
 
 ### Memory-First Workflow
@@ -276,9 +276,9 @@ Each repo memory file follows this standard format:
 
 ## Service Overview
 - [One-sentence description of what this service does]
-- [Its role in the DefenseFlow ecosystem]
+- [Its role in the <product-suite> ecosystem]
 
-## PE-Facing APIs
+## this project-Facing APIs
 | Method | URL | Purpose | Request Shape | Response Shape |
 |--------|-----|---------|--------------|----------------|
 | POST | /path | [what it does] | `{ field: type }` | `{ field: type }` |
@@ -289,13 +289,13 @@ Each repo memory file follows this standard format:
 | [Name] | [package] | [key fields] | [which service method] |
 
 ## Service-to-Service Interactions
-- **Calls PE via:** [client class, connection method]
+- **Calls this project via:** [client class, connection method]
 - **Connection config:** [property file, URL pattern, port]
 - **Auth method:** [how it authenticates]
 
 ## Business Rules & Constraints
 - [Ordering requirements, naming conventions, required fields]
-- [Any PE-specific behavior this service expects]
+- [Any this project-specific behavior this service expects]
 
 ## Known Quirks
 - [Gotchas, edge cases, undocumented behavior]
@@ -307,7 +307,7 @@ Each repo memory file follows this standard format:
 
 Knowledge files can go stale. Refresh when:
 - **Mismatch detected:** terminal output contradicts cached knowledge (e.g., DTO field missing, endpoint changed)
-- **User reports change:** "dpInline updated their API"
+- **User reports change:** "<calling-service> updated their API"
 - **Major version bump:** sibling repo is on a new release branch
 
 **How to refresh:**
@@ -350,8 +350,8 @@ grep -rln "@RestController\|@Path\|class.*Dto\|class.*Request\|class.*Response" 
 
 ### L2 Command Pattern (if L1 insufficient)
 ```bash
-# Find service classes that use PE
-grep -rln "policy-editor\|PolicyEditor\|po-template\|policy_template" \
+# Find service classes that use this project
+grep -rln "<domain-keyword-1>\|<domain-keyword-2>" \
   "C:\rdwr-intelij\<REPO>\src" --include="*.java"
 ```
 
@@ -359,20 +359,20 @@ grep -rln "policy-editor\|PolicyEditor\|po-template\|policy_template" \
 
 > **Never start with a generic repo-wide scan.** Always begin with a specific question.
 
-**Good:** "What endpoint does dpInline call to create a PO template?"
-→ `grep -rn "po-template\|poTemplate" "C:\rdwr-intelij\kvision_dp_inline_config\src" --include="*.java" -l`
+**Good:** "What endpoint does <calling-service> call to create a PO template?"
+→ `grep -rn "<entity-keyword-1>\|<entityKeyword2>" "C:\rdwr-intelij\<sibling-repo>\src" --include="*.java" -l`
 
-**Bad:** "Let me explore the dpInline codebase"
-→ `find "C:\rdwr-intelij\kvision_dp_inline_config\src" -type f` ← wastes context
+**Bad:** "Let me explore the <calling-service> codebase"
+→ `find "C:\rdwr-intelij\<sibling-repo>\src" -type f` ← wastes context
 
 ### Question → Command Mapping
 
 | Question | Command |
 |----------|---------|
-| What endpoint does X call on PE? | `grep -rn "policy-editor\|/rest/v2/policy" <REPO>/src --include="*.java"` |
-| What DTO shape does X send to PE? | Find the client class first, then read its request builder |
-| How does X authenticate with PE? | `grep -rn "Authorization\|Bearer\|token\|auth" <REPO>/src --include="*.java" -l` |
-| What config connects X to PE? | `grep -rn "policy.editor\|policy-editor" <REPO>/src/main/resources -r` |
+| What endpoint does X call on this project? | `grep -rn "<api-keyword>\|<api-base-path>" <REPO>/src --include="*.java"` |
+| What DTO shape does X send to this project? | Find the client class first, then read its request builder |
+| How does X authenticate with this project? | `grep -rn "Authorization\|Bearer\|token\|auth" <REPO>/src --include="*.java" -l` |
+| What config connects X to this project? | `grep -rn "<api-keyword-1>\|<api-keyword-2>" <REPO>/src/main/resources -r` |
 
 ## Post-Exploration Integration
 
@@ -384,13 +384,13 @@ After completing exploration, **always produce a summary usable as design input:
 **Question:** [what was investigated]
 **Answer:** [concise finding]
 
-**Integration Impact on PE:**
+**Integration Impact on this project:**
 - [How this affects our design/implementation]
 - [Contract constraints we must respect]
 - [Breaking change risks]
 
 **Action Items:**
-- [What PE needs to do based on this finding]
+- [What this project needs to do based on this finding]
 ```
 
 This summary feeds directly into the `[Design]` block of the orchestrator output.
@@ -399,9 +399,9 @@ This summary feeds directly into the `[Design]` block of the orchestrator output
 
 **Stop exploring once you can answer these three questions:**
 
-1. **What endpoint/method does the other service call on PE?** (or vice versa)
+1. **What endpoint/method does the other service call on this project?** (or vice versa)
 2. **What is the request/response DTO shape?**
-3. **Are there any constraints PE must respect?** (auth, ordering, required fields)
+3. **Are there any constraints this project must respect?** (auth, ordering, required fields)
 
 If all three are answered → stop. Don't read more files. Don't trace deeper. Write the summary and move to design.
 

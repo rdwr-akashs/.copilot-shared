@@ -107,15 +107,15 @@ Before writing findings, verify each changed Java file against these rules from 
 - [ ] **Field injection used** — `@Autowired` on fields instead of constructor injection
   ```java
   // WRONG
-  @Autowired private PolicyTemplateRepository repo;
+  @Autowired private <DomainRepository> repo;
   // CORRECT — constructor injection via @RequiredArgsConstructor
   ```
 
 - [ ] **Business logic in controller** — DB queries, transformations, or conditional logic outside the service layer
 
-- [ ] **Null returned from service** — services must return `Optional<T>` or throw `PolicyTemplateException` / `PolicyEditorException`
+- [ ] **Null returned from service** — services must return `Optional<T>` or throw `<ProjectException>` / `<LowLevelException>`
 
-- [ ] **New exception class created** — project uses `PolicyTemplateException` / `PolicyEditorException` only; no new exception types
+- [ ] **New exception class created** — project uses `<ProjectException>` / `<LowLevelException>` only; no new exception types
 
 - [ ] **Driver-api change missing driver implementations** — if `driver-api/` interface changed, ALL active `drivers/<version>/Driver.java` files must implement it
 
@@ -133,7 +133,7 @@ Before writing findings, verify each changed Java file against these rules from 
 
 - [ ] **Service lacks interface+Impl pattern** — new services must have a `PolicyXService` interface and `PolicyXServiceImpl`
 
-- [ ] **New dependency declared with version in child pom** — versions belong in `policy-bom/pom.xml`
+- [ ] **New dependency declared with version in child pom** — versions belong in `<root-bom>/pom.xml`
 
 - [ ] **N+1 query pattern** — loading a collection then iterating and querying per element
 
@@ -204,12 +204,12 @@ For each finding include:
 // problem: Field injection detected — use constructor injection
 // WRONG
 @Autowired
-private PolicyTemplateService service;
+private <DomainService> service;
 
 // CORRECT — use @RequiredArgsConstructor + final field
 @RequiredArgsConstructor
 public class MyController {
-    private final PolicyTemplateService service;
+    private final <DomainService> service;
 }
 ```
 
@@ -231,14 +231,14 @@ Controller should only call service.doThing() and return Response.ok(result).bui
 ### Null Return from Service
 ```java
 // WRONG
-public PolicyTemplate findById(Long id) {
+public <DomainEntity> findById(Long id) {
     return repository.findById(id).orElse(null);
 }
 
 // CORRECT
-public PolicyTemplate findById(Long id) {
+public <DomainEntity> findById(Long id) {
     return repository.findById(id)
-        .orElseThrow(() -> new PolicyTemplateException("Not found: " + id, PolicyTemplateException.NOT_FOUND));
+        .orElseThrow(() -> new <ProjectException>("Not found: " + id, <ProjectException>.NOT_FOUND));
 }
 ```
 

@@ -8,7 +8,7 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 > **Routing:** This agent is the primary orchestrator for multi-phase feature development. Selected by `.github/instructions/orchestrator.instructions.md` for feature-type tasks. Coordinates Design → Test Plan → Implement → Review → Wrap Up.
 
-You coordinate the full lifecycle of feature development for the DefenseFlow Policy Editor. You run phases in sequence, using the right skills and knowledge at each step. **No implementation starts without a design doc and test plan.**
+You coordinate the full lifecycle of feature development for the project. You run phases in sequence, using the right skills and knowledge at each step. **No implementation starts without a design doc and test plan.**
 
 ---
 
@@ -45,7 +45,7 @@ Read these files before doing anything:
    8. Failure Scenarios — [downstream failure, partial success]
    9. Performance — [N+1, pagination, caching]
    10. Security — [RBAC, input sanitization]
-   11. Backward Compatibility — [callers: dpInline, VRM, CC]
+   11. Backward Compatibility — [callers: <calling-service>, <reporter-service>, <orchestrator-service>]
    12. Observability — [key logs/metrics]
    13. Files to Change — [grouped by module]
    14. Risks and Open Questions
@@ -94,7 +94,7 @@ Before implementation, produce a QA-ready test plan (9 sections — see Tester a
 
 ### Rules (from `docs/codebase/CONVENTIONS.md`)
 - Constructor injection only (`@RequiredArgsConstructor`) �� never `@Autowired` on fields
-- Throw `PolicyTemplateException` with status constant — never new exception classes
+- Throw `<ProjectException>` with status constant — never new exception classes
 - No `null` returns — `Optional<T>` or throw
 - Log4j2 — no emojis, no routine info/debug
 - PascalCase classes, camelCase methods, UPPER_SNAKE_CASE constants
@@ -145,7 +145,7 @@ Before implementation, produce a QA-ready test plan (9 sections — see Tester a
 - [ ] No business logic in controllers
 - [ ] No SQL/DP-specific code in service layer
 - [ ] Constructor injection only
-- [ ] `PolicyTemplateException` with status constant
+- [ ] `<ProjectException>` with status constant
 - [ ] No `null` returns, no commented-out code
 - [ ] Input validation on endpoints, RBAC annotations
 - [ ] Tests present with edge cases

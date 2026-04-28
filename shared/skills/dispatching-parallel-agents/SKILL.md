@@ -39,7 +39,7 @@ When you have multiple unrelated failures (different test files, different modul
 ### 1. Identify Independent Domains
 
 Group failures by module and root cause:
-- Module A (service): PolicyTemplateService validation logic
+- Module A (service): <DomainService> validation logic
 - Module B (drivers/10_0_0_0): FreeMarker template rendering
 - Module C (feeds): Feed sync scheduling
 
@@ -56,7 +56,7 @@ Each agent gets:
 ### 3. Dispatch in Parallel
 
 ```
-Agent 1 → Fix PolicyTemplateServiceTest failures (service module)
+Agent 1 → Fix <DomainService>Test failures (service module)
 Agent 2 → Fix Driver10_0_0_0Test failures (drivers/10_0_0_0 module)
 Agent 3 → Fix FeedSyncServiceTest failures (feeds module)
 ```
@@ -77,7 +77,7 @@ Good agent prompts are:
 3. **Specific about output** - What should the agent return?
 
 ```markdown
-Fix the 3 failing tests in service/src/test/.../PolicyTemplateServiceTest.java:
+Fix the 3 failing tests in service/src/test/.../<DomainService>Test.java:
 
 1. "should_returnTemplate_when_idExists" - Expected template not found
 2. "should_validateAllProfiles_when_structuredTemplate" - NPE in driver call
@@ -97,7 +97,7 @@ Return: Summary of root cause and what you fixed.
 ## Common Mistakes
 
 **Too broad:** "Fix all the tests" - agent gets lost
-**Specific:** "Fix PolicyTemplateServiceTest in service module" - focused scope
+**Specific:** "Fix <DomainService>Test in service module" - focused scope
 
 **No constraints:** Agent might refactor driver-api
 **Constraints:** "Do NOT change driver-api interfaces"

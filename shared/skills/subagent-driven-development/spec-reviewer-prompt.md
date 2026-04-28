@@ -47,7 +47,7 @@ Task tool (general-purpose):
     **Extra/unneeded work:**
     - Did they build things that weren't requested?
     - Did they over-engineer or add unnecessary features?
-    - Did they create new exception classes instead of using PolicyTemplateException?
+    - Did they create new exception classes instead of using <ProjectException>?
 
     **Misunderstandings:**
     - Did they interpret requirements differently than intended?

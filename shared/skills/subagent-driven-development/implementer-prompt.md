@@ -45,7 +45,7 @@ Task tool (general-purpose):
 
     - Constructor injection (no @Autowired on fields)
     - Lombok (@Data, @Builder, @RequiredArgsConstructor)
-    - PolicyTemplateException with status codes for errors
+    - <ProjectException> with status codes for errors
     - Optional<T> returns, never null from services
     - Controller → Service → Repository layering
     - Test naming: should_expectedBehavior_when_condition()

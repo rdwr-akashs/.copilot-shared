@@ -31,7 +31,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 **Java/Spring Quality:**
 - Constructor injection (no field injection)?
-- `PolicyTemplateException` with status codes (no custom exception classes)?
+- `<ProjectException>` with status codes (no custom exception classes)?
 - `Optional<T>` returns, never null from services?
 - Lombok annotations used (`@Data`, `@Builder`, `@RequiredArgsConstructor`)?
 - Business logic in service layer, not controllers?
@@ -40,7 +40,7 @@ git diff {BASE_SHA}..{HEAD_SHA}
 **Architecture:**
 - Module boundaries respected (service, driver-api, drivers, feeds, util)?
 - Driver-api changes reflected in ALL active driver modules?
-- Dependencies managed via `policy-bom/`?
+- Dependencies managed via `<root-bom>/`?
 - No cross-module relative imports or boundary violations?
 - Controller → Service → Repository layering?
 
