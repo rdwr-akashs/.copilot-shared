@@ -61,6 +61,7 @@ Fast-path: (skip design + test plan) → Edit → get_errors → done
 | **Build/CI** | "build fails", "npm error", "docker", "pipeline" | DevOps agent | Fast |
 | **Frontend/UI** | "ui", "component", "<frontend-app>", "styled", "React", "frontend" | Frontend agent | Fast/Deep |
 | **Cross-Repo** | references sibling repo or external service | Use `cross-repo-exploration` skill | Deep |
+| **Customer Case / Field Escalation** | `RSEG-`, `SC-`, `INC-`, `JIRA-`, "support bundle", "support file", "customer logs", "RCA", "field escalation" | `case-investigator` agent | Deep |
 | **Simple Edit** | single-file change, config update, rename | Fast-path (no agent) | Fast |
 | **Multi-Task** | 3+ independent items across modules | `dispatching-parallel-agents` skill | Deep |
 
@@ -117,6 +118,7 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Save a lesson or pattern for future sessions | `remember` |
 | Onboarding or mapping a codebase | `acquire-codebase-knowledge` |
 | Creating or editing a Copilot skill | `writing-skills` |
+| Customer field escalation / RCA | `customer-case-intake` then `case-archive` (lookup) then `support-file-triage` then `rca-evidence-mapping` then `rca-document` then `case-archive` (write) |
 
 ### Skill Chaining Rules
 
@@ -130,6 +132,7 @@ Skills can be combined when the task spans multiple concerns. Chain sequentially
 | Multi-module failure | `systematic-debugging` → `dispatching-parallel-agents` |
 | Cross-repo + parallel (local) | `cross-repo-exploration` → `dispatching-parallel-agents` |
 | Cross-repo + parallel (remote, 90+ repos) | `remote-repo-exploration` (has built-in parallel dispatch) |
+| Customer field escalation | `customer-case-intake` → `case-archive` (lookup) → `support-file-triage` (parallel via `dispatching-parallel-agents`) → `rca-evidence-mapping` (+ `cross-repo-exploration` if needed) → `rca-document` → `case-archive` (write) → `developer` agent for fix |
 
 **Rule:** Chain only when needed. Single-skill is always preferred if it covers the task.
 

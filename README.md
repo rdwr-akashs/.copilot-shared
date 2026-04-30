@@ -15,10 +15,11 @@ once, all repos updated instantly.
 ```
 .copilot-shared\
 ├── shared\                 # Junctioned into every repo's .github\
-│   ├── skills\             # 23 reusable skills
-│   ├── instructions\       # Generic Copilot rules (orchestrator, agent-skills, memory-bank)
-│   └── prompts\            # Reusable prompt templates
+│   ├── skills\             # Reusable skills (incl. customer-case-intake, support-file-triage, rca-*, case-archive)
+│   ├── instructions\       # Generic Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
+│   └── prompts\            # Reusable prompt templates (incl. investigate-customer-case)
 ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
+├── cases\                  # Local-only solved-case archive — written by case-archive skill
 ├── templates\              # copilot-instructions, project-rules, personal-instructions
 └── bin\                    # Setup scripts (Windows .cmd)
     ├── setup-repo.cmd      # One-shot setup for a new repo
@@ -105,6 +106,42 @@ REM Edit .github\skills\commit-push\SKILL.md as needed
 After this, re-running `link-copilot.cmd` will see the real `skills/` folder
 and skip junctioning it (preserving your override). The other folders
 (`instructions/`, `prompts/`) are still re-junctioned normally.
+
+### Customer case RCA workflow
+
+When you're handed a customer escalation (RSEG-/SC-/INC-/JIRA- ticket with a
+support bundle), use the `case-investigator` agent. Kick off via the prompt at
+`shared/prompts/investigate-customer-case.md`.
+
+The workflow is **generic across all repos** — it makes no product-specific
+assumptions. Each phase produces evidence-backed output and the agent never
+edits product code itself (it hands fixes off to the `developer` agent).
+
+| Phase | What happens |
+|-------|--------------|
+| 0     | Scaffolds `.agent_work/<case-id>/investigation.md`; **auto-unzips every archive** in the bundle (idempotent) |
+| 0.5   | **Prior-case lookup** against `cases/_index.md` — surfaces top-3 matches with confidence % |
+| 1     | Problem framing in the investigation MD |
+| 2     | **9 triage subagents in parallel** — Identity, Connectivity, Replication, HA, Resources, External-services, Polling, Containers, Time-sync |
+| 3     | Maps findings to `repo / file / method / line`; greps `CHANGES.txt` / `CHANGELOG*` / `RELEASE_NOTES*` (replaces any static known-bugs table) |
+| 5–6   | Authors `rca-<case-id>.md` (10 sections) including a **draft commit message** |
+| 7     | Persists case to `cases/<case-id>/` (rca.md, fix.md, signature.yml) + appends `_index.md` |
+| 8     | Hands fix off to the `developer` agent; user gates code edits |
+
+#### Per-product triage rules
+
+To make Phase 2 sharper for a specific product, add a
+`.github/instructions-local/triage-rules.instructions.md` to that product's
+repo with concrete log paths and grep patterns. The triage skill prefers it
+when present and falls back to generic keyword grep when absent. See the
+example at the bottom of `shared/instructions/customer-case-rca.instructions.md`.
+
+#### The `cases/` archive
+
+Solved cases land in `.copilot-shared/cases/<case-id>/`. This directory is
+**local-only** — it inherits `.copilot-shared`'s no-remote convention and
+must never be pushed (it contains internal customer data). See
+[cases/README.md](cases/README.md) for layout and the `signature.yml` schema.
 
 ### Versioning the central folder
 

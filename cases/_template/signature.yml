@@ -1,0 +1,60 @@
+# signature.yml — schema reference
+#
+# Written by the case-archive skill (write mode) at Phase 7 of every solved case.
+# Read by the same skill (lookup mode) at Phase 0.5 of every new case.
+#
+# Keep keys stable across cases — the lookup matcher relies on this shape.
+
+case_id: SC-XXXXX                      # Jira / ticket id
+date: 2026-04-30                       # ISO-8601 date the case was archived
+analyst: <user>                        # who did the investigation
+
+product: <product-name>                # e.g. DefenseFlow, Vision, etc.
+component: <module-or-subsystem>       # e.g. HA, BGP, REST, UI
+
+version_range:
+  affected: ">=4.5.0,<4.7.1"          # SemVer range syntax (or "<=" / ">=" / "==")
+  fixed_in: "4.7.1"                    # version that contains the fix, or "unfixed"
+
+topology: HA-pair                      # one of: single-node | HA-pair | cluster | other
+
+# 3–7 short, specific keywords distilled from the symptom + smoking gun.
+# Used for token-overlap matching (weight 25). Be specific — "BGP IDLE", not "network".
+symptom_keywords:
+  - "<keyword 1>"
+  - "<keyword 2>"
+  - "<keyword 3>"
+
+# Every error code, message id, HTTP status, or bug id in the evidence.
+# Used for exact-intersection matching (weight 35 — highest signal).
+error_codes:
+  - "M_XXXXX"
+  - "DE-XXXXX"
+
+# Regex patterns for the smoking-gun log lines. Used for cross-case regex matching (weight 20).
+log_signatures:
+  - regex: "<regex pattern>"
+    notes: "<context: which file, what window>"
+
+# One paragraph plain-English root cause (no jargon-only).
+root_cause: |
+  <root cause description>
+
+# One paragraph plain-English fix summary, or "proposed, not yet validated".
+fix_summary: |
+  <fix description>
+
+# Where in the source code the fix landed (or would land).
+fix_location:
+  - repo: <repo-name>
+    file: <relative path>
+    method: <method-name>
+    line: <line-number>
+
+# Cross-references to live artefacts.
+references:
+  rca: rca.md                          # always present
+  fix: fix.md                          # always present
+  jira: <ticket-url-if-any>
+  pr: <pr-url-if-any>
+  commit: <commit-hash-if-any>
