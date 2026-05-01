@@ -109,6 +109,8 @@ and skip junctioning it (preserving your override). The other folders
 
 ### Customer case RCA workflow
 
+> Full workflow guide: [`shared/instructions/customer-case-rca.README.md`](shared/instructions/customer-case-rca.README.md) — visible in every linked repo as `.github/instructions/customer-case-rca.README.md`.
+
 When you're handed a customer escalation (RSEG-/SC-/INC-/JIRA- ticket with a
 support bundle), use the `case-investigator` agent. Kick off via the prompt at
 `shared/prompts/investigate-customer-case.md`.
