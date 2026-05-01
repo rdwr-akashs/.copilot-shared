@@ -136,11 +136,16 @@ if (Test-Path $tdPath) {
 $repoCategory = 'service'
 $catFile = Join-Path $SHARED 'skills\remote-repo-exploration\references\repo-categories.md'
 if (Test-Path $catFile) {
-    $catContent = [System.IO.File]::ReadAllText($catFile, [System.Text.Encoding]::UTF8)
-    $cPat = '(?ms)## Category:\s*([^\n]+).*?`' + [regex]::Escape($repoName) + '`'
-    if ($catContent -match $cPat) {
-        $repoCategory = $Matches[1].Trim()
-        Write-Ok "Category: $repoCategory"
+    $catLines = [System.IO.File]::ReadAllLines($catFile, [System.Text.Encoding]::UTF8)
+    $currentCat = ''
+    $escapedName2 = [regex]::Escape($repoName)
+    foreach ($line in $catLines) {
+        if ($line -match '^##\s+Category:\s*(.+)') { $currentCat = $Matches[1].Trim(); continue }
+        if ($currentCat -and $line -match "``$escapedName2``") {
+            $repoCategory = $currentCat
+            Write-Ok "Category: $repoCategory"
+            break
+        }
     }
 }
 
