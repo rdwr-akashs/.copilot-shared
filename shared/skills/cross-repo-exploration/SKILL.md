@@ -82,6 +82,11 @@ Most commonly accessed repos for cross-repo work:
 
 > See [terminal-commands.md](./references/terminal-commands.md) for the full shell command reference (directory listing, single/batch file reads, code search, config files, build/test, entry-point detection, and question→command mapping).
 
+> **Complex command?** Use `gh copilot suggest` to generate it rather than hand-crafting:
+> ```bash
+> gh copilot suggest "recursively find all Spring @FeignClient interfaces in a Java repo"
+> ```
+
 ## Cross-Repo Exploration Pattern
 
 Follow this sequence when exploring a sibling repo for integration work:

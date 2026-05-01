@@ -71,6 +71,13 @@ If the repo is not yet in the Repo Registry, add it to the appropriate category 
 
 **Always append — never overwrite.** Add a new row to the relevant table section.
 
+**Update the staleness marker** — after appending, update the file header timestamp:
+```markdown
+# <File Title>
+<!-- Last updated: YYYY-MM-DD -->
+```
+If no `Last updated` line exists, add one after the `#` title line. This lets agents warn when memory is stale (>90 days).
+
 ### Appending to customer-cases.md
 
 Add a row to the `## Case Patterns` table:

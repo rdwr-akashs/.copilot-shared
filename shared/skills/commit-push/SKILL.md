@@ -51,7 +51,9 @@ git add -p path/to/file.java                     # interactive hunk selection
 # 3. Verify exactly what will be committed
 git diff --cached
 
-# 4. Generate commit message (output as markdown — do NOT run git commit)
+# 4. Generate commit message — use gh copilot suggest for best results:
+#    gh copilot suggest "write a conventional commit message for these changes" -t git
+#    Or from the diff: git diff --cached | gh copilot suggest -t git "commit message for this diff"
 # → Present: "CYCON-XXXXX: Short imperative description"
 # User commits manually via IntelliJ (Ctrl+K) or terminal
 

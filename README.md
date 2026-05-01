@@ -41,7 +41,9 @@ source ~/.bashrc
 
 ```cmd
 cd %COPILOT_WORKSPACE_ROOT%
-git clone https://github.com/Radware/copilot-shared.git .copilot-shared
+gh repo clone Radware/copilot-shared .copilot-shared
+# No gh? winget install --id GitHub.cli && gh auth login
+# Or: git clone https://github.com/Radware/copilot-shared.git .copilot-shared
 ```
 ### 1.5. Run first-time local setup
 
@@ -158,7 +160,11 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │       ├── unlink-copilot.cmd  # Remove junctions from one repo
 │       ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
 │       ├── extract-support-bundle.ps1  # Smart extraction of DefenseFlow support bundles
-│       ├── doctor.cmd          # Health-check one repo's Copilot wiring
+│       ├── doctor.cmd          # Health-check one repo's Copilot wiring (legacy)
+│       ├── doctor.ps1          # Health-check one repo (colored output, hooks + cache checks)
+│       ├── audit.ps1           # Batch doctor on all repos — single health report table
+│       ├── setup-all-repos.ps1 # Run setup-repo.ps1 on every repo missing .github/
+│       ├── generate-skill-index.ps1  # Auto-generate shared/skills/INDEX.md
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)
 │   └── .github\
@@ -385,7 +391,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
 **Q: How do I check if a repo is wired up correctly?**
 
 ```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 Reports PASS/WARN/FAIL on: `.github/` layout, junctions pointing into

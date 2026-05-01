@@ -7,6 +7,26 @@ applyTo: '**/*.sh'
 
 Instructions for writing clean, safe, and maintainable shell scripts for bash, sh, zsh, and other shells.
 
+## Copilot CLI — Use When Unsure of Syntax
+
+When constructing a complex terminal command (multi-stage pipes, `find`/`xargs` chains,
+PowerShell one-liners, `jq` filters), use `gh copilot suggest` instead of guessing:
+
+```bash
+# Generate a command from a plain-English description
+gh copilot suggest "find all Java files modified in the last 7 days and grep for @RestController"
+
+# Explain a command you're about to run
+gh copilot explain "find . -name '*.java' | xargs grep -l 'extends AbstractActor' | head -20"
+```
+
+Prefer `gh copilot suggest` over hand-crafting when:
+- The command spans multiple tools (`find` + `xargs` + `grep` + `awk`)
+- You are unsure of the correct PowerShell vs bash syntax for the current shell
+- The command involves destructive operations (double-check before running)
+
+---
+
 ## General Principles
 
 - Generate code that is clean, simple, and concise

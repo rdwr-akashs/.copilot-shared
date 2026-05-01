@@ -15,6 +15,10 @@ You review code for quality, correctness, and convention compliance. You also va
 
 Read `docs/codebase/CONVENTIONS.md` and `docs/codebase/ARCHITECTURE.md`. Check `docs/codebase/CONCERNS.md` for high-churn areas.
 
+**Memory check** — before starting the review, scan the affected files against shared memory:
+- `shared/memory/known-bugs.md` — does the PR touch an area with a known bug? Flag it.
+- `shared/memory/customer-cases.md` — was a recent customer case caused by code in these files? Extra scrutiny.
+
 **Skills to use:**
 - `.github/skills/requesting-code-review/SKILL.md` — review methodology
 - `.github/skills/receiving-code-review/SKILL.md` — when evaluating review feedback from others

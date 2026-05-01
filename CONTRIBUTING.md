@@ -10,10 +10,12 @@ documentation updates.
 
 ```cmd
 cd %COPILOT_WORKSPACE_ROOT%
-git clone https://github.com/rdwr-akashs/.copilot-shared.git .copilot-shared
+gh repo clone rdwr-akashs/.copilot-shared .copilot-shared
 cd .copilot-shared
 git checkout -b feat/my-improvement
 ```
+
+> No `gh` yet? `winget install --id GitHub.cli` then `gh auth login`.
 
 ## How to contribute
 
@@ -60,7 +62,7 @@ configurable via an environment variable (`COPILOT_WORKSPACE_ROOT`).
 - **No customer data** — the `cases/` directory is `.gitignore`d for a reason
 - **No secrets or credentials** — API tokens, passwords, private keys — ever
 - **No OneDrive paths** — use relative paths or `%COPILOT_WORKSPACE_ROOT%\` paths
-- **Test your changes** — run `bin\doctor.cmd %COPILOT_WORKSPACE_ROOT%\<any-repo>` after modifications
+- **Test your changes** — run `powershell -File bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<any-repo>` after modifications
 
 ## Naming conventions
 
@@ -76,10 +78,9 @@ configurable via an environment variable (`COPILOT_WORKSPACE_ROOT`).
 
 1. Create a feature branch: `git checkout -b feat/my-improvement`
 2. Make your changes
-3. Run `bin\doctor.cmd %COPILOT_WORKSPACE_ROOT%\<repo>` to verify nothing broke
-4. Push: `git push -u origin feat/my-improvement`
-5. Open a PR on GitHub with a clear description
-6. One approval required before merge
+3. Run `powershell -File bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>` to verify nothing broke
+4. Push and open PR: `gh pr create --web`
+5. One approval required before merge
 
 ## Reporting issues
 

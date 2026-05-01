@@ -15,9 +15,12 @@ You implement features and fixes for the project codebase. You follow the archit
 ## Before Writing Any Code
 
 Read these files first:
-1. `docs/codebase/CONVENTIONS.md` — naming, DI, error handling, logging
-2. `docs/codebase/STRUCTURE.md` — where to put new files
-3. The architect's plan (if one exists)
+1. `.github/instructions-local/cli-commands.instructions.md` — verified build, test, and run commands for this repo
+2. `docs/codebase/CONVENTIONS.md` — naming, DI, error handling, logging
+3. `docs/codebase/STRUCTURE.md` — where to put new files
+4. The architect's plan (if one exists)
+
+> **Never guess build/test commands.** Always use what's in `cli-commands.instructions.md`.
 
 **Skills to use:**
 - `.github/skills/executing-plans/SKILL.md` — when following an architect's plan

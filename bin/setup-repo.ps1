@@ -436,6 +436,17 @@ if ($giText -notmatch 'personal-instructions\.md') {
     Write-Ok ".gitignore already correct"
 }
 
+# ---- Step 10: Install git hooks ----
+Write-Step "Step 10: Installing git hooks"
+$hookScript = Join-Path $PSScriptRoot 'install-hooks.cmd'
+if ((Test-Path $hookScript) -and (Test-Path (Join-Path $RepoPath '.git'))) {
+    & cmd.exe /c "$hookScript" "$RepoPath"
+} elseif (-not (Test-Path (Join-Path $RepoPath '.git'))) {
+    Write-Info "Not a git repo yet -- run install-hooks.cmd after git init"
+} else {
+    Write-Info "install-hooks.cmd not found -- install hooks manually"
+}
+
 # ---- Summary ----
 Write-Host ""
 Write-Host "=== $repoName is ready ===" -ForegroundColor Green

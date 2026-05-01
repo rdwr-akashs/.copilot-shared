@@ -29,6 +29,8 @@ if not exist "%ROOT%" (
 
 set "BIN=%~dp0"
 set "COUNT=0"
+set "SKIPPED=0"
+set "NEEDSETUP=0"
 
 for /d %%R in ("%ROOT%\*") do (
     if exist "%%R\.github\copilot-instructions.md" (
@@ -37,9 +39,24 @@ for /d %%R in ("%ROOT%\*") do (
     ) else if exist "%%R\.git" (
         echo SKIP: %%R  ^(no .github\copilot-instructions.md - run setup-repo.ps1 first^)
         echo       powershell -File "%BIN%setup-repo.ps1" "%%R"
+        set /a SKIPPED+=1
+        set /a NEEDSETUP+=1
+    ) else (
+        set /a SKIPPED+=1
     )
 )
 
 echo.
-echo === processed !COUNT! repos under %ROOT% ===
+echo ====================================
+echo   SUMMARY
+echo ====================================
+echo   Linked:      !COUNT! repos
+echo   Skipped:     !SKIPPED! ^(no .github or not a git repo^)
+echo   Need setup:  !NEEDSETUP! ^(have .git but no .github^)
+echo ====================================
+if !NEEDSETUP! gtr 0 (
+    echo.
+    echo To set up the remaining repos, run:
+    echo   powershell -File "%BIN%setup-repo.ps1" ^<repo-path^>
+)
 exit /b 0

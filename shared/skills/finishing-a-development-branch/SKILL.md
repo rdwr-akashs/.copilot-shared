@@ -85,8 +85,10 @@ git branch -d <feature-branch>
 
 ```bash
 git push -u origin <feature-branch>
+```
 
-# Create PR with JIRA ticket reference
+**If repo is on GitHub** (e.g. `.copilot-shared`), use `gh`:
+```bash
 gh pr create --title "<JIRA-ticket>: <title>" --body "$(cat <<'EOF'
 ## Summary
 <2-3 bullets of what changed>
@@ -104,6 +106,17 @@ gh pr create --title "<JIRA-ticket>: <title>" --body "$(cat <<'EOF'
 - [ ] <specific verification steps>
 EOF
 )"
+# Tip: gh pr create --web  ← opens browser form (easier on Windows for multi-line body)
+```
+
+**If repo is on Bitbucket** (all product repos), use the MCP tool instead:
+```
+mcp_bitbucket-mcp_create_pull_request(
+  title: "<JIRA-ticket>: <title>",
+  source_branch: "<feature-branch>",
+  destination_branch: "<base-branch>",
+  description: "## Summary\n..."
+)
 ```
 
 #### Option 3: Keep As-Is

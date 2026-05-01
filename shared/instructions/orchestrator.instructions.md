@@ -26,7 +26,11 @@ Before reading any source code or running `semantic_search`:
 1. Check for `.github/repo-cache.md` in the current repo
    - **Present and < 30 days old** → read it (tiny, fast) → skip `semantic_search`
    - **Absent or stale** → run `acquire-codebase-knowledge` skill to generate it, then proceed
-2. Load task-specific docs only when cache is absent or the area is undocumented:
+   - **If stale** → tell the user: *"Repo cache is N days old — rebuilding."*
+2. Check shared memory freshness (look for `<!-- Last updated: YYYY-MM-DD -->` in each file):
+   - `shared/memory/known-bugs.md`, `customer-cases.md`, `tech-discoveries.md`
+   - **> 90 days since last update** → warn: *"⚠ <file> hasn't been updated in N days. Consider reviewing."*
+3. Load task-specific docs only when cache is absent or the area is undocumented:
 
 | Task touches | Also read |
 |---|---|
@@ -329,3 +333,15 @@ Trigger `dispatching-parallel-agents` when:
 - Don't repeat context already in conversation
 - Tables and bullets over prose
 - Evidence before claims — run commands before saying "done"
+
+## Session-End Learning Prompt
+
+When the conversation is winding down (user says "thanks", "that's all", "done", "ship it", etc.):
+
+1. **Self-check:** Did I discover anything worth saving?
+   - New bug pattern → `shared/memory/known-bugs.md`
+   - Customer case finding → `shared/memory/customer-cases.md`
+   - Tech pattern / perf insight → `shared/memory/tech-discoveries.md`
+2. **If yes**, use the `save-learning` skill to append findings. Include the `<!-- Last updated: YYYY-MM-DD -->` timestamp.
+3. **If no**, skip silently — don't ask the user every time.
+4. **Always** remind: *"Run `git add -A && git commit` in .copilot-shared if you want to share these updates with the team."*

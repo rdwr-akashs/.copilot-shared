@@ -145,6 +145,7 @@ rabbitmqctl list_queues name messages consumers message_stats.publish_details.ra
 - **Profile in an environment that mirrors production load.** Dev-mode profiling gives false results.
 - **Fix the bottleneck, not the symptom.** Adding cache on top of N+1 is not a fix.
 - **One change at a time.** Apply, measure, then apply the next.
+- **Save baselines to memory.** After every investigation, append the key metrics (before/after) to `shared/memory/tech-discoveries.md` so future investigations have a comparison point. Use the format: `| <service> | <metric> | <baseline> | <after-fix> | <date> |`
 
 ---
 
