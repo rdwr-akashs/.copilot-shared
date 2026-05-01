@@ -90,6 +90,7 @@ if (Test-Path $tdPath) {
     # Split into sections by "## " headers
     $inRepoRegistry  = $false
     $inBuildCommands = $false
+    $repoFoundInRegistry = $false
     foreach ($line in $tdLines) {
         if ($line -match '^##\s+') {
             $inRepoRegistry  = $line -match 'Repo Registry|Repository Registry'
@@ -98,26 +99,33 @@ if (Test-Path $tdPath) {
         }
         if ($line -notmatch "^\|\s+``$escapedName``\s+\|") { continue }
 
-        $cols = ($line -split '\|') |
+        # Split all columns including empty ones (don't filter blank cells)
+        $rawCols = @($line -split '\|' | ForEach-Object { ($_ -replace '``', '').Trim() })
+        # rawCols[0] is empty (before first |), rawCols[1] is repo name, rawCols[2] is first data col
+        $cols = @(($line -split '\|') |
                 ForEach-Object { ($_ -replace '``', '').Trim() } |
-                Where-Object { $_ -ne '' }
+                Where-Object { $_ -ne '' })
 
-        if ($inBuildCommands -and $cols.Count -ge 5) {
-            $b = $cols[1]; if ($b -and $b -notmatch '^\(|^_') { $repoBuild = $b }
-            $t = $cols[2]; if ($t -and $t -notmatch '^\(|^_') { $repoTest  = $t }
-            $r = $cols[4]; if ($r -and $r -notmatch '^\(|^_') { $repoRun   = $r }
+        if ($inBuildCommands -and $rawCols.Count -ge 6) {
+            $b = $rawCols[2]; if ($b -and $b -notmatch '^\(|^_') { $repoBuild = $b }
+            $t = $rawCols[3]; if ($t -and $t -notmatch '^\(|^_') { $repoTest  = $t }
+            $r = $rawCols[5]; if ($r -and $r -notmatch '^\(|^_') { $repoRun   = $r }
             if ($repoBuild) { Write-Ok "Build command: $repoBuild" }
-        } elseif ($inRepoRegistry -and $cols.Count -ge 2 -and -not $repoDesc) {
-            $candidate = $cols[1]
-            if ($candidate -and $candidate -notmatch '^\(|^_') {
-                $repoDesc = $candidate
-                Write-Ok "Registry description: $repoDesc"
-            } else {
-                Write-Info "Registry row found but no description yet"
+        } elseif ($inRepoRegistry) {
+            $repoFoundInRegistry = $true
+            # rawCols[2] is the description column (may be blank)
+            if ($rawCols.Count -ge 3 -and -not $repoDesc) {
+                $candidate = $rawCols[2]
+                if ($candidate -and $candidate -notmatch '^\(|^_') {
+                    $repoDesc = $candidate
+                    Write-Ok "Registry description: $repoDesc"
+                } else {
+                    Write-Info "Found in registry -- no description yet (add one to tech-discoveries.md)"
+                }
             }
         }
     }
-    if (-not $repoDesc -and -not $repoBuild) {
+    if (-not $repoFoundInRegistry -and -not $repoBuild) {
         Write-Info "Not in Repo Registry -- generic template used (run setup-local.ps1 to populate)"
     }
 } else {
