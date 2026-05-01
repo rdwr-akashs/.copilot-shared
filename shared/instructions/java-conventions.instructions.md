@@ -1,14 +1,14 @@
 ---
-description: "Java coding conventions for Radware backend services. Spring Boot, constructor injection, exception hierarchy, logging, package structure."
+description: "Java coding conventions for Spring Boot backend services. Constructor injection, exception hierarchy, logging, package structure."
 applyTo: "**/*.java"
 ---
 
-# Java Conventions — Radware
+# Java Conventions
 
 ## Package Structure
 
 ```
-com.radware.<product>.<module>/
+com.<org>.<product>.<module>/
   api/           — REST controllers (@RestController)
   application/   — Application services (orchestration, use-case layer)
   domain/        — Domain entities, value objects, domain services

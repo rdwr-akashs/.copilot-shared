@@ -12,7 +12,7 @@ ls "%COPILOT_WORKSPACE_ROOT%\<REPO>"
 find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d
 
 # List files in a specific package dir
-ls "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\service\policy"
+ls "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\service\policy"
 
 # Limit output for large trees
 find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d | head -30
@@ -22,17 +22,17 @@ find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d | head -30
 
 ```bash
 # Read entire file
-cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\MyClass.java"
 
 # Read with line numbers
-cat -n "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
+cat -n "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\MyClass.java"
 
 # Read a specific line range (lines 50–100)
-sed -n '50,100p' "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
+sed -n '50,100p' "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\MyClass.java"
 
 # Read only first / last N lines
-head -80 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
-tail -50 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
+head -80 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\MyClass.java"
+tail -50 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\MyClass.java"
 ```
 
 ## Read Multiple Files in Parallel (Batched)

@@ -10,7 +10,7 @@ description: "Run at the end of any investigation, bug fix, customer case, or te
 **Triggers:**
 - End of any customer case investigation (SC-*, RSEG-*, INC-*)
 - A bug is root-caused and fixed
-- A new tech pattern is discovered in a Radware repo (ES index structure, Akka config, RabbitMQ topology)
+- A new tech pattern is discovered in a repo (ES index structure, Akka config, RabbitMQ topology)
 - User says "save this", "remember this pattern", "add to memory"
 
 > **Override Directive:** This skill runs AFTER a task completes, not before. It extracts and stores — it doesn't investigate.

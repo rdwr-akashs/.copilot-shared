@@ -25,7 +25,7 @@ The the frontend is split into multiple **independent** npm projects. Each `ui/<
 - `npm install` fails with `ERESOLVE`, `ETARGET`, or `404`
 - `Cannot find module` / `MODULE_NOT_FOUND` at test or start time
 - Example app fails to start (`dist/` not found or empty)
-- Local `.tgz` package install errors (`@radware/policy-lib`)
+- Local `.tgz` package install errors (`@<org>/policy-lib`)
 - `ENOENT` on `node_modules/.bin/react-scripts` or similar
 - `webui-design-system` version not found in registry
 
@@ -76,15 +76,15 @@ Terminal 2 — app (starts after dist/ exists):
 | `Cannot find module '../../dist'` | Library not built yet | Run `npm start` in the library folder first |
 | `404 Not Found: webui-design-system@dev-latest` | Registry unreachable or tag missing | Check VPN/registry access; try `npm install --prefer-offline` |
 | `ENOENT .../react-scripts/bin/react-scripts.js` | `node_modules` missing in lib folder | Run `npm install` in `ui/<frontend-app>-<version>/`, NOT in `example/` |
-| `Cannot find module '@radware/policy-lib'` | Local `.tgz` not resolved | Run `npm install` from the lib folder where `policy-lib-*.tgz` lives |
+| `Cannot find module '@<org>/policy-lib'` | Local `.tgz` not resolved | Run `npm install` from the lib folder where `policy-lib-*.tgz` lives |
 | `EINTEGRITY` | Corrupt cache | `npm cache clean --force && npm install` |
 | Tests fail: `Cannot find module 'react'` | Peer deps not installed | Run `npm install` in the lib folder, not the example |
 
-## Local `.tgz` Package (`@radware/policy-lib`)
+## Local `.tgz` Package (`@<org>/policy-lib`)
 
-The `@radware/policy-lib` dependency is a **local file reference**:
+The `@<org>/policy-lib` dependency is a **local file reference**:
 ```json
-"@radware/policy-lib": "file:./policy-lib-1.2.71.tgz"
+"@<org>/policy-lib": "file:./policy-lib-<version>.tgz"
 ```
 
 This means `npm install` **must be run from `ui/<frontend-app>-<version>/`** — the directory where the `.tgz` file lives. Running from a parent directory will fail with `ENOENT` on the tarball.
@@ -177,7 +177,7 @@ git diff package-lock.json | head -40
 
 - **Always use this skill** for ANY npm error in the UI modules
 - **Don't use** for Java/Maven build errors — use `systematic-debugging` instead
-- **Combine with `cross-repo-exploration`** if error relates to `webui_components` shared library
+- **Combine with `cross-repo-exploration`** if error relates to the shared UI library
 - Example: "`Cannot find module '../../dist'`" → use this skill (two-terminal issue)
 - Example: "`ERESOLVE peer dep conflict`" → use this skill (`--legacy-peer-deps`)
 - Example: "`./mvnw test` fails in service module" → don't use this skill
@@ -200,6 +200,6 @@ Use the npm-errors skill to diagnose and fix.
 
 ## Inter-Skill References
 
-- **For shared UI library issues** → `cross-repo-exploration` to check `webui_components`
+- **For shared UI library issues** → `cross-repo-exploration` to check the shared UI library repo
 - **For build pipeline issues** → `systematic-debugging` for Maven/CI failures
 - **After fixing** → `verification-before-completion` to confirm UI builds correctly

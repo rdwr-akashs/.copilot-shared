@@ -56,12 +56,12 @@ grep -A 30 "ERROR" app.log | head -200
 grep -n "NullPointerException\|IllegalStateException\|RuntimeException" app.log
 
 # Extract caused-by chain
-grep -E "Caused by:|at com\.radware" app.log | head -50
+grep -E "Caused by:|at com\.<org>" app.log | head -50
 ```
 
 ### Step 3: Correlate by request ID / correlation ID
 
-Most Radware services log a request or transaction ID. Use it to reconstruct the full request flow:
+Most services log a request or transaction ID. Use it to reconstruct the full request flow:
 
 ```bash
 # Find the request ID from an error line

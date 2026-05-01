@@ -64,7 +64,7 @@ For each class flagged as low coverage, find what's not tested:
 
 ```bash
 # Count branches in a class
-grep -n "if\|switch\|?.*:" src/main/java/com/radware/<path>/<Class>.java | wc -l
+grep -n "if\|switch\|?.*:" src/main/java/com/<org>/<path>/<Class>.java | wc -l
 
 # Find methods with no @Test referencing them
 grep -rn "<ClassName>" src/test/ --include="*.java"

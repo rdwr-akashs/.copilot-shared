@@ -1,9 +1,9 @@
 ---
-description: "React coding conventions for Radware frontend apps. Component naming, hooks patterns, co-located tests, MSW for mocking, accessibility-first queries."
+description: "React coding conventions for frontend apps. Component naming, hooks patterns, co-located tests, MSW for mocking, accessibility-first queries."
 applyTo: "**/*.tsx,**/*.ts"
 ---
 
-# React Conventions — Radware
+# React Conventions
 
 ## Component Naming and File Layout
 

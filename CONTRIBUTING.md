@@ -10,7 +10,7 @@ documentation updates.
 
 ```cmd
 cd %COPILOT_WORKSPACE_ROOT%
-git clone https://github.com/Radware/copilot-shared.git .copilot-shared
+git clone https://github.com/rdwr-akashs/.copilot-shared.git .copilot-shared
 cd .copilot-shared
 git checkout -b feat/my-improvement
 ```

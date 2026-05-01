@@ -37,7 +37,7 @@ Before upgrading:
 
 1. Find the CVE: `https://nvd.nist.gov/vuln/search/results?query=CVE-XXXX-XXXX`
 2. Find the library's changelog / migration guide
-3. Check if any Radware code uses the changed API (search for imports)
+3. Check if any internal code uses the changed API (search for imports)
 
 ```bash
 # Find usages of the library's classes

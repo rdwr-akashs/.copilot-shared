@@ -130,6 +130,7 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Situation | Skill |
 |-----------|-------|
 | **TDD** | |
+| TDD overview / language router | `test-driven-development` |
 | Java TDD (write test first) | `tdd-java` |
 | React TDD (write test first) | `tdd-react` |
 | Improve Jacoco coverage gaps | `java-test-coverage` |
@@ -139,6 +140,7 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Multi-step plan needed | `writing-plans` |
 | Executing a plan | `executing-plans` |
 | Multiple independent tasks (3+) | `dispatching-parallel-agents` |
+| Subagent-per-task parallel execution | `subagent-driven-development` |
 | **Debugging** | |
 | Any failure/error | `systematic-debugging` |
 | Elasticsearch query wrong/slow | `elasticsearch-debug` |

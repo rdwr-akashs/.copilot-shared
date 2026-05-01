@@ -22,7 +22,7 @@ Missing any step typically causes a silent failure (404) or a security bypass.
 
 ### Step 1: Create the REST Resource class
 
-Create a new class in `service/src/main/java/com/radware/dfc/policy/service/rest/`:
+Create a new class in `service/src/main/java/com/<org>/<product>/service/rest/`:
 
 ```java
 @Component
@@ -84,7 +84,7 @@ private void registerEndpoints() {
 
 ### Step 3: Create a Service Interface
 
-In `service/src/main/java/com/radware/dfc/policy/service/`:
+In `service/src/main/java/com/<org>/<product>/service/`:
 
 ```java
 public interface MyResourceService {

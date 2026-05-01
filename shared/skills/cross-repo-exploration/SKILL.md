@@ -41,10 +41,10 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `<siblin
 ## When to Use
 
 **Use when:**
-- Implementing a feature that spans this project and another service (core product, configuration service, reporting module, etc.)
+- Implementing a feature that spans this project and another service (`kvision_cyber_controller_core`, `df_core`, `kvision_configuration_service`, `kvision_vrm`, etc.)
 - Tracing an API contract to see how the caller/callee implements it
 - Understanding DTOs, endpoints, or DB schemas in a sibling service
-- Checking how a shared library is used in other repos
+- Checking how a shared library (`kvision_libs`, `vision_libs`, `webui_components`) is used
 - Verifying integration points before writing code
 
 **Don't use when:**
@@ -55,22 +55,28 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `<siblin
 
 All repos live under the workspace root: **`%COPILOT_WORKSPACE_ROOT%\`**
 
-**Your org's repo list:** `shared/memory/tech-discoveries.md` → Repo Registry section (gitignored, local only).
+**Full repo list:** `shared/memory/tech-discoveries.md` → Repo Registry section  
+**Category filter guide:** `shared/skills/remote-repo-exploration/references/repo-categories.md`
 
-```bash
-# Discover all locally cloned repos
-ls "$COPILOT_WORKSPACE_ROOT"
-```
+Most commonly accessed repos for cross-repo work:
 
-Commonly needed repo types to look for:
-- **Core product** — the main backend service
-- **Configuration service** — RBAC, config proxy
-- **Reporter / collector** — data pipeline services
-- **Shared libraries** — Java/Node shared libs
-- **Deployment** — orchestration and manifests
-- **UI** — frontend applications and design system
+| Repository | Description |
+|---|---|
+| `df_core` | DefenseFlow core — HA, BGP, protection policies |
+| `kvision_cyber_controller_core` | Vision Cyber Controller — main orchestration product |
+| `kvision_configuration_service` | Configuration Service — RBAC, config proxy |
+| `kvision_vrm` | Vision Reporter Module |
+| `kvision_deploy` | Deployment orchestration |
+| `kvision_ha_orchestrator` | HA orchestrator |
+| `kvision_libs` | Shared Java libraries |
+| `vision_libs` | Shared Java libraries (vision) |
+| `kvision_manifest` | Service manifest definitions |
+| `kvision_upgrade` | Upgrade service |
+| `kvision_webui` | Main Vision web UI shell |
+| `webui_components` | Shared UI design system |
 
-> **Tip:** Fill in `shared/memory/tech-discoveries.md` → Repo Registry with your org's repo names using the `save-learning` skill. That file is gitignored so it stays local.
+> **Tip:** Run `ls "$COPILOT_WORKSPACE_ROOT"` to see all locally cloned repos.  
+> For repos NOT cloned locally, use `remote-repo-exploration` skill instead.
 
 ## Terminal Commands Reference
 
@@ -108,7 +114,7 @@ cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\RepositoryA.java"
 ### Step 4: Map DTOs (batch)
 ```bash
 # Read all DTOs in a package at once
-for f in "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\dto"/*.java; do
+for f in "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\<org>\...\dto"/*.java; do
   echo "===== $f ====="; cat "$f"
 done
 ```

@@ -14,13 +14,9 @@ description: Use when you need to search, read, or understand code across ALL Bi
 - Searching for who calls a specific API, uses a DTO, or depends on a library
 - Tracing a feature or bug across 3+ services that aren't all locally available
 - User asks "which repos use X?" or "find all usages of Y across all services"
-- Cross-repo exploration skill failed because the repo isn't cloned locally
+- Cross-repo exploration skill failed because the repo isn't > **Override Directive:** This skill overrides `cross-repo-exploration` when the target repo is NOT available locally under `%COPILOT_WORKSPACE_ROOT%\`. Use `cross-repo-exploration` for locally available repos (faster). Use THIS skill for remote-only repos or broad multi-repo searches.
 
-> **Override Directive:** This skill overrides `cross-repo-exploration` when the target repo is NOT available locally under `%COPILOT_WORKSPACE_ROOT%\`. Use `cross-repo-exploration` for locally available repos (faster). Use THIS skill for remote-only repos or broad multi-repo searches.
-
-## Overview
-
-The <product-suite> ecosystem has 90+ repos in Bitbucket (<your-bb-workspace> workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
+## OverviewThe <product-suite> ecosystem has 90+ repos in Bitbucket (<your-bb-workspace> workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
 
 1. **Bitbucket MCP API** (`mcp_bitbucket-mcp_get_file_content`) — read any file from any repo without cloning
 2. **Shallow git clones** — `git clone --depth 1` to a temp dir for `grep` across a repo's code
@@ -118,7 +114,7 @@ Once you know which file to read, use the MCP tool (no clone needed):
 mcp_bitbucket-mcp_get_file_content:
   workspace: <bb-workspace>
   repo_slug: <repo_name>
-  file_path: src/main/java/com/radware/.../MyClass.java
+  file_path: src/main/java/com/<org>/.../MyClass.java
   ref: HEAD  (or a specific branch)
 ```
 
@@ -201,6 +197,13 @@ After all subagents return:
 | Task | Tool | Key Params |
 |---|---|---|
 | List all repos | `mcp_bitbucket-mcp_list_repositories` | `workspace: <bb-workspace>` |
+mary finding
+
+## Bitbucket API Tools — Quick Reference
+
+| Task | Tool | Key Params |
+|---|---|---|
+| List all repos | `mcp_bitbucket-mcp_list_repositories` | `workspace: rdwr` |
 | Read a file remotely | `mcp_bitbucket-mcp_get_file_content` | `repo_slug`, `file_path`, `ref` |
 | Get repo info | `mcp_bitbucket-mcp_get_repository` | `repo_slug` |
 | List recent commits | `mcp_bitbucket-mcp_list_commits` | `repo_slug`, `branch`, `limit` |
@@ -215,7 +218,7 @@ After all subagents return:
 
 ```
 1. Filter: service repos (<sibling-repo>, <orchestrator-repo>, 
-   <config-service-repo>, <reporter-repo>, etc.)
+   kvision_configuration_service, kvision_vrm, etc.)
 2. Shallow clone 5-8 repos
 3. grep -rn "<api-keyword>\|<api-path>\|<rest-base>" */src --include="*.java" -l
 4. Read matching files via Bitbucket MCP
@@ -252,6 +255,15 @@ After all subagents return:
 ```
 Need to explore repos?
 ├── Is repo cloned locally under %COPILOT_WORKSPACE_ROOT%\? 
+KafkaTemplate\|RedisTemplate" */src --include="*.java" -l
+3. Read config files: get_file_content(file_path=src/main/resources/application.yml)
+```
+
+## Decision Tree
+
+```
+Need to explore repos?
+├── Is repo cloned locally under C:\rdwr-intelij\? 
 │   ├── YES → Use `cross-repo-exploration` skill (faster, no network)
 │   └── NO → Continue below
 ├── Do you know the exact file path?

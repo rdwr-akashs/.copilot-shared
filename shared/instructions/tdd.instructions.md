@@ -1,9 +1,9 @@
 ---
-description: "TDD-first mandate for all Radware development. Applies to every agent and every developer. No production code without a failing test first."
+description: "TDD-first mandate. Applies to every agent and every developer. No production code without a failing test first."
 applyTo: "**"
 ---
 
-# TDD Mandate — Radware
+# TDD Mandate
 
 ## The Rule
 

@@ -69,7 +69,7 @@ akka {
 ## Step 2: Interpret Dead Letter Log
 
 ```
-[akka://mySystem/user/ItemSupervisor/item-processor-1] Message [com.radware.items.ProcessItemMessage] 
+[akka://mySystem/user/ItemSupervisor/item-processor-1] Message [com.example.items.ProcessItemMessage] 
 from Actor[akka://mySystem/user/ItemController#1234] to Actor[akka://mySystem/user/ItemSupervisor/item-processor-1#5678] 
 was not delivered. [3] dead letters encountered.
 ```
@@ -126,7 +126,7 @@ public SupervisorStrategy supervisorStrategy() {
 ```bash
 # Find Thread.sleep, synchronized blocks, and blocking I/O in actor classes
 grep -rn "Thread.sleep\|synchronized\|\.get()\|\.join()\|ResultSet\|InputStream" \
-  src/main/java/com/radware/actors/ --include="*.java"
+  src/main/java/com/<org>/actors/ --include="*.java"
 ```
 
 Blocking patterns to move to a separate dispatcher:
