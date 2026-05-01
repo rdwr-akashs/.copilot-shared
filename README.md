@@ -225,6 +225,80 @@ REM Edit .github\skills\commit-push\SKILL.md as needed
 Re-running `link-copilot.cmd` will see the real `skills/` folder and skip
 junctioning it (preserving your override).
 
+---
+
+## Updating After Upstream Changes
+
+When someone pushes improvements to `.copilot-shared` (new skills, agent fixes, orchestrator updates, etc.), here's how to get them into your repos.
+
+### What propagates automatically vs manually
+
+| What changed | Propagation | Action needed |
+|---|---|---|
+| **Skills** (`shared/skills/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
+| **Instructions** (`shared/instructions/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
+| **Prompts** (`shared/prompts/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
+| **Plans** (`shared/plans/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
+| **Agent templates** (`agent-templates/`) | **Manual** — agents are copied per-repo | Run `refresh-agents.cmd` per repo |
+| **Scripts** (`bin/`) | **Instant** — scripts run from `.copilot-shared` directly | Just `git pull` in `.copilot-shared` |
+
+### Step-by-step: pull + refresh
+
+```bash
+# 1. Pull the latest shared config
+cd %COPILOT_WORKSPACE_ROOT%\.copilot-shared
+git pull
+
+# Skills, instructions, prompts, plans are now live in ALL linked repos.
+# No further action needed for those.
+
+# 2. Refresh agent templates in a single repo
+bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
+
+# 3. Or refresh ALL repos at once (Git Bash)
+for d in /c/rdwr-intelij/*/; do
+  [ -d "$d/.github/agents" ] && bin/refresh-agents.cmd "$d"
+done
+
+# 3b. Or refresh ALL repos at once (PowerShell)
+Get-ChildItem "$env:COPILOT_WORKSPACE_ROOT" -Directory |
+  Where-Object { Test-Path "$($_.FullName)\.github\agents" } |
+  ForEach-Object { & "$env:COPILOT_WORKSPACE_ROOT\.copilot-shared\bin\refresh-agents.cmd" $_.FullName }
+```
+
+### What `refresh-agents.cmd` does
+
+For each file in `agent-templates/*.agent.md`:
+
+| Status | Meaning | What happens |
+|---|---|---|
+| **NEW** | Repo doesn't have this agent yet | Copied in automatically. Run `customize-agents` skill afterwards. |
+| **SAME** | Repo's copy is byte-identical to template | Skipped — nothing to do. |
+| **CONFLICT** | Both sides changed | Saves upstream version as `<agent>.agent.md.template.new`. You diff and merge manually. |
+
+> **Never overwrites a customised agent.** Your per-repo customisations are always safe.
+
+### After resolving conflicts
+
+```
+# In Copilot Chat, inside the repo:
+Run the customize-agents skill on this repo.
+```
+
+This re-applies repo-specific substitutions (project names, tech stack, paths) to any newly merged agent sections.
+
+### Health check after updating
+
+```cmd
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
+```
+
+Or audit all repos at once:
+
+```powershell
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\audit.ps1
+```
+
 ### Customer Case RCA Workflow
 
 > Full guide: [`shared/instructions/customer-case-rca.README.md`](shared/instructions/customer-case-rca.README.md)
