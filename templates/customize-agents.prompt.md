@@ -8,7 +8,7 @@ invoked by name from any linked repo:
 
 ## How to run it
 
-In Copilot Chat, after seeding a repo with `setup-repo.cmd`:
+In Copilot Chat, after seeding a repo with `setup-repo.ps1`:
 
 ```
 Run the customize-agents skill on this repo.

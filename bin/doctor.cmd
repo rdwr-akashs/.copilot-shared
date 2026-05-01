@@ -31,7 +31,7 @@ echo.
 
 REM ---- 1. .github exists ----
 if not exist "%REPO%\.github" (
-    echo [FAIL] .github folder missing - run setup-repo.cmd first
+    echo [FAIL] .github folder missing - run setup-repo.ps1 first
     set /a FAILS+=1
     goto :Summary
 )

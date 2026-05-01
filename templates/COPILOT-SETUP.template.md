@@ -84,8 +84,8 @@ Verify:
 ```cmd
 dir %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin
 ```
-Expect: `setup-repo.cmd`, `link-copilot.cmd`, `link-all-copilot.cmd`,
-`unlink-copilot.cmd`, `copy-agents.cmd`.
+Expect: `setup-repo.ps1`, `setup-local.ps1`, `link-copilot.cmd`, `link-all-copilot.cmd`,
+`unlink-copilot.cmd`, `copy-agents.cmd`, `refresh-agents.cmd`.
 
 ### Step 2 — Clone repos under `%COPILOT_WORKSPACE_ROOT%\`
 
@@ -102,7 +102,7 @@ git clone <repo-url> <repo-name>
 
 This walks `%COPILOT_WORKSPACE_ROOT%\*`, finds every repo with
 `.github\copilot-instructions.md`, and creates the four junctions. Repos
-without that file are skipped (they need `setup-repo.cmd` first).
+without that file are skipped (they need `setup-repo.ps1` first).
 
 ### Step 4 — Create your personal instructions (one-time per machine)
 
@@ -135,7 +135,7 @@ You should see agents from `.github/agents/`, skills from
 For a repo that has no `.github/` yet:
 
 ```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-repo.cmd %COPILOT_WORKSPACE_ROOT%\<new-repo>
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<new-repo>
 ```
 
 This creates `.github/`, seeds `copilot-instructions.md`, creates

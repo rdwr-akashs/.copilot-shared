@@ -10,7 +10,7 @@ description: Use when seeding a new repo with the shared Copilot setup — rewri
 **Triggers:**
 - User says "customize agents", "customise agents", "tailor the agents",
   "adapt agents to this repo", "run customize-agents"
-- A repo was just seeded by `setup-repo.cmd` or `copy-agents.cmd` and the
+- A repo was just seeded by `setup-repo.ps1` or `copy-agents.cmd` and the
   agents still contain placeholder tokens like `<DomainEntity>`,
   `<ProjectException>`, `<calling-service>`
 - A grep for `<[A-Z][A-Za-z-]+>` inside `.github/agents/` returns hits

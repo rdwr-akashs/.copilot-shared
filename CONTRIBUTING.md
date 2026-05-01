@@ -70,7 +70,7 @@ configurable via an environment variable (`COPILOT_WORKSPACE_ROOT`).
 | Instruction file | `<name>.instructions.md` | `orchestrator.instructions.md` |
 | Agent template | `<name>.agent.md` | `developer.agent.md` |
 | Prompt file | `<name>.md` | `investigate-customer-case.md` |
-| Bin script | `<name>.cmd` (Windows) | `setup-repo.cmd` |
+| Bin script | `<name>.ps1` (PowerShell) or `<name>.cmd` (simple) | `setup-repo.ps1` |
 
 ## Pull request process
 

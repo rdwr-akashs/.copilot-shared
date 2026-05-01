@@ -31,7 +31,7 @@ set "TPL=%BIN%..\agent-templates"
 for %%I in ("%TPL%") do set "TPL=%%~fI"
 
 if not exist "%REPO%\.github" (
-    echo ERROR: %REPO%\.github not found - run setup-repo.cmd first
+    echo ERROR: %REPO%\.github not found - run setup-repo.ps1 first
     exit /b 2
 )
 if not exist "%TPL%" (
