@@ -8,6 +8,8 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 > **Routing:** Selected for UI/frontend tasks across any `ui/<frontend-app>-<version>/` module. Knows the versioned UI architecture, the design system, and the two-terminal dev workflow.
 
+> **Pipeline Entry Gate:** When invoked directly via `@expert-react-frontend-engineer`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
+
 ## Your Expertise
 
 - **React 16.13.1** — class components still exist in the codebase, but prefer functional components with hooks for new code
@@ -61,3 +63,23 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 - Backend Java code → use Developer agent
 - Build/npm failures → use DevOps agent (or `npm-errors` skill)
 - Driver DTO changes → use Developer agent (drivers are Java)
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions-local/project-rules.instructions.md` — repo-specific rules
+- `.github/instructions/react-conventions.instructions.md` — React coding standards
+
+### 3. Save Learning
+At task end, self-check: did I discover a new UI pattern, component issue, or frontend insight?
+- **Yes** → run `save-learning` skill to append to `shared/memory/tech-discoveries.md`
+- **No** → skip silently

@@ -10,6 +10,8 @@ description: 'Senior design-focused reviewer. Invoke for architecture decisions,
 > Distinct from the Developer agent (which implements) and the Reviewer agent
 > (which validates a specific diff).
 
+> **Pipeline Entry Gate:** When invoked directly via `@principal-engineer`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
+
 ## Mandate
 
 Make the codebase **fast, correct, and maintainable** — in that priority order
@@ -121,3 +123,24 @@ following sections in the repo's copy:
 - **Performance hot paths**: which endpoints are latency-critical
 - **Standard exception types**: name them
 - **Build/test commands**: from `cli-commands.instructions.md`
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions-local/project-rules.instructions.md` — repo-specific rules
+- `.github/instructions/design-principles.instructions.md` — SOLID, DRY, KISS, YAGNI
+- `.github/instructions/performance-awareness.instructions.md` — perf rules
+
+### 3. Save Learning
+At task end, self-check: did I discover a new architectural pattern or design insight?
+- **Yes** → run `save-learning` skill to append to `shared/memory/tech-discoveries.md`
+- **No** → skip silently

@@ -38,7 +38,7 @@
     .\bin\setup-local.ps1 -Force
     .\bin\setup-local.ps1 -BBWorkspace mycompany
 
-NOTE: Step 3 (repo fetch) uses a Bitbucket HTTP Access Token (Bearer auth).
+NOTE: Step 3 (repo fetch) uses a Bitbucket HTTP Access Token (Basic auth with username:app-password).
       Create one at https://bitbucket.org/account/settings/access-tokens
       with Repositories: Read scope.
 #>
@@ -90,10 +90,19 @@ if (-not $BBWorkspace) {
     $BBWorkspace = Prompt-Input "Bitbucket workspace slug (e.g. mycompany)" $savedWorkspace
 }
 if (-not $BBWorkspace) { Write-Host "ERROR: workspace is required." -ForegroundColor Red; exit 1 }
+if ($BBWorkspace -notmatch '^[a-zA-Z0-9_-]+$') {
+    Write-Host "ERROR: workspace slug must contain only alphanumeric characters, hyphens, and underscores." -ForegroundColor Red
+    exit 1
+}
 
 if (-not $BBBaseUrl) {
     $BBBaseUrl = Prompt-Input "Bitbucket base URL" $savedBaseUrl
 }
+if ($BBBaseUrl -notmatch '^https?://[a-zA-Z0-9._-]+(:[0-9]+)?(/[a-zA-Z0-9._/-]*)?$') {
+    Write-Host "ERROR: base URL must be a valid HTTP(S) URL (e.g. https://bitbucket.org)." -ForegroundColor Red
+    exit 1
+}
+$BBBaseUrl = $BBBaseUrl.TrimEnd('/')
 
 # ---------------------------------------------------------------------------
 Write-Step "Step 2: Product / project names"
@@ -121,8 +130,12 @@ if ($doFetch -match '^[Yy]') {
         $bbUser = Prompt-Input "Bitbucket username (e.g. you@company.com)"
         Write-Host "  Bitbucket password / access token (input hidden): " -NoNewline -ForegroundColor White
         $passSecure = Read-Host -AsSecureString
-        $bbPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-                      [Runtime.InteropServices.Marshal]::SecureStringToBSTR($passSecure))
+        $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($passSecure)
+        try {
+            $bbPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+        } finally {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+        }
     }
 
     $creds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${bbUser}:${bbPass}"))
@@ -132,11 +145,15 @@ if ($doFetch -match '^[Yy]') {
     try {
         # Match MCP exactly: no fields filter, pagelen=100 per page
         $url = "$bbApiBase/2.0/repositories/$BBWorkspace`?pagelen=100"
+        $maxPages = 200  # safety cap: 200 pages × 100 = 20,000 repos max
+        $page = 0
         do {
             $resp    = Invoke-RestMethod -Uri $url -Headers $authHeader -TimeoutSec 30
             $allRepos += $resp.values
-            $url = if ($resp.PSObject.Properties.Match('next').Count -gt 0) { $resp.next } else { $null }
+            $page++
+            $url = if ($page -lt $maxPages -and $resp.PSObject.Properties.Match('next').Count -gt 0) { $resp.next } else { $null }
         } while ($url)
+        if ($page -ge $maxPages) { Write-Host "  [warn] Reached page limit ($maxPages). Some repos may be missing." -ForegroundColor Yellow }
         Write-Ok "Fetched $($allRepos.Count) repos"
         $fetchRepos = $true
     } catch {
@@ -149,6 +166,9 @@ if ($doFetch -match '^[Yy]') {
         }
         Write-Info "Continuing without live repo list -- re-run with -Force to retry."
     }
+
+    # Clear credential variables — no longer needed
+    $bbPass = $null; $creds = $null; $authHeader = $null
 }
 
 # ---------------------------------------------------------------------------
@@ -201,7 +221,10 @@ foreach ($f in $memFiles) {
 
 # Inject fetched repos into tech-discoveries.md Repo Registry
 $tdPath = Join-Path $memDir 'tech-discoveries.md'
-if ($fetchRepos -and (Test-Path $tdPath)) {
+
+# Build $categories whenever we have repos — used by Steps 5, 6, and the injection below
+$categories = $null
+if ($fetchRepos) {
     $categories = @{
         'core-primary'   = @{ Title = "Core Services — Primary Product"; Repos = @() }
         'core-secondary' = @{ Title = "Core Services — Secondary Product"; Repos = @() }
@@ -219,9 +242,12 @@ if ($fetchRepos -and (Test-Path $tdPath)) {
     }
     foreach ($r in $allRepos) {
         $cat = Get-Category $r.slug
-        $desc = if ($r.description) { $r.description.Trim() } else { '' }
+        $desc = if ($r.description) { $r.description.Trim().Replace('|', '\|') } else { '' }
         $categories[$cat].Repos += "| ``$($r.slug)`` | $desc |"
     }
+}
+
+if ($fetchRepos -and (Test-Path $tdPath)) {
 
     $regLines = @('', '## Repo Registry', '', "All repos in Bitbucket workspace ``$BBWorkspace``. Auto-fetched $(Get-Date -Format 'yyyy-MM-dd').", "Full category filter: ``shared/skills/remote-repo-exploration/references/repo-categories.md``", '')
     $order = @('core-primary','core-secondary','libs','alerts','ui','infra','ops','tools','testing','vision-legacy','shared','docs','other')

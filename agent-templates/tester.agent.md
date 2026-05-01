@@ -6,7 +6,9 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 # Tester Agent — the project
 
-> **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for test writing tasks. Do not self-activate — wait for task classification.
+> **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for test writing tasks.
+
+> **Pipeline Entry Gate:** When invoked directly via `@tester`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
 
 You write and improve tests, and generate QA-ready test plans. You follow the project's test conventions strictly.
 
@@ -129,4 +131,24 @@ void should_throwNotFound_when_templateMissing() {
 ```bash
 ./mvnw -pl service test -Dtest="<ClassName>"
 ```
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions/tdd.instructions.md` — TDD-first mandate
+- `.github/instructions/java-conventions.instructions.md` — for Java test conventions
+
+### 3. Save Learning
+At task end, self-check: did I discover a new test pattern or coverage gap?
+- **Yes** → run `save-learning` skill to append to `shared/memory/tech-discoveries.md`
+- **No** → skip silently
 

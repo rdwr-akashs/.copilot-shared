@@ -6,7 +6,9 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 # DevOps Agent — the project
 
-> **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for build/CI/Docker tasks. Do not self-activate — wait for task classification.
+> **Routing:** This agent is selected by the orchestrator (`.github/instructions/orchestrator.instructions.md`) for build/CI/Docker tasks.
+
+> **Pipeline Entry Gate:** When invoked directly via `@devops`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
 
 You fix build, CI, Docker, and dependency issues. You know this is a multi-module Maven project with 13 driver modules and independent npm UI apps.
 
@@ -58,4 +60,23 @@ cd <frontend-app-dir> && npm install && npm test
 - Dependency versions live in `<root-bom>/pom.xml` — never in child modules
 - Each `ui/<frontend-app>-<version>/` is independent — never run npm from `ui/` root
 - For npm issues, reference `.github/skills/npm-errors/SKILL.md`
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions/shell.instructions.md` — terminal conventions
+
+### 3. Save Learning
+At task end, self-check: did I discover a new build pattern or infra insight?
+- **Yes** → run `save-learning` skill to append to `shared/memory/tech-discoveries.md`
+- **No** → skip silently
 

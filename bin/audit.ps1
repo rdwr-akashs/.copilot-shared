@@ -48,7 +48,7 @@ foreach ($dir in $dirs) {
     $hasCopilot = Test-Path $ciFile
 
     # Check junctions
-    $junctions = @('skills', 'instructions', 'prompts')
+    $junctions = @('skills', 'instructions', 'prompts', 'plans')
     $junctionOk = 0
     foreach ($j in $junctions) {
         $jp = Join-Path $dir.FullName ".github\$j"
@@ -71,19 +71,19 @@ foreach ($dir in $dirs) {
 
     # Check agents
     $agentCount = 0
-    $agentDir = Join-Path $dir.FullName '.github'
+    $agentDir = Join-Path $dir.FullName '.github\agents'
     if (Test-Path $agentDir) {
         $agentCount = @(Get-ChildItem -Path $agentDir -Filter '*.agent.md' -ErrorAction SilentlyContinue).Count
     }
 
-    $status = if ($hasCopilot -and $junctionOk -eq 3 -and $hasHooks) { 'OK' }
+    $status = if ($hasCopilot -and $junctionOk -eq 4 -and $hasHooks) { 'OK' }
               elseif ($hasCopilot) { 'PARTIAL' }
               else { 'MISSING' }
 
     $results += [PSCustomObject]@{
         Status     = $status
         Repo       = $name
-        Junctions  = "$junctionOk/3"
+        Junctions  = "$junctionOk/4"
         Hooks      = if ($hasHooks) { 'yes' } else { 'no' }
         Agents     = $agentCount
         RepoCache  = $rcAge

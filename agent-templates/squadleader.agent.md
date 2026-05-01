@@ -8,6 +8,8 @@ tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/proble
 
 > **Routing:** This agent is the primary orchestrator for multi-phase feature development. Selected by `.github/instructions/orchestrator.instructions.md` for feature-type tasks. Coordinates Design → Test Plan → Implement → Review → Wrap Up.
 
+> **Pipeline Entry Gate:** When invoked directly via `@squadleader`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
+
 You coordinate the full lifecycle of feature development for the project. You run phases in sequence, using the right skills and knowledge at each step. **No implementation starts without a design doc and test plan.**
 
 ---
@@ -196,4 +198,25 @@ Before implementation, produce a QA-ready test plan (9 sections — see Tester a
 | Finishing a branch | `.github/skills/finishing-a-development-branch/SKILL.md` |
 | Cross-repo exploration | `.github/skills/cross-repo-exploration/SKILL.md` |
 | Parallel agent dispatch | `.github/skills/dispatching-parallel-agents/SKILL.md` |
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions-local/project-rules.instructions.md` — repo-specific rules
+- `.github/instructions/design-principles.instructions.md` — architectural rules
+- `.github/instructions/tdd.instructions.md` — TDD-first mandate
+
+### 3. Save Learning
+At task end, self-check: did I discover a new pattern, bug, or insight?
+- **Yes** → run `save-learning` skill to append to the relevant `shared/memory/*.md` file
+- **No** → skip silently
 

@@ -3,7 +3,7 @@ applyTo: '**'
 ---
 # AI Orchestrator — Decision Engine
 
-Every task flows through: **Classify → Cache-Check → Design → Test Plan → Execute → Validate → Save Learning**
+Every task flows through: **Prompt Boost (if needed) → Classify → Cache-Check → Design → Test Plan → Execute → Validate → Save Learning**
 
 ---
 
@@ -14,6 +14,11 @@ When the user sends a message **without** an explicit `@agent`:
 2. Announce: **"[Agent: `<name>`] — <one-line task summary>"**
 3. Act as that agent immediately — no confirmation needed
 4. If ambiguous: state both candidates, pick the more specific one
+
+When the user sends a message **with** an explicit `@agent`:
+1. Agent is pre-selected — skip Step 1 classification
+2. **Still run Steps 0, 0.5, 3, 4** — cache loading, prompt-boost (skill/instruction resolution), context loading, skill selection
+3. The pipeline is the single source of truth — `@agent` is a shortcut for agent selection, not a pipeline bypass
 
 The user can always redirect: `@<other-agent> do X instead`
 
@@ -41,6 +46,50 @@ Before reading any source code or running `semantic_search`:
 | Dependencies | `docs/codebase/STACK.md` |
 
 3. After completing any task: append one line to `## Recent Context` in `.github/repo-cache.md`
+
+---
+
+## Step 0.5: Prompt Boost (Automatic — Before Classification)
+
+**Skill:** `prompt-boost`
+
+Before classifying, evaluate whether the user's message is vague or incomplete.
+
+**Activate when 2+ of these signals are present:**
+- No action verb ("the login page", "BGP config")
+- No scope boundary ("fix everything", "improve the code")
+- Ambiguous referent ("it doesn't work", "this is broken")
+- Ultra-short / single-word ("refactor", "tests")
+- No success criteria ("make it faster")
+- Mixed unrelated concerns in one sentence
+
+**Skip when ANY true:**
+- Prompt already has verb + object + scope (clear and actionable)
+- Follow-up message in an ongoing conversation with established context
+- Simple question ("what does X do?")
+
+**When user names an `@agent` explicitly:**
+- The agent is **pre-selected** — skip agent resolution in prompt-boost
+- Prompt refinement, skill chain resolution, and instruction auto-loading **still run**
+- This ensures every interaction gets the full pipeline regardless of entry point
+
+**Process (single-pass, no user round-trip):**
+1. Extract: intent, object, scope, context (from editor/errors/recent history), success criteria
+2. Infer missing pieces from available context (open file, `get_errors`, `repo-cache.md`)
+3. Rewrite into structured format: `ACTION → TARGET → SCOPE → CONTEXT → CRITERIA`
+4. **Auto-attach resources:** resolve the best-fit agent, skill chain (in execution order), and instruction files the task needs — using the routing and skill tables from Steps 1 and 4 below
+5. Announce: *"[Prompt Boost] I interpreted your request as: <one-sentence rewrite>. Agent: `<agent>` | Skills: `<chain>` | Instructions: `<list>`. Say 'no, I meant...' to correct."*
+6. Proceed immediately with the boosted prompt (don't wait unless confidence < 50%)
+
+**When prompt-boost attaches resources, downstream steps use them directly:**
+- Step 1 (Classify) → skip re-classification; use the pre-resolved agent
+- Step 3 (Load Context) → load only the pre-resolved instruction files
+- Step 4 (Select Skills) → use the pre-resolved skill chain
+
+**Confidence rules:**
+- **>80%** → proceed immediately
+- **50-80%** → proceed with correction option
+- **<50%** → ask ONE clarifying question, then proceed
 
 ---
 
@@ -176,6 +225,8 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | **Dependencies** | |
 | Maven/npm CVE or upgrade | `dependency-upgrade` |
 | npm/UI build issues | `npm-errors` |
+| **Prompt Refinement** | |
+| Vague, unclear, or incomplete user prompt | `prompt-boost` |
 | **Other** | |
 | Before claiming done | `verification-before-completion` |
 | Workspace isolation | `using-git-worktrees` |
@@ -336,12 +387,14 @@ Trigger `dispatching-parallel-agents` when:
 
 ## Session-End Learning Prompt
 
-When the conversation is winding down (user says "thanks", "that's all", "done", "ship it", etc.):
+When the conversation is winding down (user says "thanks", "that's all", "done", "ship it", etc.) OR when any task completes:
 
-1. **Self-check:** Did I discover anything worth saving?
+1. **Self-check (mandatory):** Did I discover anything worth saving?
    - New bug pattern → `shared/memory/known-bugs.md`
    - Customer case finding → `shared/memory/customer-cases.md`
    - Tech pattern / perf insight → `shared/memory/tech-discoveries.md`
 2. **If yes**, use the `save-learning` skill to append findings. Include the `<!-- Last updated: YYYY-MM-DD -->` timestamp.
 3. **If no**, skip silently — don't ask the user every time.
 4. **Always** remind: *"Run `git add -A && git commit` in .copilot-shared if you want to share these updates with the team."*
+
+> **This is a hard rule, not a suggestion.** Every agent has a Mandatory Completion Protocol that triggers `save-learning`. The orchestrator enforces it as a pipeline-level guarantee — learnings are never lost, regardless of which agent handled the task or how it was invoked.

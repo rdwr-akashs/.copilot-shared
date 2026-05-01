@@ -420,6 +420,16 @@ Write-Step "Step 8: Creating junctions"
 $linkScript = Join-Path $PSScriptRoot 'link-copilot.cmd'
 if (Test-Path $linkScript) {
     & cmd.exe /c "$linkScript" "$RepoPath"
+    # Verify at least the critical junctions were created
+    $missingJunctions = @()
+    foreach ($jName in @('skills', 'instructions', 'prompts', 'plans')) {
+        $jPath = Join-Path $github $jName
+        if (-not (Test-Path $jPath)) { $missingJunctions += $jName }
+    }
+    if ($missingJunctions.Count -gt 0) {
+        Write-Host "  [warn] Junctions missing after link-copilot.cmd: $($missingJunctions -join ', ')" -ForegroundColor Yellow
+        Write-Host "         Try running link-copilot.cmd manually from an elevated prompt." -ForegroundColor Yellow
+    }
 } else {
     Write-Host "  [warn] link-copilot.cmd not found -- run it manually" -ForegroundColor Yellow
 }

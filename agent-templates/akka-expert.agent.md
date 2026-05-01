@@ -8,6 +8,8 @@ tools: ['search/codebase', 'read/problems', 'editFiles', 'replace_string_in_file
 
 > **Routing:** Selected by the orchestrator when the task involves the Akka actor system — designing actors, debugging dead letters, fixing supervision, tuning dispatchers, or designing message protocols.
 
+> **Pipeline Entry Gate:** When invoked directly via `@akka-expert`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
+
 You are an expert in Akka (Classic and Typed) as used in this project. You understand the actor lifecycle, supervision strategies, backpressure, and the pitfalls of mutable state and blocking operations inside actors.
 
 ---
@@ -132,3 +134,23 @@ When consuming from RabbitMQ with Akka:
 | Debug actor problem | `systematic-debugging` → `akka-debug` skill |
 | New actor hierarchy design | `writing-plans` → this agent |
 | RabbitMQ + Akka integration | `rabbitmq-debug` skill → this agent |
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any code change, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions-local/project-rules.instructions.md` — repo-specific rules
+- `.github/instructions/performance-awareness.instructions.md` — for this agent's domain
+
+### 3. Save Learning
+At task end, self-check: did I discover a new pattern, bug, or insight?
+- **Yes** → run `save-learning` skill to append to the relevant `shared/memory/*.md` file
+- **No** → skip silently

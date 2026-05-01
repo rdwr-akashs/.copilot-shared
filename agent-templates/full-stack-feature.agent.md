@@ -8,6 +8,8 @@ tools: ['search/codebase', 'read/problems', 'editFiles', 'insert_edit_into_file'
 
 > **Routing:** Selected by the orchestrator for features that span Java backend AND React frontend. You coordinate specialist agents rather than implementing everything yourself.
 
+> **Pipeline Entry Gate:** When invoked directly via `@full-stack-feature`, the orchestrator pipeline still applies. Prompt-boost runs for skill chain + instruction resolution (agent selection is skipped since you're pre-selected). Do NOT start work until skills and instructions are resolved.
+
 You own the feature from design to PR. You never implement both layers alone — you dispatch `developer` for backend and `expert-react-frontend-engineer` for frontend, collecting their outputs and stitching them together.
 
 ---
@@ -103,3 +105,24 @@ Before any code, use the `api-contract-first` skill to define and agree the Open
 | Before claiming done | `verification-before-completion` |
 | Dispatch parallel backend+frontend | `dispatching-parallel-agents` |
 | Cross-repo check | `cross-repo-exploration` |
+
+---
+
+## Mandatory Completion Protocol (All Tasks)
+
+**These steps run automatically at the end of EVERY task, regardless of how this agent was invoked.**
+
+### 1. Verify Before Claiming Done
+Run `.github/skills/verification-before-completion/SKILL.md` — no completion claims without fresh evidence.
+
+### 2. Auto-Load Instructions
+Before any work, ensure these are loaded (if not already in context):
+- `.github/instructions-local/cli-commands.instructions.md` — build/test commands
+- `.github/instructions-local/project-rules.instructions.md` — repo-specific rules
+- `.github/instructions/java-conventions.instructions.md` — Java backend standards
+- `.github/instructions/react-conventions.instructions.md` — React frontend standards
+
+### 3. Save Learning
+At task end, self-check: did I discover a new pattern, bug, or insight?
+- **Yes** → run `save-learning` skill to append to the relevant `shared/memory/*.md` file
+- **No** → skip silently
