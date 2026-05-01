@@ -4,7 +4,7 @@ REM link-copilot.cmd  --  Junction a single repo's .github/{skills,instructions,
 REM                       prompts} folders to the central .copilot-shared store.
 REM
 REM Usage:  link-copilot.cmd <full-path-to-repo>
-REM         link-copilot.cmd C:\rdwr-intelij\my_repo
+REM         link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\my_repo
 REM
 REM Behaviour:
 REM   - Creates .github\ if missing.
@@ -51,6 +51,7 @@ call :LinkOne prompts
 call :LinkOne plans
 
 call :EnsureGitignore
+call :EnsureLocalExclude
 
 echo.
 echo === %REPO% ===
@@ -122,4 +123,22 @@ if not errorlevel 1 (
   echo .github/plans
   echo # ^<^<^< copilot-shared junctions
 ) >> "%GI%"
+exit /b 0
+
+REM ----------------------------------------------------------------------------
+:EnsureLocalExclude
+REM .git/info/exclude is machine-local and never committed -- use it for
+REM codebase knowledge files that must NOT go to GitHub.
+set "EX=%REPO%\.git\info\exclude"
+if not exist "%REPO%\.git" exit /b 0
+if not exist "%REPO%\.git\info" mkdir "%REPO%\.git\info"
+if not exist "%EX%" type nul > "%EX%"
+findstr /c:"copilot-generated knowledge" "%EX%" >nul 2>&1
+if not errorlevel 1 exit /b 0
+(
+  echo.
+  echo # copilot-generated knowledge -- local only, never committed
+  echo .github/repo-cache.md
+  echo docs/codebase/
+) >> "%EX%"
 exit /b 0

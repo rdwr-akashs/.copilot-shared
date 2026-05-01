@@ -14,6 +14,26 @@ description: Use when starting investigation of a customer field escalation — 
 
 > **Override Directive:** This skill overrides default behavior when its conditions are met. NO LOG ANALYSIS BEFORE THE INVESTIGATION MD IS SCAFFOLDED.
 
+## Step 0 — Check Memory for Known Patterns
+
+Before scaffolding the investigation, grep the shared memory for patterns matching the symptom. A known-pattern match can cut investigation time from hours to minutes.
+
+```bash
+# Grep customer-cases memory for matching symptom keywords
+grep -i "<symptom-keyword-1>\|<symptom-keyword-2>" shared/memory/customer-cases.md
+
+# Grep known-bugs for log evidence patterns
+grep -i "<symptom-keyword>" shared/memory/known-bugs.md
+```
+
+**If a match is found:**
+1. Note the matching pattern ID (e.g., `CP-003`) in the investigation MD under `## Known Pattern Match`
+2. Go directly to the `## Immediate Fix` for that pattern
+3. Still collect evidence to confirm — but start from the known root cause, not from zero
+4. Use `save-learning` at the end to add the new case ID to the existing pattern row
+
+**If no match:** continue with the full intake procedure below.
+
 ## Overview
 
 Every case begins by creating a **living investigation MD** as the persistent context, expanding **all** archives in the support bundle (idempotent), and indexing the file tree. Without this, every subsequent interaction loses state.
@@ -52,97 +72,35 @@ If any of `case-id` or `bundle path` is missing, **stop and ask the user**.
 If the user supplied a path → use it.
 Otherwise glob for: `dfc_support_*`, `support_bundle_*`, `*-support-*`, `tac-bundle-*`, `support-*`, `*.tar.gz`, `*.zip` under the path the user mentioned.
 
-### Step 3 — Auto-unzip everything (eager, idempotent)
+### Step 3 — Extract the bundle (smart mode by default)
 
-Run a recursive expansion loop until no archives remain. Use the appropriate command for the OS.
-
-**Windows PowerShell:**
+Use `extract-support-bundle.ps1` from `.copilot-shared/bin/`. It reads the zip index first and decompresses **only the ~20 RCA-critical files**, pulling 10-50 MB from a 4-5 GB bundle instead of extracting everything.
 
 ```powershell
-# Run from inside the bundle root.
-$bundle = '<ABS-PATH>'
-$logFile = '<.agent_work-path>\_extraction.log'
-
-# Loop until no archives remain
-do {
-  $found = $false
-
-  Get-ChildItem -Path $bundle -Recurse -File -Include *.zip | ForEach-Object {
-    $dest = Join-Path $_.DirectoryName ($_.BaseName + '_extracted')
-    if (-not (Test-Path $dest)) {
-      Expand-Archive -LiteralPath $_.FullName -DestinationPath $dest -Force
-      Add-Content $logFile "expanded: $($_.FullName) -> $dest"
-      $found = $true
-    } else {
-      Add-Content $logFile "skipped (already expanded): $($_.FullName)"
-    }
-  }
-
-  Get-ChildItem -Path $bundle -Recurse -File -Include *.tar.gz, *.tgz | ForEach-Object {
-    $dest = Join-Path $_.DirectoryName ($_.BaseName + '_extracted')
-    if (-not (Test-Path $dest)) {
-      New-Item -ItemType Directory -Path $dest | Out-Null
-      tar -xzf $_.FullName -C $dest
-      Add-Content $logFile "expanded: $($_.FullName) -> $dest"
-      $found = $true
-    }
-  }
-
-  # Single-file .gz (e.g. container.health.log.1.gz) — decompress in place
-  Get-ChildItem -Path $bundle -Recurse -File -Include *.gz |
-    Where-Object { $_.Name -notmatch '\.tar\.gz$|\.tgz$' } | ForEach-Object {
-      $out = $_.FullName -replace '\.gz$', ''
-      if (-not (Test-Path $out)) {
-        & 'C:\Windows\System32\tar.exe' -xzf $_.FullName -C $_.DirectoryName 2>$null
-        if (-not (Test-Path $out)) {
-          # Fallback: use .NET GzipStream
-          $in  = [System.IO.File]::OpenRead($_.FullName)
-          $gz  = New-Object System.IO.Compression.GzipStream($in, [System.IO.Compression.CompressionMode]::Decompress)
-          $outStream = [System.IO.File]::Create($out)
-          $gz.CopyTo($outStream)
-          $outStream.Close(); $gz.Close(); $in.Close()
-        }
-        Add-Content $logFile "expanded: $($_.FullName) -> $out"
-        $found = $true
-      }
-    }
-} while ($found)
+# Smart extract — RCA-critical files only (fast, low disk usage)
+& "$env:COPILOT_SHARED\bin\extract-support-bundle.ps1" `
+    -Bundle '<ABS-PATH-TO-BUNDLE>' `
+    -OutDir '.agent_work\<case-id>\bundle'
 ```
 
-**Linux / WSL / Git-Bash:**
+If smart mode misses a file you need (unusual bundle layout), switch to full mode:
 
-```bash
-bundle="<ABS-PATH>"
-log="<.agent_work-path>/_extraction.log"
-
-while true; do
-  changed=0
-  while IFS= read -r -d '' z; do
-    dest="${z%.zip}_extracted"
-    if [[ ! -d "$dest" ]]; then
-      mkdir -p "$dest" && unzip -q "$z" -d "$dest"
-      echo "expanded: $z -> $dest" >> "$log"; changed=1
-    fi
-  done < <(find "$bundle" -type f -name '*.zip' -print0)
-
-  while IFS= read -r -d '' t; do
-    dest="${t%.tar.gz}_extracted"; dest="${dest%.tgz}_extracted"
-    if [[ ! -d "$dest" ]]; then
-      mkdir -p "$dest" && tar -xzf "$t" -C "$dest"
-      echo "expanded: $t -> $dest" >> "$log"; changed=1
-    fi
-  done < <(find "$bundle" -type f \( -name '*.tar.gz' -o -name '*.tgz' \) -print0)
-
-  while IFS= read -r -d '' g; do
-    out="${g%.gz}"
-    if [[ ! -f "$out" ]]; then
-      gunzip -k "$g" && echo "expanded: $g -> $out" >> "$log"; changed=1
-    fi
-  done < <(find "$bundle" -type f -name '*.gz' ! -name '*.tar.gz' -print0)
-
-  [[ $changed -eq 0 ]] && break
-done
+```powershell
+# Full extract — everything, nested zips up to 3 levels (slow, ~full bundle size)
+& "$env:COPILOT_SHARED\bin\extract-support-bundle.ps1" `
+    -Bundle '<ABS-PATH-TO-BUNDLE>' `
+    -OutDir '.agent_work\<case-id>\bundle' `
+    -Full
 ```
+
+The script:
+- Handles `.zip`, `.tar.gz`, `.tgz`, single-file `.gz` logs
+- Recurses into nested zips up to `-MaxDepth` levels (default 3)
+- Is idempotent — safe to re-run if the case was already partially extracted
+- Prints a file count + MB summary on exit
+
+> **COPILOT_SHARED env var** defaults to the path of the `.copilot-shared` folder.  
+> If not set, resolve it from the junction: `.github/skills` → parent of `skills` → parent of `.github`.
 
 ### Step 4 — Scaffold the investigation MD
 

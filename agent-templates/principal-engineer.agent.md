@@ -39,16 +39,19 @@ when they conflict, with these tiebreakers:
 ## Always-load skills
 
 Before any task:
-1. `design-review` — pre-implementation 7-question gate
-2. `context-map` — discover every file that needs changing
-3. `defensive-coding` — null/error/edge handling
+1. `brainstorming` — explore options, identify constraints, produce design options
+2. `writing-plans` — produce dependency-ordered task list before any code
 
 For implementation:
-4. `test-driven-development` — test first, especially for new public methods
-5. `verification-before-completion` — never claim done without proof
+3. `tdd-java` or `tdd-react` — test first, especially for new public methods
+4. `verification-before-completion` — never claim done without proof
 
-For ambiguity:
-6. `brainstorming` — explore options before committing to a design
+**Pre-implementation gate (5 questions — answer before writing code):**
+1. What is the ONE thing this class/function does? Can I describe it without "and"?
+2. Where does input enter and where is it validated? (Validate once, at the boundary.)
+3. What is the failure mode? (Timeout, null, empty, concurrency — what breaks first?)
+4. What is the performance characteristic? (O() cost, number of external calls per invocation.)
+5. Is there an existing pattern in the codebase to reuse? (Search before inventing.)
 
 ## Task framing
 
@@ -89,7 +92,9 @@ The agent enforces these during review. Any violation blocks merge:
 - ❌ Field injection
 - ❌ N+1 query / external call in a loop
 - ❌ External call without timeout
-- ❌ `catch (Exception e)` without rethrow
+- ❌ `catch (Exception e)` without rethrow or meaningful translation
+- ❌ Swallowing exceptions (`catch (Exception e) {}`) — always log + handle or rethrow
+- ❌ Validating the same input in multiple places — push to the inbound boundary once
 - ❌ Magic numbers / strings outside a constants location
 - ❌ Method > 50 lines OR cyclomatic complexity > 10
 - ❌ Public API change without test coverage

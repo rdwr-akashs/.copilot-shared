@@ -93,7 +93,9 @@ if defined PHFOUND (
 )
 
 REM ---- 6. Old-template-term leakage ----
-findstr /i /r /c:"PolicyTemplate" /c:"policy-bom" /c:"common_policy_editor" /c:"DefenseFlow" /c:"DefensePro" /c:"dpInline" "%REPO%\.github\agents\*.agent.md" >nul 2>&1
+REM Looks for product-specific template placeholder terms that the customize-agents
+REM skill should have replaced. Add your org's terms here after running setup.
+findstr /i /r /c:"PolicyTemplate" /c:"policy-bom" /c:"<product-suite>" /c:"<orchestrator-repo>" /c:"<sibling-repo>" /c:"<core-lib-repo>" "%REPO%\.github\agents\*.agent.md" >nul 2>&1
 if not errorlevel 1 (
     echo [WARN] Old template terms still in agents - re-run customize-agents skill
     set /a WARNS+=1

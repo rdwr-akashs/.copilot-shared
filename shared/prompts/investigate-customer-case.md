@@ -60,13 +60,13 @@ If the active workspace's repo has `.github/instructions-local/triage-rules.inst
 
 ## Example invocations
 
-### DefenseFlow HA pair
+### Example: Product HA pair
 
 ```
 Investigate customer case SC-17669.
 
-Bundle path:  C:\Users\AkashS\OneDrive - Radware LTD\customer cases\SC-17669\dfc_support_2026-04-01_01-36-55
-Product:      DefenseFlow
+Bundle path:  <path-to-your-support-bundle>\SC-17669\dfc_support_2026-04-01_01-36-55
+Product:      <your-product>
 Versions:     auto-detect from bundle
 Topology:     HA pair (active + standby)
 Customer:     internal

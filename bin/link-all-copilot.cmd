@@ -1,17 +1,26 @@
 @echo off
 REM ============================================================================
-REM link-all-copilot.cmd  --  Walk all sibling repos under C:\rdwr-intelij\
+REM link-all-copilot.cmd  --  Walk all sibling repos under the workspace root
 REM                          and run link-copilot.cmd for each one that has
 REM                          (or wants) a .github folder.
 REM
-REM Usage:  link-all-copilot.cmd            (default root: C:\rdwr-intelij)
-REM         link-all-copilot.cmd D:\code    (custom root)
+REM Usage:  link-all-copilot.cmd                   (auto-detect root)
+REM         link-all-copilot.cmd D:\code           (custom root)
+REM         set COPILOT_WORKSPACE_ROOT=D:\code     (env var)
 REM ============================================================================
 
 setlocal EnableDelayedExpansion
 
 set "ROOT=%~1"
-if "%ROOT%"=="" set "ROOT=C:\rdwr-intelij"
+if "%ROOT%"=="" (
+    if defined COPILOT_WORKSPACE_ROOT (
+        set "ROOT=%COPILOT_WORKSPACE_ROOT%"
+    ) else (
+        REM Auto-detect: parent of .copilot-shared (i.e. parent of bin's parent)
+        set "ROOT=%~dp0..\..\"
+        for %%I in ("!ROOT!") do set "ROOT=%%~fI"
+    )
+)
 
 if not exist "%ROOT%" (
     echo ERROR: root not found: %ROOT%

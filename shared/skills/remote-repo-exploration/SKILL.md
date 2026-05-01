@@ -16,11 +16,11 @@ description: Use when you need to search, read, or understand code across ALL Bi
 - User asks "which repos use X?" or "find all usages of Y across all services"
 - Cross-repo exploration skill failed because the repo isn't cloned locally
 
-> **Override Directive:** This skill overrides `cross-repo-exploration` when the target repo is NOT available locally under `C:\rdwr-intelij\`. Use `cross-repo-exploration` for locally available repos (faster). Use THIS skill for remote-only repos or broad multi-repo searches.
+> **Override Directive:** This skill overrides `cross-repo-exploration` when the target repo is NOT available locally under `%COPILOT_WORKSPACE_ROOT%\`. Use `cross-repo-exploration` for locally available repos (faster). Use THIS skill for remote-only repos or broad multi-repo searches.
 
 ## Overview
 
-The <product-suite> ecosystem has 90+ repos in Bitbucket (`rdwr` workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
+The <product-suite> ecosystem has 90+ repos in Bitbucket (<your-bb-workspace> workspace). Most are NOT cloned locally. This skill provides fast remote exploration using three tools:
 
 1. **Bitbucket MCP API** (`mcp_bitbucket-mcp_get_file_content`) — read any file from any repo without cloning
 2. **Shallow git clones** — `git clone --depth 1` to a temp dir for `grep` across a repo's code
@@ -31,7 +31,7 @@ The <product-suite> ecosystem has 90+ repos in Bitbucket (`rdwr` workspace). Mos
 ## When to Use
 
 **Use when:**
-- Target repo is NOT locally available under `C:\rdwr-intelij\`
+- Target repo is NOT locally available under `%COPILOT_WORKSPACE_ROOT%\`
 - Searching across 3+ repos for a pattern, class, endpoint, or dependency
 - Need to find "who uses X" across the entire ecosystem
 - Investigating a cross-service integration with remote-only repos
@@ -78,13 +78,13 @@ mkdir -p "$TEMP_DIR"
 
 # Shallow clone ONE repo (fast — only latest commit, no history)
 git clone --depth 1 --single-branch \
-  "https://bitbucket.org/rdwr/<REPO>.git" \
+  "https://bitbucket.org/<bb-workspace>/<REPO>.git" \
   "$TEMP_DIR/<REPO>" 2>/dev/null
 
 # Shallow clone MULTIPLE repos in parallel (up to 4 at a time)
 for repo in repo1 repo2 repo3 repo4; do
   git clone --depth 1 --single-branch \
-    "https://bitbucket.org/rdwr/$repo.git" \
+    "https://bitbucket.org/<bb-workspace>/$repo.git" \
     "$TEMP_DIR/$repo" 2>/dev/null &
 done
 wait  # Wait for all background clones to finish
@@ -116,7 +116,7 @@ Once you know which file to read, use the MCP tool (no clone needed):
 
 ```
 mcp_bitbucket-mcp_get_file_content:
-  workspace: rdwr
+  workspace: <bb-workspace>
   repo_slug: <repo_name>
   file_path: src/main/java/com/radware/.../MyClass.java
   ref: HEAD  (or a specific branch)
@@ -151,22 +151,22 @@ Each subagent gets a focused batch of repos and a specific question:
 Search these repos for [PATTERN/QUESTION]:
 
 Repos (clone all to temp dir):
-- rdwr/repo_a
-- rdwr/repo_b
-- rdwr/repo_c
-- rdwr/repo_d
-- rdwr/repo_e
+- <bb-workspace>/repo_a
+- <bb-workspace>/repo_b
+- <bb-workspace>/repo_c
+- <bb-workspace>/repo_d
+- <bb-workspace>/repo_e
 
 Steps:
 1. Create temp dir: TEMP_DIR="/tmp/scan-batch-N-$(date +%s)" && mkdir -p "$TEMP_DIR"
 2. Shallow clone all repos in parallel:
    for repo in repo_a repo_b repo_c repo_d repo_e; do
-     git clone --depth 1 "https://bitbucket.org/rdwr/$repo.git" "$TEMP_DIR/$repo" 2>/dev/null &
+     git clone --depth 1 "https://bitbucket.org/<bb-workspace>/$repo.git" "$TEMP_DIR/$repo" 2>/dev/null &
    done
    wait
 3. Grep across all: grep -rn "[PATTERN]" "$TEMP_DIR"/*/src --include="*.java" | head -40
 4. For each match, read the relevant file with Bitbucket MCP:
-   mcp_bitbucket-mcp_get_file_content(workspace=rdwr, repo_slug=<repo>, file_path=<path>)
+   mcp_bitbucket-mcp_get_file_content(workspace=<bb-workspace>, repo_slug=<repo>, file_path=<path>)
 5. Clean up: rm -rf "$TEMP_DIR"
 
 Return: A table of findings:
@@ -200,7 +200,7 @@ After all subagents return:
 
 | Task | Tool | Key Params |
 |---|---|---|
-| List all repos | `mcp_bitbucket-mcp_list_repositories` | `workspace: rdwr` |
+| List all repos | `mcp_bitbucket-mcp_list_repositories` | `workspace: <bb-workspace>` |
 | Read a file remotely | `mcp_bitbucket-mcp_get_file_content` | `repo_slug`, `file_path`, `ref` |
 | Get repo info | `mcp_bitbucket-mcp_get_repository` | `repo_slug` |
 | List recent commits | `mcp_bitbucket-mcp_list_commits` | `repo_slug`, `branch`, `limit` |
@@ -215,7 +215,7 @@ After all subagents return:
 
 ```
 1. Filter: service repos (<sibling-repo>, <orchestrator-repo>, 
-   kvision_configuration_service, kvision_vrm, etc.)
+   <config-service-repo>, <reporter-repo>, etc.)
 2. Shallow clone 5-8 repos
 3. grep -rn "<api-keyword>\|<api-path>\|<rest-base>" */src --include="*.java" -l
 4. Read matching files via Bitbucket MCP
@@ -251,7 +251,7 @@ After all subagents return:
 
 ```
 Need to explore repos?
-├── Is repo cloned locally under C:\rdwr-intelij\? 
+├── Is repo cloned locally under %COPILOT_WORKSPACE_ROOT%\? 
 │   ├── YES → Use `cross-repo-exploration` skill (faster, no network)
 │   └── NO → Continue below
 ├── Do you know the exact file path?

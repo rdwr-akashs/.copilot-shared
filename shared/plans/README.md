@@ -8,7 +8,7 @@ When a feature spans `repo-A` and `repo-B`, the plan needs to be visible from
 both. JetBrains Copilot Chat in either repo can read absolute paths, so:
 
 ```
-Continue executing the plan at C:\rdwr-intelij\.copilot-shared\plans\<filename>.md
+Continue executing the plan at %COPILOT_WORKSPACE_ROOT%\.copilot-shared\plans\<filename>.md
 ```
 
 works from any window.

@@ -11,11 +11,11 @@ Developer-specific overrides. NOT committed to git. Each developer creates their
 
 ## Workspace Path
 
-My workspace root: `C:\rdwr-intelij\`
+My workspace root: `%COPILOT_WORKSPACE_ROOT%\`
 
 ## Cross-Repo Path
 
-Sibling repositories are at: `C:\rdwr-intelij\<REPO>`
+Sibling repositories are at: `%COPILOT_WORKSPACE_ROOT%\<REPO>`
 
 ## Personal preferences
 

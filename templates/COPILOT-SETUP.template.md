@@ -1,7 +1,7 @@
 # GitHub Copilot Setup — Team Onboarding
 
 This repository uses a **shared Copilot configuration** that lives outside the
-repo at `C:\rdwr-intelij\.copilot-shared\`. Skills, instructions, prompts, and
+repo at `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\`. Skills, instructions, prompts, and
 plans are junctioned in from there. Agents are copied per-repo and customised.
 
 If you're joining the team, **read this file end-to-end before you start**.
@@ -11,10 +11,10 @@ If you're joining the team, **read this file end-to-end before you start**.
 ## TL;DR
 
 ```cmd
-git clone <this-repo-url> C:\rdwr-intelij\<repo-name>
+git clone <this-repo-url> %COPILOT_WORKSPACE_ROOT%\<repo-name>
 :: Get .copilot-shared from a teammate (zip / file share / USB) and place at:
-::   C:\rdwr-intelij\.copilot-shared\
-C:\rdwr-intelij\.copilot-shared\bin\link-copilot.cmd C:\rdwr-intelij\<repo-name>
+::   %COPILOT_WORKSPACE_ROOT%\.copilot-shared\
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo-name>
 :: Restart JetBrains. Done.
 ```
 
@@ -23,7 +23,7 @@ C:\rdwr-intelij\.copilot-shared\bin\link-copilot.cmd C:\rdwr-intelij\<repo-name>
 ## What's where
 
 ```
-C:\rdwr-intelij\.copilot-shared\          ← Shared store (one per machine)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\          ← Shared store (one per machine)
 ├── shared\
 │   ├── skills\          ← Junctioned to every repo
 │   ├── instructions\    ← Junctioned to every repo
@@ -56,7 +56,7 @@ C:\rdwr-intelij\.copilot-shared\          ← Shared store (one per machine)
 | JetBrains IDE (IntelliJ / IDEA) | Any recent version |
 | GitHub Copilot plugin | Install from JetBrains Marketplace |
 | GitHub Copilot subscription | Individual or business plan |
-| Workspace at `C:\rdwr-intelij\` | OR adjust path references in `.copilot-shared\bin\*.cmd` |
+| Workspace at `%COPILOT_WORKSPACE_ROOT%\` | OR adjust path references in `.copilot-shared\bin\*.cmd` |
 | Git Bash (recommended) | For terminal operations on Windows |
 
 > **macOS / Linux teammates:** the central store and scripts are Windows-batch.
@@ -72,43 +72,43 @@ The `.copilot-shared\` folder is local-only. Get a copy from a teammate:
 
 ```bash
 # A teammate zips and shares it
-cd /c/rdwr-intelij
+cd $COPILOT_WORKSPACE_ROOT
 tar czf copilot-shared.tgz .copilot-shared/
 
 # You unpack it on your machine
-cd /c/rdwr-intelij
+cd $COPILOT_WORKSPACE_ROOT
 tar xzf copilot-shared.tgz
 ```
 
 Verify:
 ```cmd
-dir C:\rdwr-intelij\.copilot-shared\bin
+dir %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin
 ```
 Expect: `setup-repo.cmd`, `link-copilot.cmd`, `link-all-copilot.cmd`,
 `unlink-copilot.cmd`, `copy-agents.cmd`.
 
-### Step 2 — Clone repos under `C:\rdwr-intelij\`
+### Step 2 — Clone repos under `%COPILOT_WORKSPACE_ROOT%\`
 
 ```cmd
-cd C:\rdwr-intelij
+cd %COPILOT_WORKSPACE_ROOT%
 git clone <repo-url> <repo-name>
 ```
 
 ### Step 3 — Link every repo at once
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\link-all-copilot.cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
 ```
 
-This walks `C:\rdwr-intelij\*`, finds every repo with
+This walks `%COPILOT_WORKSPACE_ROOT%\*`, finds every repo with
 `.github\copilot-instructions.md`, and creates the four junctions. Repos
 without that file are skipped (they need `setup-repo.cmd` first).
 
 ### Step 4 — Create your personal instructions (one-time per machine)
 
 ```cmd
-copy C:\rdwr-intelij\.copilot-shared\templates\personal-instructions.template.md ^
-     C:\rdwr-intelij\<repo-name>\.github\personal-instructions.md
+copy %COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\personal-instructions.template.md ^
+     %COPILOT_WORKSPACE_ROOT%\<repo-name>\.github\personal-instructions.md
 ```
 
 This file is gitignored — captures your shell preference, paths, etc.
@@ -135,7 +135,7 @@ You should see agents from `.github/agents/`, skills from
 For a repo that has no `.github/` yet:
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\setup-repo.cmd C:\rdwr-intelij\<new-repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-repo.cmd %COPILOT_WORKSPACE_ROOT%\<new-repo>
 ```
 
 This creates `.github/`, seeds `copilot-instructions.md`, creates
@@ -163,21 +163,21 @@ If your repo already has `.github\workflows\`, `CODEOWNERS`, etc. but no
 Copilot config:
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\link-copilot.cmd C:\rdwr-intelij\<repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 Then manually seed the per-repo files:
 ```cmd
-copy C:\rdwr-intelij\.copilot-shared\templates\copilot-instructions.template.md  ^
+copy %COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\copilot-instructions.template.md  ^
      <repo>\.github\copilot-instructions.md
-copy C:\rdwr-intelij\.copilot-shared\templates\COPILOT-SETUP.template.md ^
+copy %COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\COPILOT-SETUP.template.md ^
      <repo>\.github\COPILOT-SETUP.md
-copy C:\rdwr-intelij\.copilot-shared\templates\customize-agents.prompt.md ^
+copy %COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\customize-agents.prompt.md ^
      <repo>\.github\customize-agents.prompt.md
 mkdir <repo>\.github\instructions-local
-copy C:\rdwr-intelij\.copilot-shared\templates\project-rules.template.instructions.md ^
+copy %COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\project-rules.template.instructions.md ^
      <repo>\.github\instructions-local\project-rules.instructions.md
-xcopy /E /I C:\rdwr-intelij\.copilot-shared\agent-templates ^
+xcopy /E /I %COPILOT_WORKSPACE_ROOT%\.copilot-shared\agent-templates ^
             <repo>\.github\agents
 ```
 
@@ -204,7 +204,7 @@ Edits to shared files propagate to every linked repo immediately. After
 significant edits, version them:
 
 ```cmd
-cd C:\rdwr-intelij\.copilot-shared
+cd %COPILOT_WORKSPACE_ROOT%\.copilot-shared
 git add -A && git commit -m "<change>"
 ```
 
@@ -216,15 +216,15 @@ There's no remote git, so changes to `.copilot-shared\` must be shared manually:
 
 ```bash
 # Source machine
-cd /c/rdwr-intelij/.copilot-shared
+cd $COPILOT_WORKSPACE_ROOT/.copilot-shared
 git log --oneline -5
 tar czf copilot-shared-update.tgz --exclude='.git' .
 
 # Teammate's machine
-cd /c/rdwr-intelij
+cd $COPILOT_WORKSPACE_ROOT
 mv .copilot-shared .copilot-shared.bak
 tar xzf copilot-shared-update.tgz -C .copilot-shared/
-C:\rdwr-intelij\.copilot-shared\bin\link-all-copilot.cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
 ```
 
 > **Recommendation:** for >2–3 people, set up a private GitHub repo for
@@ -275,7 +275,7 @@ If a shared rule conflicts with a per-repo rule, **the per-repo rule wins**.
 
 **Q: Copilot says skills/agents are missing after I clone.**
 A: Junctions aren't checked into git. Run
-   `C:\rdwr-intelij\.copilot-shared\bin\link-copilot.cmd <repo>` after every fresh clone.
+   `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd <repo>` after every fresh clone.
 
 **Q: A pull recreated `.github/skills/` as a real empty folder.**
 A: Run `link-copilot.cmd <repo>` — it detects the empty folder and replaces it.
@@ -286,13 +286,13 @@ A: `unlink-copilot.cmd <repo>`, copy the shared skills into `.github/skills/`
    detects the real folder and won't junction it.
 
 **Q: How do I see what changed in `.copilot-shared\`?**
-A: `cd C:\rdwr-intelij\.copilot-shared && git log --oneline`.
+A: `cd %COPILOT_WORKSPACE_ROOT%\.copilot-shared && git log --oneline`.
 
 **Q: I'm on a Mac.**
 A: Replace junctions with symlinks:
    ```bash
    for d in skills instructions prompts plans; do
-     ln -s ~/rdwr-intelij/.copilot-shared/shared/$d ~/rdwr-intelij/<repo>/.github/$d
+     ln -s $COPILOT_WORKSPACE_ROOT/.copilot-shared/shared/$d $COPILOT_WORKSPACE_ROOT/<repo>/.github/$d
    done
    ```
 
@@ -304,7 +304,7 @@ A: The agent template wasn't customised for this repo. In Copilot Chat say:
 
 ## File reference
 
-- Central documentation: `C:\rdwr-intelij\.copilot-shared\README.md`
+- Central documentation: `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\README.md`
 - Customise-agents prompt: `.github/customize-agents.prompt.md` (per-repo copy)
-- Personal-instructions template: `C:\rdwr-intelij\.copilot-shared\templates\personal-instructions.template.md`
+- Personal-instructions template: `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\templates\personal-instructions.template.md`
 - Cross-repo plan README: `.github/plans/README.md` (junctioned)

@@ -1,4 +1,13 @@
 
 # >>> copilot-shared junctions (managed by .copilot-shared/bin/link-copilot.cmd)
-.github/
+.github/skills
+.github/instructions
+.github/prompts
+.github/plans
 # <<< copilot-shared junctions
+
+# The entries below belong in .git/info/exclude (machine-local, never committed).
+# link-copilot.cmd writes them there automatically.
+# If you need to add them manually:
+#   .github/repo-cache.md
+#   docs/codebase/

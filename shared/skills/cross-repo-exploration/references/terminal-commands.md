@@ -6,33 +6,33 @@ Since `run_in_terminal` is the only tool that works for sibling repos, use these
 
 ```bash
 # List repo root
-ls "C:\rdwr-intelij\<REPO>"
+ls "%COPILOT_WORKSPACE_ROOT%\<REPO>"
 
 # List Java package tree (directories only)
-find "C:\rdwr-intelij\<REPO>\src\main\java" -type d
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d
 
 # List files in a specific package dir
-ls "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\service\policy"
+ls "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\service\policy"
 
 # Limit output for large trees
-find "C:\rdwr-intelij\<REPO>\src\main\java" -type d | head -30
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d | head -30
 ```
 
 ## Read a Single File
 
 ```bash
 # Read entire file
-cat "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
 
 # Read with line numbers
-cat -n "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
+cat -n "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
 
 # Read a specific line range (lines 50–100)
-sed -n '50,100p' "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
+sed -n '50,100p' "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
 
 # Read only first / last N lines
-head -80 "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
-tail -50 "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
+head -80 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
+tail -50 "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\MyClass.java"
 ```
 
 ## Read Multiple Files in Parallel (Batched)
@@ -41,19 +41,19 @@ tail -50 "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\MyClass.java"
 
 ```bash
 # Read 2–3 related files in one call
-cat "C:\rdwr-intelij\<REPO>\src\...\ServiceA.java" && \
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ServiceA.java" && \
 echo "===== ServiceB.java =====" && \
-cat "C:\rdwr-intelij\<REPO>\src\...\ServiceB.java" && \
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ServiceB.java" && \
 echo "===== ServiceC.java =====" && \
-cat "C:\rdwr-intelij\<REPO>\src\...\ServiceC.java"
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ServiceC.java"
 
 # Read all files in a directory at once
-for f in "C:\rdwr-intelij\<REPO>\src\...\dto"/*.java; do
+for f in "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\dto"/*.java; do
   echo "===== $f ====="; cat "$f"
 done
 
 # Read files matched by a pattern (e.g., all *Transaction*.java files)
-find "C:\rdwr-intelij\<REPO>\src" -name "*Transaction*.java" | \
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" -name "*Transaction*.java" | \
   xargs -I{} sh -c 'echo "===== {} ====="; cat "{}"'
 ```
 
@@ -63,25 +63,25 @@ find "C:\rdwr-intelij\<REPO>\src" -name "*Transaction*.java" | \
 
 ```bash
 # Find text in Java files (recursive, with line numbers)
-grep -rn "someMethod" "C:\rdwr-intelij\<REPO>\src" --include="*.java"
+grep -rn "someMethod" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java"
 
 # Find class/interface definitions
-grep -rn "class MyClass\|interface MyInterface" "C:\rdwr-intelij\<REPO>\src" --include="*.java"
+grep -rn "class MyClass\|interface MyInterface" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java"
 
 # Find files by name pattern
-find "C:\rdwr-intelij\<REPO>\src" -name "*Transaction*.java"
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" -name "*Transaction*.java"
 
 # Find annotations (e.g., all @Service classes — list files only)
-grep -rn "@Service" "C:\rdwr-intelij\<REPO>\src" --include="*.java" -l
+grep -rn "@Service" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" -l
 
 # Find method signatures
-grep -rn "public.*upload\|void.*upload" "C:\rdwr-intelij\<REPO>\src" --include="*.java"
+grep -rn "public.*upload\|void.*upload" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java"
 
 # Context search (5 lines before/after match)
-grep -rn -B5 -A5 "runDpCommands" "C:\rdwr-intelij\<REPO>\src" --include="*.java"
+grep -rn -B5 -A5 "runDpCommands" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java"
 
 # Search + immediately read matching files (search-then-read in one call)
-grep -rln "AdditionalPolicyData" "C:\rdwr-intelij\<REPO>\src" --include="*.java" | \
+grep -rln "AdditionalPolicyData" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" | \
   xargs -I{} sh -c 'echo "===== {} ====="; cat "{}"'
 ```
 
@@ -89,11 +89,11 @@ grep -rln "AdditionalPolicyData" "C:\rdwr-intelij\<REPO>\src" --include="*.java"
 
 ```bash
 # Find all config files
-find "C:\rdwr-intelij\<REPO>\src\main\resources" -type f
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\resources" -type f
 
 # Read all config files at once
-for f in "C:\rdwr-intelij\<REPO>\src\main\resources"/*.properties \
-         "C:\rdwr-intelij\<REPO>\src\main\resources"/*.yml; do
+for f in "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\resources"/*.properties \
+         "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\resources"/*.yml; do
   [ -f "$f" ] && echo "===== $f =====" && cat "$f"
 done
 ```
@@ -102,13 +102,13 @@ done
 
 ```bash
 # Build (skip tests)
-cd "C:\rdwr-intelij\<REPO>" && ./mvnw clean install -DskipTests
+cd "%COPILOT_WORKSPACE_ROOT%\<REPO>" && ./mvnw clean install -DskipTests
 
 # Run tests
-cd "C:\rdwr-intelij\<REPO>" && ./mvnw test
+cd "%COPILOT_WORKSPACE_ROOT%\<REPO>" && ./mvnw test
 
 # Check current branch
-cd "C:\rdwr-intelij\<REPO>" && git branch --show-current
+cd "%COPILOT_WORKSPACE_ROOT%\<REPO>" && git branch --show-current
 ```
 
 ## One-Shot Entry Point Detection
@@ -116,13 +116,13 @@ cd "C:\rdwr-intelij\<REPO>" && git branch --show-current
 ```bash
 # Find all entry points in priority order (1 terminal call)
 echo "=== Controllers ===" && \
-grep -rln "@RestController\|@Path" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
+grep -rln "@RestController\|@Path" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" && \
 echo "=== DTOs ===" && \
-grep -rln "class.*Dto\|class.*Request\|class.*Response" "C:\rdwr-intelij\<REPO>\src" --include="*.java" | head -15 && \
+grep -rln "class.*Dto\|class.*Request\|class.*Response" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" | head -15 && \
 echo "=== this project Clients ===" && \
-grep -rln "<domain-keyword>\|WebClient\|RestTemplate" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
+grep -rln "<domain-keyword>\|WebClient\|RestTemplate" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" && \
 echo "=== Config ===" && \
-grep -rn "<api-keyword-1>\|<api-keyword-2>" "C:\rdwr-intelij\<REPO>\src\main\resources" -r 2>/dev/null
+grep -rn "<api-keyword-1>\|<api-keyword-2>" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\resources" -r 2>/dev/null
 ```
 
 ## Question → Command Mapping

@@ -3,7 +3,40 @@ applyTo: '**'
 ---
 # AI Orchestrator — Decision Engine
 
-Every task flows through: **Understand → Classify → Design → Test Plan → Execute → Validate**. No agent acts independently.
+Every task flows through: **Classify → Cache-Check → Design → Test Plan → Execute → Validate → Save Learning**
+
+---
+
+## Auto-Dispatch Rule
+
+When the user sends a message **without** an explicit `@agent`:
+1. Classify using Step 1 below
+2. Announce: **"[Agent: `<name>`] — <one-line task summary>"**
+3. Act as that agent immediately — no confirmation needed
+4. If ambiguous: state both candidates, pick the more specific one
+
+The user can always redirect: `@<other-agent> do X instead`
+
+---
+
+## Step 0: Cache-First Context Loading
+
+Before reading any source code or running `semantic_search`:
+
+1. Check for `.github/repo-cache.md` in the current repo
+   - **Present and < 30 days old** → read it (tiny, fast) → skip `semantic_search`
+   - **Absent or stale** → run `acquire-codebase-knowledge` skill to generate it, then proceed
+2. Load task-specific docs only when cache is absent or the area is undocumented:
+
+| Task touches | Also read |
+|---|---|
+| Architecture/design | `docs/codebase/ARCHITECTURE.md` + `STRUCTURE.md` |
+| High-churn area | `docs/codebase/CONCERNS.md` |
+| DB, RabbitMQ, Config | `docs/codebase/INTEGRATIONS.md` |
+| Tests | `docs/codebase/TESTING.md` |
+| Dependencies | `docs/codebase/STACK.md` |
+
+3. After completing any task: append one line to `## Recent Context` in `.github/repo-cache.md`
 
 ---
 
@@ -15,37 +48,31 @@ Before any code is written, produce a **Design Doc** for:
 - All new features
 - Non-trivial bug fixes (multi-file, cross-module, API changes)
 
-**Skip design ONLY when ALL true:** single file, no API change, no new endpoint, change is obvious (typo, log, config).
+**Skip design ONLY when ALL true:** single file, no API change, no new endpoint, change is obvious.
 
-**Owner:** PEplan agent (features) or Debugger agent (bug root cause analysis).
+**Owner:** `principal-engineer` agent (features) or `debugger` agent (bug root cause analysis).
 
-Design Doc structure — see PEplan agent for full template (14 sections):
-- Problem Statement → Scope → Approach → API Design → Step Flow → Data Model → Edge Cases → Failure Scenarios → Performance → Security → Backward Compatibility → Observability → Files to Change → Risks
+Design Doc structure — see `principal-engineer` agent for full template:
+- Problem Statement → Options Considered → Recommendation → Design → Edge Cases → Performance → Risks → Tasks
 
 ### Test Plan Phase
 
-After design, before implementation, produce a **QA Test Plan** (9 sections):
-- Functional cases (happy path, boundary, optional fields)
-- Negative cases (missing fields, invalid format, unauthorized, malformed)
-- Edge cases (null/empty, large payload, duplicate, concurrent, timeout)
-- Integration tests (service-to-service, DB interaction)
-- E2E scenarios (full request flow through all layers)
-- Regression cases (existing features unaffected, previous bugs not reintroduced)
-- Performance tests (if applicable — load, response time)
-- QA validation steps (how to reproduce/verify)
-- Logs & observability checks (correct level, no sensitive data)
+After design, before implementation, produce a **QA Test Plan**:
+- Functional (happy path, boundary, optional fields)
+- Negative (missing fields, invalid format, unauthorized)
+- Edge (null/empty, large payload, duplicate, concurrent, timeout)
+- Integration (service-to-service, DB)
+- Regression (existing features unaffected)
 
-**Owner:** Tester agent generates the plan; Reviewer agent validates coverage.
+**Owner:** Tester agent generates; Reviewer agent validates coverage.
 
 ### Enforced Flow by Task Type
 
 ```
-Feature:  Design Doc → Test Plan → Implementation → Validation
-Bug Fix:  Root Cause Analysis → Fix Plan → Test Plan → Validation
-Fast-path: (skip design + test plan) → Edit → get_errors → done
+Feature:  Design Doc → Test Plan → Implementation → Validation → Save Learning
+Bug Fix:  Root Cause → Fix Plan → Test → Validation → Save Learning
+Fast-path: Edit → get_errors → done
 ```
-
-**Prompt template:** See `.github/prompts/design-first.md` for copy-paste prompts that trigger this flow.
 
 ---
 
@@ -56,12 +83,17 @@ Fast-path: (skip design + test plan) → Edit → get_errors → done
 | **Feature** | "add", "implement", "create", "build" + new functionality | SquadLeader agent | Deep |
 | **Bug Fix** | "fix", "broken", "failing", "error", "debug" | Debugger agent → Developer agent | Deep |
 | **Code Review** | "review", "check my code", "PR comments" | Reviewer agent | Deep |
-| **Planning** | "plan", "design", "how should we", "brainstorm" | PEplan agent | Deep |
+| **Planning / Architecture** | "plan", "design", "how should we", "brainstorm", "architecture" | principal-engineer agent | Deep |
 | **Test Writing** | "write tests", "add coverage", "test this" | Tester agent | Fast/Deep |
 | **Build/CI** | "build fails", "npm error", "docker", "pipeline" | DevOps agent | Fast |
 | **Frontend/UI** | "ui", "component", "<frontend-app>", "styled", "React", "frontend" | Frontend agent | Fast/Deep |
 | **Cross-Repo** | references sibling repo or external service | Use `cross-repo-exploration` skill | Deep |
 | **Customer Case / Field Escalation** | `RSEG-`, `SC-`, `INC-`, `JIRA-`, "support bundle", "support file", "customer logs", "RCA", "field escalation" | `case-investigator` agent | Deep |
+| **Full-Stack Feature** | new feature touching both Java backend and React frontend | `full-stack-feature` agent | Deep |
+| **Elasticsearch issue** | "ES query wrong", "no hits", "mapping conflict", "slow query", index health | `elasticsearch-expert` agent | Deep |
+| **Akka Actor issue** | "dead letters", "ask timeout", "actor stuck", dispatcher starvation | `akka-expert` agent | Deep |
+| **Performance investigation** | "slow", "high CPU/memory", "throughput dropped", "latency spike" | `perf-investigator` agent | Deep |
+| **Write Jira Story/Bug/Spike** | "write a story for", "create a Jira ticket", "document this as a bug" | `story-writer` agent | Fast |
 | **Simple Edit** | single-file change, config update, rename | Fast-path (no agent) | Fast |
 | **Multi-Task** | 3+ independent items across modules | `dispatching-parallel-agents` skill | Deep |
 
@@ -97,44 +129,63 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 
 | Situation | Skill |
 |-----------|-------|
+| **TDD** | |
+| Java TDD (write test first) | `tdd-java` |
+| React TDD (write test first) | `tdd-react` |
+| Improve Jacoco coverage gaps | `java-test-coverage` |
+| **API & Implementation** | |
 | New REST endpoint | `adding-rest-endpoints` |
-| Before creative work | `brainstorming` |
+| Design API before implementing | `api-contract-first` |
 | Multi-step plan needed | `writing-plans` |
-| Executing a plan | `executing-plans` or `subagent-driven-development` |
+| Executing a plan | `executing-plans` |
+| Multiple independent tasks (3+) | `dispatching-parallel-agents` |
+| **Debugging** | |
 | Any failure/error | `systematic-debugging` |
-| Before claiming done | `verification-before-completion` |
-| npm/UI build issues | `npm-errors` |
-  | PR review response | `handling-pr-review-comments` |
-| Reviewing a teammate's PR (chat-only, no Bitbucket posts) | `requesting-pr-review` |
+| Elasticsearch query wrong/slow | `elasticsearch-debug` |
+| RabbitMQ queue backlog / dead-letter | `rabbitmq-debug` |
+| Akka dead letters / ask timeout | `akka-debug` |
+| Log analysis (pattern, correlation) | `log-analysis` |
+| **Design** | |
+| Creative exploration, requirements | `brainstorming` |
+| **Customer Cases** | |
+| Case intake (first action) | `customer-case-intake` |
+| Prior case lookup | `case-archive` (lookup mode) |
+| Support file triage | `support-file-triage` |
+| RCA evidence mapping | `rca-evidence-mapping` |
+| RCA document | `rca-document` |
+| Archive completed RCA | `case-archive` (write mode) → triggers `save-learning` |
+| **Memory & Learning** | |
+| End of any investigation/case | `save-learning` |
+| Map unfamiliar repo | `acquire-codebase-knowledge` |
+| **Git & PR Workflow** | |
 | Commit and push | `commit-push` |
 | Branch completion | `finishing-a-development-branch` |
-| Code outside workspace (local repos) | `cross-repo-exploration` |
-| Code across ALL Bitbucket repos (remote) | `remote-repo-exploration` |
-| Test-first approach | `test-driven-development` |
-| Workspace isolation | `using-git-worktrees` |
-| Before starting implementation (file impact analysis) | `context-map` |
-| Evaluating incoming review feedback | `receiving-code-review` |
+| Reviewing a teammate's PR | `requesting-pr-review` |
+| PR review response | `handling-pr-review-comments` |
 | Pre-commit self-review | `requesting-code-review` |
-| Save a lesson or pattern for future sessions | `remember` |
-| Onboarding or mapping a codebase | `acquire-codebase-knowledge` |
+| Evaluating incoming feedback | `receiving-code-review` |
+| **Cross-Repo** | |
+| Code in sibling repos (local) | `cross-repo-exploration` |
+| Code across ALL Bitbucket repos (remote) | `remote-repo-exploration` |
+| **Dependencies** | |
+| Maven/npm CVE or upgrade | `dependency-upgrade` |
+| npm/UI build issues | `npm-errors` |
+| **Other** | |
+| Before claiming done | `verification-before-completion` |
+| Workspace isolation | `using-git-worktrees` |
 | Creating or editing a Copilot skill | `writing-skills` |
-| Customer field escalation / RCA | `customer-case-intake` then `case-archive` (lookup) then `support-file-triage` then `rca-evidence-mapping` then `rca-document` then `case-archive` (write) |
+| Save a lesson for future sessions | `save-learning` or `remember` |
+| Tailor agent to a specific repo | `customize-agents` |
 
 ### Skill Chaining Rules
-
-Skills can be combined when the task spans multiple concerns. Chain sequentially — output of one feeds the next.
 
 | Scenario | Chain |
 |----------|-------|
 | Bug in cross-repo flow | `systematic-debugging` → `cross-repo-exploration` → `verification-before-completion` |
-| New feature end-to-end | `brainstorming` → `writing-plans` → `adding-rest-endpoints` → `test-driven-development` → `verification-before-completion` |
+| New feature end-to-end | `brainstorming` → `writing-plans` → `adding-rest-endpoints` → `tdd-java` → `verification-before-completion` |
 | PR fix + verify | `handling-pr-review-comments` → `verification-before-completion` → `commit-push` |
 | Multi-module failure | `systematic-debugging` → `dispatching-parallel-agents` |
-| Cross-repo + parallel (local) | `cross-repo-exploration` → `dispatching-parallel-agents` |
-| Cross-repo + parallel (remote, 90+ repos) | `remote-repo-exploration` (has built-in parallel dispatch) |
-| Customer field escalation | `customer-case-intake` → `case-archive` (lookup) → `support-file-triage` (parallel via `dispatching-parallel-agents`) → `rca-evidence-mapping` (+ `cross-repo-exploration` if needed) → `rca-document` → `case-archive` (write) → `developer` agent for fix |
-
-**Rule:** Chain only when needed. Single-skill is always preferred if it covers the task.
+| Customer field escalation | `customer-case-intake` → `case-archive` (lookup) → `support-file-triage` → `rca-evidence-mapping` → `rca-document` → `case-archive` (write) → `save-learning` |
 
 ## Step 5: Execute with Structured Output
 
@@ -256,7 +307,7 @@ When task references code outside the current repo:
 3. **Persist findings:** After exploration, write/update the knowledge file
 - ALL IDE file tools are workspace-restricted — they WILL fail on sibling repos
 - Use ONLY `run_in_terminal` with `cat`, `grep`, `find`, `ls`
-- Sibling repos: `C:\rdwr-intelij\<repo>` — use `cross-repo-exploration` skill
+- Sibling repos: `%COPILOT_WORKSPACE_ROOT%\<repo>` — use `cross-repo-exploration` skill
 - Auto-detect: if a class, endpoint, or service name isn't found locally, check memory then sibling repos before giving up
 
 ## Parallel Execution

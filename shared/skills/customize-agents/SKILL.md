@@ -132,8 +132,8 @@ After rewriting, run **both** scans:
 # (a) any unresolved placeholders left in agents?
 grep -rnE "<[A-Z][A-Za-z-]+>|<[a-z][a-z-]+>" .github/agents/
 
-# (b) any leftover terms from the original template upstream?
-grep -rniE "policytemplate|policy-bom|policy-app|common_policy_editor|defenseflow|defensepro|dpinline|cyber.controller" .github/agents/
+# (b) any leftover terms from the original template (edit this pattern for your org's products)
+grep -rniE "policytemplate|policy-bom|<product-suite>|<orchestrator-repo>|<sibling-repo>" .github/agents/
 ```
 
 Both must return zero matches before proceeding. If matches remain:

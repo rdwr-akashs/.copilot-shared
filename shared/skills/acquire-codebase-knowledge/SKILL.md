@@ -36,6 +36,7 @@ Before finishing, all of the following must be true:
 3. Unknowns are marked as `[TODO]`; intent-dependent decisions are marked `[ASK USER]`.
 4. Every document includes a short "evidence" list with concrete file paths.
 5. Final response includes numbered `[ASK USER]` questions and intent-vs-reality divergences.
+6. **`.github/repo-cache.md` is written** (see Phase 5 below) so future sessions skip re-indexing.
 
 ## Workflow
 
@@ -46,6 +47,7 @@ Copy and track this checklist:
 - [ ] Phase 2: Investigate each documentation area
 - [ ] Phase 3: Populate all seven docs in docs/codebase/
 - [ ] Phase 4: Validate docs, present findings, resolve all [ASK USER] items
+- [ ] Phase 5: Write .github/repo-cache.md
 ```
 
 ## Focus Area Mode
@@ -132,6 +134,69 @@ Validation pass criteria:
 **Test TODOs ≠ production debt:** TODOs inside `test/`, `tests/`, `__tests__/`, or `spec/` are coverage gaps, not production technical debt. Separate them in `CONCERNS.md`.
 
 **High-churn files = fragile areas:** Files appearing most in recent git history have the highest modification rate and likely hidden complexity. Always note them in `CONCERNS.md`.
+
+---
+
+## Phase 5: Write Repo Cache
+
+After completing Phase 4, write `.github/repo-cache.md` in the target repo. This file lets future sessions skip re-indexing entirely — load it instead of running `semantic_search`.
+
+```markdown
+# Repo Cache — <repo-name>
+# Generated: YYYY-MM-DD | Refresh when: major architecture change or > 30 days stale
+# Usage: Orchestrator reads this first; skips semantic_search when present and fresh.
+
+## Modules
+<path/to/module> → <one-line purpose> (<key class names>)
+
+## Key Patterns
+- DI: <e.g., constructor injection>
+- Error: <e.g., DfException hierarchy>
+- Tests: <e.g., JUnit5 + Mockito + TestContainers>
+- Logging: <e.g., SLF4J, level conventions>
+
+## Commands
+build: <e.g., ./mvnw clean install>
+test-all: <e.g., ./mvnw test>
+test-module: <e.g., ./mvnw test -pl <module>>
+run: <e.g., ./mvnw spring-boot:run>
+
+## External Integrations
+- <DB type, URL pattern>
+- <Message broker, queue names>
+- <External APIs>
+
+## Recent Context
+<!-- Append one line per task: YYYY-MM-DD: <summary> -->
+```
+
+Keep the cache under 200 lines. If a module list grows long, summarise at module-group level.
+
+**After writing the cache, register both paths in `.git/info/exclude`** (machine-local, never committed — keeps codebase knowledge off GitHub entirely):
+
+```powershell
+# Windows PowerShell — run from the target repo root
+$ex = '.git/info/exclude'
+if (-not (Test-Path $ex)) { New-Item $ex -Force | Out-Null }
+$content = Get-Content $ex -Raw -ErrorAction SilentlyContinue
+if ($content -notmatch 'copilot-generated knowledge') {
+    Add-Content $ex "`n# copilot-generated knowledge -- local only, never committed"
+    Add-Content $ex '.github/repo-cache.md'
+    Add-Content $ex 'docs/codebase/'
+}
+```
+
+```bash
+# Linux / Git Bash
+ex='.git/info/exclude'
+grep -q 'copilot-generated knowledge' "$ex" 2>/dev/null || {
+  printf '\n# copilot-generated knowledge -- local only, never committed\n' >> "$ex"
+  printf '.github/repo-cache.md\n' >> "$ex"
+  printf 'docs/codebase/\n' >> "$ex"
+}
+```
+
+> **Note:** `link-copilot.cmd` does this automatically. Only run the snippet above if you set up the repo manually.
 
 ---
 

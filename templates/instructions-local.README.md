@@ -3,7 +3,7 @@
 This folder holds **repo-specific** instructions that are NOT shared across repos.
 
 The shared `.github/instructions/` folder is a directory junction into
-`C:\rdwr-intelij\.copilot-shared\shared\instructions\` — editing files there
+`%COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\instructions\` — editing files there
 affects every linked repo. Anything specific to THIS repo (exception classes,
 build commands, module layout, domain rules) must live here instead.
 
@@ -23,4 +23,4 @@ picked up automatically.
 1. Edit any file here freely — changes are tracked by THIS repo's git.
 2. Never edit files under `.github/instructions/` — that is the shared junction.
 3. If you find yourself wanting to share something across repos, move it to
-   `C:\rdwr-intelij\.copilot-shared\shared\instructions\` and remove the local copy.
+   `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\instructions\` and remove the local copy.

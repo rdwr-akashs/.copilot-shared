@@ -1,193 +1,374 @@
-# `.copilot-shared` — central Copilot configuration
+# `.copilot-shared` — Radware Shared Copilot Configuration
 
-Single source of truth for GitHub Copilot agents, skills, instructions, and
-prompts shared across all repos under `C:\rdwr-intelij\`.
+Single source of truth for GitHub Copilot **agents, skills, instructions, and
+prompts** shared across all Radware repos under `%COPILOT_WORKSPACE_ROOT%\`.
+Edit once, every linked repo sees the change instantly — via filesystem junctions.
 
-## Why
+> **This repo is public** so the community can learn from and adapt our Copilot
+> workflow. The skills and agents are Radware-specific but the patterns are
+> reusable. Contributions from Radware team members are welcome — see
+> [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Without this, every repo would carry its own copy of the same skills and
-instructions. Edits in one wouldn't propagate. With junctions, every linked
-repo sees the same `.github/{skills,instructions,prompts}` content — edit
-once, all repos updated instantly.
+---
+
+## Quick Start (New Team Member)
+
+### 0. Set your workspace root
+
+All Radware repos live side-by-side under one folder. Set the env var so the
+scripts know where to find them:
+
+**Windows (cmd — permanent):**
+```cmd
+setx COPILOT_WORKSPACE_ROOT "C:\your\workspace\path"
+```
+
+**Windows (PowerShell — permanent):**
+```powershell
+[Environment]::SetEnvironmentVariable("COPILOT_WORKSPACE_ROOT", "C:\your\workspace\path", "User")
+```
+
+**macOS / Linux:**
+```bash
+echo 'export COPILOT_WORKSPACE_ROOT="$HOME/workspace"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+> If you don't set the env var, the scripts auto-detect by using the parent
+> folder of `.copilot-shared/`.
+
+### 1. Clone this repo
+
+```cmd
+cd %COPILOT_WORKSPACE_ROOT%
+git clone https://github.com/Radware/copilot-shared.git .copilot-shared
+```
+
+### 2. Clone your product repos from Bitbucket
+
+```cmd
+cd %COPILOT_WORKSPACE_ROOT%
+git clone https://bitbucket.org/<bb-workspace>/<your-repo>.git
+:: ... clone whichever repos you work on
+```
+
+### 3. Link one repo
+
+**New repo** (no `.github/` yet):
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-repo.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
+```
+
+**Existing repo** (already has `.github/`):
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
+```
+
+### 4. Link ALL repos at once
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
+```
+
+Walks `%COPILOT_WORKSPACE_ROOT%\*`. Skips repos without a `.github/copilot-instructions.md`
+(those need `setup-repo.cmd` first).
+
+### 5. Customise per-repo
+
+After linking, edit these three files in each repo:
+
+1. `.github/copilot-instructions.md` — describe the project
+2. `.github/instructions-local/project-rules.instructions.md` — hard rules for this repo
+3. Open Copilot Chat → *"Run the customize-agents skill on this repo."*
+
+Restart your IDE. Done.
+
+---
+
+## Prerequisites
+
+| Requirement | Notes |
+|---|---|
+| JetBrains IDE or VS Code | With GitHub Copilot plugin installed |
+| GitHub Copilot subscription | Individual or business plan |
+| Workspace at `%COPILOT_WORKSPACE_ROOT%\` | All Radware repos cloned here |
+| Bitbucket access | `<bb-workspace>` workspace — for product repos |
+| Git Bash (recommended) | For terminal operations on Windows |
+
+> **macOS / Linux:** Use symlinks (`ln -s`) instead of junctions. Adapt the
+> `.cmd` scripts or create shell equivalents — PRs welcome.
+
+---
 
 ## Layout
 
 ```
-.copilot-shared\
-├── shared\                 # Junctioned into every repo's .github\
-│   ├── skills\             # Reusable skills (incl. customer-case-intake, support-file-triage, rca-*, case-archive)
-│   ├── instructions\       # Generic Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
-│   └── prompts\            # Reusable prompt templates (incl. investigate-customer-case)
-├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
-├── cases\                  # Local-only solved-case archive — written by case-archive skill
-├── templates\              # copilot-instructions, project-rules, personal-instructions
-└── bin\                    # Setup scripts (Windows .cmd)
-    ├── setup-repo.cmd      # One-shot setup for a new repo
-    ├── link-copilot.cmd    # (Re)create junctions for one repo
-    ├── link-all-copilot.cmd# Walk parent folder; link every repo
-    ├── unlink-copilot.cmd  # Remove junctions from one repo
-    ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
-    ├── doctor.cmd          # Health-check one repo's Copilot wiring
-    └── refresh-agents.cmd  # Pull upstream agent-template improvements
+%COPILOT_WORKSPACE_ROOT%\
+├── .copilot-shared\            ← THIS REPO (cloned from GitHub)
+│   ├── shared\                 # Junctioned into every repo's .github\
+│   │   ├── skills\             # Reusable skills (cross-repo-exploration, customer-case-intake, rca-*, etc.)
+│   │   ├── instructions\       # Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
+│   │   └── prompts\            # Reusable prompt templates (investigate-customer-case, etc.)
+│   ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
+│   ├── cases\                  # Local-only solved-case archive (gitignored — contains customer data)
+│   ├── templates\              # Per-repo seed files (copilot-instructions, project-rules, etc.)
+│   └── bin\                    # Setup scripts (Windows .cmd)
+│       ├── setup-repo.cmd      # One-shot setup for a new repo
+│       ├── link-copilot.cmd    # (Re)create junctions for one repo
+│       ├── link-all-copilot.cmd# Walk %COPILOT_WORKSPACE_ROOT%\; link every repo
+│       ├── unlink-copilot.cmd  # Remove junctions from one repo
+│       ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
+│       ├── doctor.cmd          # Health-check one repo's Copilot wiring
+│       └── refresh-agents.cmd  # Pull upstream agent-template improvements
+├── <your-repo-1>\               ← product repo (Bitbucket)
+│   └── .github\
+│       ├── copilot-instructions.md
+│       ├── agents\             # Copied from agent-templates\, customised
+│       ├── instructions-local\ # Per-repo rules
+│       ├── instructions\ → JUNCTION → .copilot-shared\shared\instructions
+│       ├── skills\       → JUNCTION → .copilot-shared\shared\skills
+│       └── prompts\      → JUNCTION → .copilot-shared\shared\prompts
+├── <your-repo-2>\               ← another product repo
+└── ...                         ← all repos in your Bitbucket workspace
 ```
 
-## What's shared vs per-repo
+---
+
+## What's Shared vs Per-Repo
 
 | Item | Shared? | Why |
 |---|---|---|
-| `skills/` | Junction | Pattern-based; same workflow for any repo |
+| `skills/` | Junction | Same workflow patterns for any Radware repo |
 | `instructions/` (generic) | Junction | Routing + memory + skill-loading rules |
 | `prompts/` | Junction | Reusable prompt templates |
 | `agents/` | Copy | Agents encode project-specific conventions |
-| `copilot-instructions.md` | Per-repo | Project overview is unique |
+| `copilot-instructions.md` | Per-repo | Project overview is unique per product |
 | `instructions-local/` | Per-repo | Exception types, build commands, domain rules |
-| `personal-instructions.md` | Per-developer | Local paths, shell preference |
+| `personal-instructions.md` | Per-developer | Local paths, shell preference (gitignored) |
 
-## Quick start
+---
 
-### New repo (no `.github/` yet)
-
-```cmd
-C:\rdwr-intelij\.copilot-shared\bin\setup-repo.cmd C:\rdwr-intelij\my_new_repo
-```
-
-This creates `.github/`, copies the templates, seeds agents, and creates
-junctions. Then edit:
-1. `.github/copilot-instructions.md` — describe the project
-2. `.github/instructions-local/project-rules.instructions.md` — hard rules
-3. `.github/agents/*.agent.md` — adjust to repo conventions
-
-### Existing repo (already has `.github/`)
-
-```cmd
-C:\rdwr-intelij\.copilot-shared\bin\link-copilot.cmd C:\rdwr-intelij\existing_repo
-```
-
-The script preserves existing real folders (treated as overrides). Agents are
-not touched. Only `skills/`, `instructions/`, `prompts/` are junctioned.
-
-### All repos at once
-
-```cmd
-C:\rdwr-intelij\.copilot-shared\bin\link-all-copilot.cmd
-```
-
-Walks `C:\rdwr-intelij\*`. Skips repos without a `.github/copilot-instructions.md`
-(those need `setup-repo.cmd` first).
-
-## Daily workflow
+## Daily Workflow
 
 ### Editing a shared skill
 
 ```cmd
-notepad C:\rdwr-intelij\.copilot-shared\shared\skills\writing-plans\SKILL.md
+notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\writing-plans\SKILL.md
 ```
 
 Save → every linked repo sees the change immediately. No sync step.
 
 ### Adding a new shared skill
 
-1. `mkdir C:\rdwr-intelij\.copilot-shared\shared\skills\my-skill`
-2. Create `SKILL.md` (see `skills/writing-skills/SKILL.md` for conventions).
+1. `mkdir %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\my-skill`
+2. Create `SKILL.md` (see `shared/instructions/agent-skills.instructions.md` for conventions).
 3. Done. Every linked repo can now invoke it.
+4. **Push to GitHub** so teammates get it too: `git add . && git commit -m "feat: add my-skill" && git push`
 
-### Per-repo override of a shared skill
+### Per-repo override
 
-If one repo needs a different `commit-push` skill:
+If one repo needs a different version of a shared skill:
 
 ```cmd
-cd C:\rdwr-intelij\my_repo
-.copilot-shared\bin\unlink-copilot.cmd C:\rdwr-intelij\my_repo
-mkdir .github\skills
-xcopy /e C:\rdwr-intelij\.copilot-shared\shared\skills .github\skills
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\unlink-copilot.cmd %COPILOT_WORKSPACE_ROOT%\my_repo
+mkdir %COPILOT_WORKSPACE_ROOT%\my_repo\.github\skills
+xcopy /e %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills %COPILOT_WORKSPACE_ROOT%\my_repo\.github\skills
 REM Edit .github\skills\commit-push\SKILL.md as needed
 ```
 
-After this, re-running `link-copilot.cmd` will see the real `skills/` folder
-and skip junctioning it (preserving your override). The other folders
-(`instructions/`, `prompts/`) are still re-junctioned normally.
+Re-running `link-copilot.cmd` will see the real `skills/` folder and skip
+junctioning it (preserving your override).
 
-### Customer case RCA workflow
+### Customer Case RCA Workflow
 
-> Full workflow guide: [`shared/instructions/customer-case-rca.README.md`](shared/instructions/customer-case-rca.README.md) — visible in every linked repo as `.github/instructions/customer-case-rca.README.md`.
+> Full guide: [`shared/instructions/customer-case-rca.README.md`](shared/instructions/customer-case-rca.README.md)
 
 When you're handed a customer escalation (RSEG-/SC-/INC-/JIRA- ticket with a
-support bundle), use the `case-investigator` agent. Kick off via the prompt at
-`shared/prompts/investigate-customer-case.md`.
-
-The workflow is **generic across all repos** — it makes no product-specific
-assumptions. Each phase produces evidence-backed output and the agent never
-edits product code itself (it hands fixes off to the `developer` agent).
+DefenseFlow/Vision support bundle), use the `case-investigator` agent. Kick off
+via the prompt at `shared/prompts/investigate-customer-case.md`.
 
 | Phase | What happens |
 |-------|--------------|
-| 0     | Scaffolds `.agent_work/<case-id>/investigation.md`; **auto-unzips every archive** in the bundle (idempotent) |
-| 0.5   | **Prior-case lookup** against `cases/_index.md` — surfaces top-3 matches with confidence % |
-| 1     | Problem framing in the investigation MD |
-| 2     | **9 triage subagents in parallel** — Identity, Connectivity, Replication, HA, Resources, External-services, Polling, Containers, Time-sync |
-| 3     | Maps findings to `repo / file / method / line`; greps `CHANGES.txt` / `CHANGELOG*` / `RELEASE_NOTES*` (replaces any static known-bugs table) |
-| 5–6   | Authors `rca-<case-id>.md` (10 sections) including a **draft commit message** |
-| 7     | Persists case to `cases/<case-id>/` (rca.md, fix.md, signature.yml) + appends `_index.md` |
-| 8     | Hands fix off to the `developer` agent; user gates code edits |
+| 0     | Scaffolds `.agent_work/<case-id>/investigation.md`; auto-unzips archives |
+| 0.5   | Prior-case lookup against `cases/_index.md` |
+| 1     | Problem framing |
+| 2     | 9 parallel triage subagents (Identity, Connectivity, Replication, HA, Resources, etc.) |
+| 3     | Maps findings to `repo / file / method / line` in the relevant codebase |
+| 5–6   | Authors `rca-<case-id>.md` with draft commit message |
+| 7     | Archives to `cases/<case-id>/` |
+| 8     | Hands fix off to `developer` agent |
 
-#### Per-product triage rules
+> **⚠️ `cases/` is gitignored** — it contains customer data and must NEVER be pushed.
 
-To make Phase 2 sharper for a specific product, add a
-`.github/instructions-local/triage-rules.instructions.md` to that product's
-repo with concrete log paths and grep patterns. The triage skill prefers it
-when present and falls back to generic keyword grep when absent. See the
-example at the bottom of `shared/instructions/customer-case-rca.instructions.md`.
+---
 
-#### The `cases/` archive
+## Included Content
 
-Solved cases land in `.copilot-shared/cases/<case-id>/`. This directory is
-**local-only** — it inherits `.copilot-shared`'s no-remote convention and
-must never be pushed (it contains internal customer data). See
-[cases/README.md](cases/README.md) for layout and the `signature.yml` schema.
+### Agent Templates (15)
 
-### Versioning the central folder
+| Agent | Purpose |
+|---|---|
+| `developer` | Day-to-day implementation |
+| `tester` | Test writing and coverage |
+| `debugger` | Bug investigation and fix |
+| `reviewer` | Code review (Bitbucket PR-aware) |
+| `devops` | Build, CI/CD, deployment |
+| `principal-engineer` | Architecture, design decisions, pre-implementation gate |
+| `squadleader` | Sprint planning and task breakdown |
+| `case-investigator` | Customer escalation RCA (DefenseFlow / Vision) |
+| `gem-code-simplifier` | Code simplification |
+| `expert-react-frontend-engineer` | React frontend (webui_* repos) |
+| `full-stack-feature` | End-to-end feature: Java backend + React frontend together |
+| `elasticsearch-expert` | ES query debugging, mapping conflicts, index design |
+| `akka-expert` | Actor hierarchy design, dead-letter debugging, dispatcher tuning |
+| `perf-investigator` | Performance triage across JVM, Akka, ES, RabbitMQ, React |
+| `story-writer` | Write Jira stories, bugs, and spikes in EARS notation |
 
-```cmd
-cd C:\rdwr-intelij\.copilot-shared
-git log --oneline
-```
+### Skills (35)
 
-Local-only git repo (no remote). Commit after every meaningful edit so you
-can roll back if a change breaks Copilot in any repo.
+Organized in `shared/skills/`:
+
+| Skill | What it does |
+|---|---|
+| **TDD & Testing** | |
+| `tdd-java` | Java TDD: JUnit 5, Mockito, TestContainers, MockMvc. Red→Green→Refactor |
+| `tdd-react` | React TDD: RTL, Jest, MSW. Component, hook, and page testing |
+| `java-test-coverage` | Jacoco analysis — find uncovered branches, write targeted tests |
+| **API Design** | |
+| `api-contract-first` | OpenAPI spec-first — spec before code; generate TS types and Java DTOs |
+| `adding-rest-endpoints` | REST endpoint scaffolding |
+| **Debugging** | |
+| `elasticsearch-debug` | ES query wrong/slow: `_explain`, `_profile`, mapping checks, index health. Checks memory first. |
+| `rabbitmq-debug` | Consumer lag, dead-letter, prefetch tuning, poison messages. Checks memory first. |
+| `akka-debug` | Dead letters, dispatcher starvation, ask timeout, blocking actors. Checks memory first. |
+| `systematic-debugging` | General structured bug investigation |
+| `log-analysis` | Parse logs, find error patterns, correlate events, extract stack traces |
+| **Memory & Learning** | |
+| `save-learning` | Append investigation findings to shared memory. Run after every RCA or bug fix. |
+| `acquire-codebase-knowledge` | Deep-dive into unfamiliar repos; writes `.github/repo-cache.md` |
+| `remember` | Save lessons and patterns for future sessions |
+| **Customer Cases** | |
+| `customer-case-intake` | Ingest support bundles; checks `customer-cases.md` memory first |
+| `support-file-triage` | Parallel subagent triage of support files |
+| `rca-document` / `rca-evidence-mapping` | Generate structured RCA docs |
+| `case-archive` | Persist solved cases; also appends to shared memory |
+| **Dependencies** | |
+| `dependency-upgrade` | Safe Maven/npm upgrade: CVE check, one-at-a-time, tests after each |
+| `npm-errors` | npm/UI build failure triage |
+| **Planning & Design** | |
+| `writing-plans` / `executing-plans` | Design-first development |
+| `brainstorming` | Structured ideation and requirements exploration |
+| `dispatching-parallel-agents` | Fan-out independent tasks to subagents (includes two-stage review) |
+| **Git Workflow** | |
+| `commit-push` | Git commit + push with conventional commits |
+| `requesting-pr-review` / `handling-pr-review-comments` | Bitbucket PR workflow |
+| `finishing-a-development-branch` | Merge prep checklist |
+| `receiving-code-review` / `requesting-code-review` | Self-review and receiving feedback |
+| **Cross-Repo** | |
+| `cross-repo-exploration` | Read/search sibling repos via terminal |
+| `remote-repo-exploration` | Search across 90+ Bitbucket repos using MCP + shallow clones |
+| **Other** | |
+| `verification-before-completion` | Never claim done without proof |
+| `using-git-worktrees` | Workspace isolation |
+| `customize-agents` | Tailor agent templates to a specific repo |
+| `writing-skills` | Create and edit Copilot skills |
+
+### Shared Memory (grows over time)
+
+Located in `shared/memory/` — **gitignored here, maintain in your internal repo**.
+The structure is provided as a template; each team populates it from real work:
+
+| File | Contains |
+|---|---|
+| `customer-cases.md` | Symptom → root cause → fix matrix. Checked automatically before every case intake. |
+| `known-bugs.md` | Bug table with log evidence patterns and workarounds. |
+| `tech-discoveries.md` | ES indexes, RabbitMQ queues, Akka topologies, PG configs, repo registry. |
+
+### Instructions
+
+- **`orchestrator.instructions.md`** — Auto-dispatch, cache-first context loading, agent/skill routing
+- **`tdd.instructions.md`** — TDD-first mandate: no production code without a failing test
+- **`java-conventions.instructions.md`** — Constructor injection, no null returns, exception hierarchy, boundary validation
+- **`react-conventions.instructions.md`** — Component naming, hooks patterns, MSW mocking, accessibility-first
+- **`agent-skills.instructions.md`** — Guidelines for writing high-quality skills
+- **`design-principles.instructions.md`** — SOLID, DRY, KISS, YAGNI as hard rules
+- **`performance-awareness.instructions.md`** — N+1, allocation, I/O, concurrency
+- **`customer-case-rca.instructions.md`** — Customer case investigation process
+- **`memory-bank.instructions.md`** — Persistent context management
+- **`shell.instructions.md`** — Terminal usage conventions
+
+### Prompts (6)
+
+- **`start-feature.md`** — Kick off a full-stack feature (triggers `full-stack-feature` agent)
+- **`bug-report.md`** — Structured bug investigation (triggers `debugger` + `systematic-debugging`)
+- **`review-request.md`** — Pre-PR self-review (triggers `reviewer` agent)
+- **`dependency-audit.md`** — Dependency upgrade prompt (triggers `dependency-upgrade` skill)
+- **`investigate-customer-case.md`** — Customer case RCA prompt
+- **`cross-repo-knowledge.md`** — Cross-repo exploration prompt
+
+### Git Hooks
+
+Located in `shared/hooks/`, installed via `bin/install-hooks.cmd <repo-path>`:
+
+| Hook | What it enforces |
+|---|---|
+| `commit-msg` | Conventional Commits format (`feat:`, `fix:`, `docs:`, etc.) |
+| `pre-push` | Runs `mvnw test` or `npx jest` before push (bypass with `SKIP_TESTS=1`) |
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+
+1. Clone this repo from GitHub (not Bitbucket — this lives on GitHub)
+2. Create a branch: `git checkout -b feat/my-improvement`
+3. Make your changes (new skill, agent improvement, instruction fix)
+4. Test by running `link-copilot.cmd` on a repo and verifying in Copilot Chat
+5. Push and open a PR on GitHub
+
+**What to contribute:**
+- New shared skills that work across repos
+- Agent template improvements
+- Instruction fixes and enhancements
+- Bug fixes in `bin/` scripts
+
+**What NOT to commit:**
+- Customer data or support bundles (`cases/` is gitignored)
+- Personal paths in `personal-instructions.md` (gitignored)
+- Secrets, tokens, or credentials
+
+---
 
 ## Troubleshooting
 
 **Q: How do I check if a repo is wired up correctly?**
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\doctor.cmd C:\rdwr-intelij\<repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 Reports PASS/WARN/FAIL on: `.github/` layout, junctions pointing into
-`copilot-shared\shared`, `.gitignore` marker block, unresolved
-`<placeholder>` tokens in agents, and old template terms left over from
-a partial `customize-agents` run. Exit 0 = clean, 1 = warnings, 2 = failures.
+`.copilot-shared\shared`, `.gitignore` marker block, unresolved
+`<placeholder>` tokens, and stale template terms.
 
-**Q: I improved an agent template centrally. How do I push that into existing repos?**
+**Q: I improved an agent template. How do I push that into existing repos?**
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\refresh-agents.cmd C:\rdwr-intelij\<repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 For each `agent-templates/*.agent.md`:
 - **NEW** — repo is missing it; copied in (then run `customize-agents` skill).
-- **SAME** — repo's copy is byte-identical to the template; nothing to do.
-- **CONFLICT** — repo's copy was customised; saved upstream as
-  `<agent>.agent.md.template.new` next to the live file. Diff the two,
-  merge wanted changes manually, delete the `.template.new`, then re-run
-  the `customize-agents` skill in Copilot Chat to fix any new placeholders.
+- **SAME** — repo's copy is byte-identical; nothing to do.
+- **CONFLICT** — saved as `<agent>.agent.md.template.new` for manual merge.
 
 Never overwrites a customised agent.
 
-**Q: JetBrains Copilot doesn't see the shared skills.**
-- Verify the junction: `dir C:\rdwr-intelij\<repo>\.github` should show
+**Q: IDE doesn't see the shared skills.**
+- Verify the junction: `dir %COPILOT_WORKSPACE_ROOT%\<repo>\.github` should show
   `<JUNCTION>` next to `skills`, `instructions`, `prompts`.
-- Restart JetBrains; it caches `.github/` on project open.
+- Restart the IDE; it caches `.github/` on project open.
 
 **Q: Junction creation fails.**
 - `mklink /J` does not require admin. Confirm `cmd.exe` (not WSL) is being used.
@@ -198,24 +379,23 @@ Never overwrites a customised agent.
 - Some IDE/refactor tools recreate junctioned folders as real (empty) folders.
   Re-run `link-copilot.cmd <repo>` — it's idempotent.
 
-**Q: I want a repo to be excluded from auto-linking.**
+**Q: I want a repo excluded from auto-linking.**
 - Don't create `.github/copilot-instructions.md` in it. `link-all-copilot.cmd`
   skips repos without that file.
 
-## Adding a new repo to the rotation
+---
+
+## Removing the Integration from a Repo
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\setup-repo.cmd C:\rdwr-intelij\<NEW_REPO>
-```
-
-Then customise the three per-repo files (`copilot-instructions.md`,
-`instructions-local/project-rules.instructions.md`, `agents/*.agent.md`).
-
-## Removing the integration from a repo
-
-```cmd
-C:\rdwr-intelij\.copilot-shared\bin\unlink-copilot.cmd C:\rdwr-intelij\<repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\unlink-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 Junctions are removed. Real folders (`agents/`, `instructions-local/`,
 `copilot-instructions.md`) are left untouched.
+
+---
+
+## License
+
+[MIT](LICENSE) — Copyright 2025 Radware Ltd.

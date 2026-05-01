@@ -21,9 +21,9 @@ description: Use when you need to read, search, or understand code in sibling re
 
 The <product-suite> ecosystem spans multiple repositories under a shared workspace root. When working on cross-service features, you need to read and search code in sibling repos that are **not** part of the current IDE workspace.
 
-**Core principle:** All sibling repos live under `C:\rdwr-intelij\`. The IDE tools (`list_dir`, `read_file`, `file_search`, `grep_search`, `semantic_search`) are **workspace-restricted** and WILL FAIL on any path outside the current repo. Use `run_in_terminal` for ALL cross-repo access.
+**Core principle:** All sibling repos live under `%COPILOT_WORKSPACE_ROOT%\`. The IDE tools (`list_dir`, `read_file`, `file_search`, `grep_search`, `semantic_search`) are **workspace-restricted** and WILL FAIL on any path outside the current repo. Use `run_in_terminal` for ALL cross-repo access.
 
-In examples below, substitute `<REPO>` with the actual repo name (e.g., `<sibling-repo>`). Full path: `C:\rdwr-intelij\<REPO>`.
+In examples below, substitute `<REPO>` with the actual repo name (e.g., `<sibling-repo>`). Full path: `%COPILOT_WORKSPACE_ROOT%\<REPO>`.
 
 ## Critical Constraint
 
@@ -41,10 +41,10 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `<siblin
 ## When to Use
 
 **Use when:**
-- Implementing a feature that spans this project and another service (<calling-service>, <orchestrator-service>, <reporter-service>, etc.)
+- Implementing a feature that spans this project and another service (core product, configuration service, reporting module, etc.)
 - Tracing an API contract to see how the caller/callee implements it
 - Understanding DTOs, endpoints, or DB schemas in a sibling service
-- Checking how a shared library (`kvision_libs`, `webui_components`) is used
+- Checking how a shared library is used in other repos
 - Verifying integration points before writing code
 
 **Don't use when:**
@@ -53,24 +53,24 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `<siblin
 
 ## Available Repositories
 
-All repos live under the workspace root: **`C:\rdwr-intelij\`**
+All repos live under the workspace root: **`%COPILOT_WORKSPACE_ROOT%\`**
 
-| Repository | Description |
-|---|---|
-| the current repo | the project — current workspace |
-| `<sibling-repo>` | DP Inline Configurator — manages inline <managed-device> devices |
-| `<orchestrator-repo>` | <orchestrator-service> (<product-suite>) core service |
-| `kvision_configuration_service` | Configuration Service — platform config, RBAC proxy |
-| `kvision_vrm` | <reporter-service> — Vision Reporter Module |
-| `kvision_deploy` | Deployment orchestration |
-| `kvision_ha_orchestrator` | HA Orchestrator |
-| `kvision_libs` | Shared Java libraries |
-| `kvision_manifest` | Service manifest definitions |
-| `kvision_upgrade` | Upgrade service |
-| `<core-lib-repo>` | <product-suite> core library |
-| `webui_components` | Shared UI design system (`webui-design-system`) |
+**Your org's repo list:** `shared/memory/tech-discoveries.md` → Repo Registry section (gitignored, local only).
 
-> **Tip:** Run `ls "C:\rdwr-intelij"` to discover all repos — this list may not be exhaustive.
+```bash
+# Discover all locally cloned repos
+ls "$COPILOT_WORKSPACE_ROOT"
+```
+
+Commonly needed repo types to look for:
+- **Core product** — the main backend service
+- **Configuration service** — RBAC, config proxy
+- **Reporter / collector** — data pipeline services
+- **Shared libraries** — Java/Node shared libs
+- **Deployment** — orchestration and manifests
+- **UI** — frontend applications and design system
+
+> **Tip:** Fill in `shared/memory/tech-discoveries.md` → Repo Registry with your org's repo names using the `save-learning` skill. That file is gitignored so it stays local.
 
 ## Terminal Commands Reference
 
@@ -83,39 +83,39 @@ Follow this sequence when exploring a sibling repo for integration work:
 ### Step 1: Orientation (1 terminal call)
 ```bash
 # Repo root + package layout in one call
-ls "C:\rdwr-intelij\<REPO>" && \
+ls "%COPILOT_WORKSPACE_ROOT%\<REPO>" && \
 echo "=== Java packages ===" && \
-find "C:\rdwr-intelij\<REPO>\src\main\java" -type d
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java" -type d
 ```
 
 ### Step 2: Find Entry Points (1 terminal call)
 ```bash
 # REST controllers + service classes + key patterns — all in one grep
 grep -rn "@RestController\|@Service\|class.*Service\|interface.*Service" \
-  "C:\rdwr-intelij\<REPO>\src" --include="*.java" -l
+  "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" -l
 ```
 
 ### Step 3: Read and Trace (batch reads)
 ```bash
 # Read all relevant files in one call
-cat "C:\rdwr-intelij\<REPO>\src\...\ControllerA.java" && \
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ControllerA.java" && \
 echo "=====" && \
-cat "C:\rdwr-intelij\<REPO>\src\...\ServiceA.java" && \
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ServiceA.java" && \
 echo "=====" && \
-cat "C:\rdwr-intelij\<REPO>\src\...\RepositoryA.java"
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\RepositoryA.java"
 ```
 
 ### Step 4: Map DTOs (batch)
 ```bash
 # Read all DTOs in a package at once
-for f in "C:\rdwr-intelij\<REPO>\src\main\java\com\radware\...\dto"/*.java; do
+for f in "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\java\com\radware\...\dto"/*.java; do
   echo "===== $f ====="; cat "$f"
 done
 ```
 
 ### Step 5: Check Config (batch)
 ```bash
-find "C:\rdwr-intelij\<REPO>\src\main\resources" -type f | \
+find "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\main\resources" -type f | \
   xargs -I{} sh -c 'echo "===== {} ====="; cat "{}"'
 ```
 
@@ -188,16 +188,16 @@ Combine multiple file reads, searches, and directory listings into a **single `r
 **Examples of good batching:**
 ```bash
 # BAD: 3 separate terminal calls
-# Call 1: ls "C:\rdwr-intelij\<REPO>"
+# Call 1: ls "%COPILOT_WORKSPACE_ROOT%\<REPO>"
 # Call 2: grep -rn "@Service" ...
 # Call 3: cat "...\ServiceA.java"
 
 # GOOD: 1 terminal call
-ls "C:\rdwr-intelij\<REPO>" && \
+ls "%COPILOT_WORKSPACE_ROOT%\<REPO>" && \
 echo "=== Services ===" && \
-grep -rln "@Service" "C:\rdwr-intelij\<REPO>\src" --include="*.java" && \
+grep -rln "@Service" "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" && \
 echo "=== ServiceA.java ===" && \
-cat "C:\rdwr-intelij\<REPO>\src\...\ServiceA.java"
+cat "%COPILOT_WORKSPACE_ROOT%\<REPO>\src\...\ServiceA.java"
 ```
 
 Target: **≤3 terminal calls** for a typical cross-repo exploration session (orient → search → read).
@@ -272,7 +272,7 @@ Each repo memory file follows this standard format:
 ```markdown
 # <Service Name> — Cross-Repo Knowledge
 **Last updated:** [date]
-**Repo:** `C:\rdwr-intelij\<repo_name>`
+**Repo:** `%COPILOT_WORKSPACE_ROOT%\<repo_name>`
 
 ## Service Overview
 - [One-sentence description of what this service does]
@@ -345,14 +345,14 @@ Not every cross-repo task requires deep exploration. Match depth to the question
 ```bash
 # Find controllers + DTOs in one call
 grep -rln "@RestController\|@Path\|class.*Dto\|class.*Request\|class.*Response" \
-  "C:\rdwr-intelij\<REPO>\src" --include="*.java" | head -20
+  "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java" | head -20
 ```
 
 ### L2 Command Pattern (if L1 insufficient)
 ```bash
 # Find service classes that use this project
 grep -rln "<domain-keyword-1>\|<domain-keyword-2>" \
-  "C:\rdwr-intelij\<REPO>\src" --include="*.java"
+  "%COPILOT_WORKSPACE_ROOT%\<REPO>\src" --include="*.java"
 ```
 
 ## Targeted Exploration Rule
@@ -360,10 +360,10 @@ grep -rln "<domain-keyword-1>\|<domain-keyword-2>" \
 > **Never start with a generic repo-wide scan.** Always begin with a specific question.
 
 **Good:** "What endpoint does <calling-service> call to create a PO template?"
-→ `grep -rn "<entity-keyword-1>\|<entityKeyword2>" "C:\rdwr-intelij\<sibling-repo>\src" --include="*.java" -l`
+→ `grep -rn "<entity-keyword-1>\|<entityKeyword2>" "%COPILOT_WORKSPACE_ROOT%\<sibling-repo>\src" --include="*.java" -l`
 
 **Bad:** "Let me explore the <calling-service> codebase"
-→ `find "C:\rdwr-intelij\<sibling-repo>\src" -type f` ← wastes context
+→ `find "%COPILOT_WORKSPACE_ROOT%\<sibling-repo>\src" -type f` ← wastes context
 
 ### Question → Command Mapping
 

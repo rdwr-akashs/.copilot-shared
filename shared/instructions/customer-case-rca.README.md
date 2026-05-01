@@ -11,7 +11,7 @@ End-to-end, subagent-driven workflow for investigating customer field escalation
 ### 1. (One-time, per repo) Pick up the new agent
 
 ```cmd
-C:\rdwr-intelij\.copilot-shared\bin\refresh-agents.cmd C:\rdwr-intelij\<repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 The skills, instruction, and prompt are already live via junctions — only the agent file needs copying.
@@ -85,7 +85,7 @@ agent-templates/
 └── case-investigator.agent.md               # the orchestrating agent
 
 cases/                                        # local-only solved-case archive
-                                              # at C:\rdwr-intelij\.copilot-shared\cases\
+                                              # at %COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\
 ├── README.md
 ├── _index.md
 ├── _template/signature.yml
@@ -105,8 +105,8 @@ cases/                                        # local-only solved-case archive
 | File inventory | `<repo>\.agent_work\<case-id>\_inventory.md` | Per-case |
 | Extraction log | `<repo>\.agent_work\<case-id>\_extraction.log` | Per-case |
 | Final RCA | `<repo>\.agent_work\<case-id>\rca-<case-id>.md` | Per-case |
-| Persisted post-mortem | `C:\rdwr-intelij\.copilot-shared\cases\<case-id>\` | Permanent, **local-only** |
-| Lookup index | `C:\rdwr-intelij\.copilot-shared\cases\_index.md` | Permanent, **local-only** |
+| Persisted post-mortem | `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\<case-id>\` | Permanent, **local-only** |
+| Lookup index | `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\_index.md` | Permanent, **local-only** |
 
 ---
 
@@ -204,7 +204,7 @@ Phase 0.5 of every **future** case scores incoming symptoms against every `signa
 
 Top-3 matches with confidence % are surfaced before any new triage runs.
 
-> ⚠️ **The archive contains internal customer data.** It lives in the local-only `.copilot-shared` git repo (no remote, per the top-level `C:\rdwr-intelij\.copilot-shared\README.md`). Never push it. See `C:\rdwr-intelij\.copilot-shared\cases\README.md` for the full warning.
+> ⚠️ **The archive contains internal customer data.** It lives in the local-only `.copilot-shared` git repo (no remote, per the top-level `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\README.md`). Never push it. See `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\README.md` for the full warning.
 
 ---
 
@@ -235,8 +235,8 @@ The investigator **does not** run `git commit`. The message is handed to the `de
 | I want to… | Do this |
 |------------|---------|
 | Start a new case | Paste [`investigate-customer-case.md`](../prompts/investigate-customer-case.md) into chat |
-| See if a similar case was solved before | Phase 0.5 runs automatically; or `findstr /S /I "<keyword>" C:\rdwr-intelij\.copilot-shared\cases\*\signature.yml` |
+| See if a similar case was solved before | Phase 0.5 runs automatically; or `findstr /S /I "<keyword>" %COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\*\signature.yml` |
 | Make triage sharper for one product | Add `<product-repo>/.github/instructions-local/triage-rules.instructions.md` |
 | Re-run an investigation | Re-paste the kickoff prompt; intake is idempotent |
 | Hand the fix to a developer | Approve the RCA; the agent dispatches the `developer` agent |
-| Browse archived cases | Open `C:\rdwr-intelij\.copilot-shared\cases\_index.md` |
+| Browse archived cases | Open `%COPILOT_WORKSPACE_ROOT%\.copilot-shared\cases\_index.md` |

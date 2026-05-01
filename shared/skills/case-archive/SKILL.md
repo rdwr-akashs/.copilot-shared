@@ -130,7 +130,8 @@ references:
    ```markdown
    | <case-id> | <date> | <product> | <versions> | <symptom one-liner> | [signature](<case-id>/signature.yml) | <fixed-in> |
    ```
-6. **Optional commit**: if the user agrees, dispatch `commit-push` skill on `.copilot-shared` (local-only repo per README — no remote, no push needed beyond the local commit).
+6. **Append to shared memory** — invoke `save-learning` skill to append the pattern to `shared/memory/customer-cases.md` and any relevant `known-bugs.md` entries. This makes the pattern searchable by ALL team members in future sessions, not just via the local `cases/` archive.
+7. **Optional commit**: if the user agrees, dispatch `commit-push` skill on `.copilot-shared` (local-only repo per README — no remote, no push needed beyond the local commit).
 
 ### Output
 

@@ -128,6 +128,29 @@ After agents return:
 - Example: All driver modules failing after driver-api change → sequential fix, don't parallelize
 - Example: Two UI apps + one backend module need changes → dispatch 3 agents
 
+## Two-Stage Review (for implementation tasks)
+
+When agents implement features (not just fixes), apply a two-stage review after each agent returns:
+
+**Stage 1 — Spec compliance:** Does the output match the requirement/acceptance criteria exactly?
+- If not: send back with specific spec gaps listed
+
+**Stage 2 — Code quality:** Constructor injection, no null returns, tests present, no magic strings?
+- If not: send back with concrete violations listed
+
+Only after both stages pass: mark the task complete and proceed to the next agent.
+
+```
+Agent completes task
+    → Stage 1: spec reviewer subagent (does it DO the right thing?)
+    → If gaps: implementer fixes → re-review
+    → Stage 2: code quality reviewer subagent (is it written correctly?)
+    → If violations: implementer fixes → re-review
+    → Mark complete → next task
+```
+
+**Skip two-stage review for:** bug fixes where the existing test going green is sufficient proof.
+
 ## Quick Start
 
 1. Group failures by module and root cause

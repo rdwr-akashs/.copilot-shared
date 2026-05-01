@@ -1,0 +1,58 @@
+#!/bin/sh
+# Git pre-push hook — runs tests before push
+# Install: copy to .git/hooks/pre-push and chmod +x
+# Or use: bin/install-hooks.cmd <repo-path>
+#
+# Set SKIP_TESTS=1 to bypass: SKIP_TESTS=1 git push
+# (Use sparingly — only for WIP branches or if tests ran just before)
+
+if [ "$SKIP_TESTS" = "1" ]; then
+    echo "pre-push: SKIP_TESTS=1 set, skipping test run."
+    exit 0
+fi
+
+# Detect project type
+if [ -f "pom.xml" ] || [ -f "mvnw" ]; then
+    echo "pre-push: Maven project detected, running tests..."
+    if [ -f "./mvnw" ]; then
+        ./mvnw test -q
+    else
+        mvn test -q
+    fi
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "ERROR: Tests failed. Push aborted."
+        echo "Fix the failing tests or use SKIP_TESTS=1 git push (WIP branches only)."
+        exit 1
+    fi
+    echo "pre-push: All tests passed."
+
+elif [ -f "package.json" ]; then
+    echo "pre-push: npm project detected, running tests..."
+
+    # TypeScript type-check first
+    if [ -f "tsconfig.json" ]; then
+        npx tsc --noEmit
+        if [ $? -ne 0 ]; then
+            echo ""
+            echo "ERROR: TypeScript errors found. Push aborted."
+            exit 1
+        fi
+    fi
+
+    # Run Jest
+    npx jest --passWithNoTests --ci
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "ERROR: Tests failed. Push aborted."
+        echo "Fix the failing tests or use SKIP_TESTS=1 git push (WIP branches only)."
+        exit 1
+    fi
+    echo "pre-push: All tests passed."
+
+else
+    echo "pre-push: No pom.xml or package.json found. Skipping test run."
+fi
+
+exit 0
