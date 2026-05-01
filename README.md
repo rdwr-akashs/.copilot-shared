@@ -74,14 +74,24 @@ git clone https://bitbucket.org/<bb-workspace>/<your-repo>.git
 :: ... clone whichever repos you work on
 ```
 
-### 3. Link one repo
+### 3. Set up each repo fully (new repos)
 
-**New repo** (no `.github/` yet):
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-repo.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
+**One command creates `.github/`, agents, instructions-local, junctions and auto-fills what it can from your Bitbucket registry:**
+
+```powershell
+.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
 
-**Existing repo** (already has `.github/`):
+What it does automatically:
+- Detects repo category and description from your Bitbucket registry
+- Writes `.github/copilot-instructions.md` pre-filled with tech stack, Bitbucket URL, build commands
+- Writes `.github/instructions-local/project-rules.instructions.md` (stub to edit)
+- Writes `.github/instructions-local/cli-commands.instructions.md` (pre-filled build/test commands)
+- Copies all agent templates to `.github/agents/`
+- Junctions `skills/`, `instructions/`, `prompts/`, `plans/` from the shared store
+- Writes `.github/COPILOT-SETUP.md` (team onboarding doc)
+
+**Existing repo** (already has `.github/` — junctions only):
 ```cmd
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
@@ -92,18 +102,24 @@ git clone https://bitbucket.org/<bb-workspace>/<your-repo>.git
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
 ```
 
-Walks `%COPILOT_WORKSPACE_ROOT%\*`. Skips repos without a `.github/copilot-instructions.md`
-(those need `setup-repo.cmd` first).
+Walks `%COPILOT_WORKSPACE_ROOT%\*`. Prints the `setup-repo.ps1` command for any repos that don't have `.github/` yet.
 
-### 5. Customise per-repo
+### 5. Finish tailoring in Copilot Chat (3 commands, one-time per repo)
 
-After linking, edit these three files in each repo:
+After running `setup-repo.ps1`, open the repo in your IDE and run these in order:
 
-1. `.github/copilot-instructions.md` — describe the project
-2. `.github/instructions-local/project-rules.instructions.md` — hard rules for this repo
-3. Open Copilot Chat → *"Run the customize-agents skill on this repo."*
+```
+# Step A — replaces <placeholders> in agents/ with real names from this codebase
+Run the customize-agents skill on this repo.
 
-Restart your IDE. Done.
+# Step B — builds .github/repo-cache.md, makes every future session instant
+Run the acquire-codebase-knowledge skill.
+
+# Step C — optional: describe the project overview you want agents to know
+Fill in the project overview section of .github/copilot-instructions.md based on this codebase.
+```
+
+Restart your IDE after Step B. Done — Copilot now has full context for this repo.
 
 ---
 
@@ -134,12 +150,14 @@ Restart your IDE. Done.
 │   ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
 │   ├── cases\                  # Local-only solved-case archive (gitignored — contains customer data)
 │   ├── templates\              # Per-repo seed files (copilot-instructions, project-rules, etc.)
-│   └── bin\                    # Setup scripts (Windows .cmd)
-│       ├── setup-repo.cmd      # One-shot setup for a new repo
-│       ├── link-copilot.cmd    # (Re)create junctions for one repo
+│   └── bin\                    # Setup scripts
+│       ├── setup-local.ps1     # ONE-TIME: personalise toolkit after GitHub clone
+│       ├── setup-repo.ps1      # ONE-TIME per repo: full .github/ setup + junctions
+│       ├── link-copilot.cmd    # (Re)create junctions for one repo (existing .github/)
 │       ├── link-all-copilot.cmd# Walk %COPILOT_WORKSPACE_ROOT%\; link every repo
 │       ├── unlink-copilot.cmd  # Remove junctions from one repo
 │       ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
+│       ├── extract-support-bundle.ps1  # Smart extraction of DefenseFlow support bundles
 │       ├── doctor.cmd          # Health-check one repo's Copilot wiring
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)

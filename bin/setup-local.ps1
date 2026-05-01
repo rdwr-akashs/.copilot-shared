@@ -359,11 +359,20 @@ Write-Host "  shared/skills/remote-repo-exploration/references/repo-categories.m
 Write-Host "  .local.env"
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Link your repos:  bin\link-copilot.cmd <repo-path>"
-Write-Host "     Or all at once:   bin\link-all-copilot.cmd"
-Write-Host "  2. Open a linked repo in your IDE and ask Copilot:"
-Write-Host "     'Run the customize-agents skill on this repo.'"
-Write-Host "  3. As you investigate cases and bugs, run the save-learning skill."
+Write-Host "  1. Set up each product repo (creates .github/, agents, instructions-local, junctions):"
+Write-Host "       .\bin\setup-repo.ps1 <repo-path>" -ForegroundColor Yellow
+Write-Host "     Or all linked repos at once:" 
+Write-Host "       .\bin\link-all-copilot.cmd"
+Write-Host ""
+Write-Host "  2. In each newly set-up repo, open Copilot Chat and run:"
+Write-Host "       'Run the customize-agents skill on this repo.'" -ForegroundColor Yellow
+Write-Host "     This replaces <placeholders> in agents/ with real names from that codebase."
+Write-Host ""
+Write-Host "  3. In each repo, run:"
+Write-Host "       'Run the acquire-codebase-knowledge skill.'" -ForegroundColor Yellow
+Write-Host "     This builds .github/repo-cache.md — makes every future session instant."
+Write-Host ""
+Write-Host "  4. As you investigate cases and bugs, run the save-learning skill."
 Write-Host "     Your shared/memory/ files will grow and agents get faster over time."
 if (-not $fetchRepos) {
     Write-Host ""

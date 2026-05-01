@@ -35,7 +35,8 @@ for /d %%R in ("%ROOT%\*") do (
         call "%BIN%link-copilot.cmd" "%%R"
         set /a COUNT+=1
     ) else if exist "%%R\.git" (
-        echo SKIP: %%R  ^(no .github\copilot-instructions.md - run setup-repo.cmd first^)
+        echo SKIP: %%R  ^(no .github\copilot-instructions.md - run setup-repo.ps1 first^)
+        echo       powershell -File "%BIN%setup-repo.ps1" "%%R"
     )
 )
 
