@@ -43,7 +43,29 @@ source ~/.bashrc
 cd %COPILOT_WORKSPACE_ROOT%
 git clone https://github.com/Radware/copilot-shared.git .copilot-shared
 ```
+### 1.5. Run first-time local setup
 
+This is what makes the toolkit **org-specific and powerful**. Run it once after cloning:
+
+```powershell
+.copilot-shared\bin\setup-local.ps1
+```
+
+You'll be asked for:
+1. Your **Bitbucket workspace slug** (e.g. `mycompany`)
+2. Your **product names** (used in agent context)
+3. Optional: **Bitbucket App Password** to auto-fetch your full repo list
+
+What it generates (all gitignored):
+
+| File | What it does |
+|------|-------------|
+| `shared/instructions/copilot-local.instructions.md` | **Most impactful** — junctioned into every linked repo so agents always know your workspace name, product names, and key repos. No more `<bb-workspace>` placeholders. |
+| `shared/memory/*.md` | Initialised from templates — grows as you investigate cases and bugs |
+| `remote-repo-exploration/references/repo-categories.md` | Your real repo list, fetched from Bitbucket API and categorised |
+| `.local.env` | `BB_WORKSPACE` and `BB_BASE_URL` for scripts |
+
+Re-run with `-Force` to refresh (e.g. after your repo list grows).
 ### 2. Clone your product repos from Bitbucket
 
 ```cmd
