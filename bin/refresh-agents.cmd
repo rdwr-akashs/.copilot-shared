@@ -77,13 +77,12 @@ echo   CONFLICT  : !CONFLICT!  ^(diff *.template.new vs the live agent, merge ma
 echo.
 
 if !CONFLICT! gtr 0 (
-    echo Next steps for each conflict:
-    echo   1. cd %REPO%\.github\agents
-    echo   2. diff ^<agent^>.agent.md ^<agent^>.agent.md.template.new
-    echo   3. Merge wanted changes into the live file
-    echo   4. del ^<agent^>.agent.md.template.new
-    echo   5. In Copilot Chat: "Run the customize-agents skill on this repo"
-    echo      ^(re-substitutes placeholders in any newly imported sections^)
+    echo Auto-merging conflicts with merge-agent-templates.ps1 ...
+    echo.
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%BIN%merge-agent-templates.ps1" -AgentsDir "%REPO%\.github\agents"
+    echo.
+    echo If any hunks were SKIPPED above, review those files manually then run:
+    echo   In Copilot Chat: "Run the customize-agents skill on this repo"
     echo.
 )
 
