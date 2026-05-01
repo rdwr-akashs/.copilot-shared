@@ -37,6 +37,10 @@
     .\bin\setup-local.ps1
     .\bin\setup-local.ps1 -Force
     .\bin\setup-local.ps1 -BBWorkspace mycompany
+
+NOTE: Step 3 (repo fetch) uses a Bitbucket HTTP Access Token (Bearer auth).
+      Create one at https://bitbucket.org/account/settings/access-tokens
+      with Repositories: Read scope.
 #>
 
 param(
@@ -101,36 +105,49 @@ $product2 = Prompt-Input "Secondary product name (optional, press Enter to skip)
 # ---------------------------------------------------------------------------
 Write-Step "Step 3: Fetch repo list from Bitbucket API (optional)"
 Write-Info "Creates repo-categories.md and the Repo Registry in tech-discoveries.md."
-Write-Info "Requires a Bitbucket App Password (read-only 'Repositories' scope)."
-Write-Info "Create one at: $BBBaseUrl/account/settings/app-passwords"
+Write-Info "Requires your Bitbucket username and an HTTP Access Token as the password."
 
 $fetchRepos = $false
 $allRepos   = @()
 
 $doFetch = Prompt-Input "Fetch repo list now? [y/N]" "N"
 if ($doFetch -match '^[Yy]') {
-    $bbUser = Prompt-Input "Bitbucket username"
-    Write-Host "  App password (input hidden): " -NoNewline -ForegroundColor White
-    $bbPassSecure = Read-Host -AsSecureString
-    $bbPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-                  [Runtime.InteropServices.Marshal]::SecureStringToBSTR($bbPassSecure))
 
-    $authBytes  = [Text.Encoding]::ASCII.GetBytes("${bbUser}:${bbPass}")
-    $authHeader = @{ Authorization = "Basic " + [Convert]::ToBase64String($authBytes) }
+    # ---- Resolve credentials ----
+    $bbUser = $env:BITBUCKET_USERNAME
+    $bbPass = $env:BITBUCKET_PASSWORD
 
-    Write-Info "Fetching repos from $BBBaseUrl/2.0/repositories/$BBWorkspace ..."
+    if (-not ($bbUser -and $bbPass)) {
+        $bbUser = Prompt-Input "Bitbucket username (e.g. you@company.com)"
+        Write-Host "  Bitbucket password / access token (input hidden): " -NoNewline -ForegroundColor White
+        $passSecure = Read-Host -AsSecureString
+        $bbPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+                      [Runtime.InteropServices.Marshal]::SecureStringToBSTR($passSecure))
+    }
+
+    $creds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${bbUser}:${bbPass}"))
+    $authHeader = @{ Authorization = "Basic $creds" }
+    $bbApiBase  = 'https://api.bitbucket.org'
+    Write-Info "Fetching repos from $bbApiBase/2.0/repositories/$BBWorkspace ..."
     try {
-        $url = "$BBBaseUrl/2.0/repositories/$BBWorkspace`?pagelen=100&fields=values.slug,values.description,values.project.key,next"
+        # Match MCP exactly: no fields filter, pagelen=100 per page
+        $url = "$bbApiBase/2.0/repositories/$BBWorkspace`?pagelen=100"
         do {
             $resp    = Invoke-RestMethod -Uri $url -Headers $authHeader -TimeoutSec 30
             $allRepos += $resp.values
-            $url = if ($resp.PSObject.Properties['next']) { $resp.next } else { $null }
+            $url = if ($resp.PSObject.Properties.Match('next').Count -gt 0) { $resp.next } else { $null }
         } while ($url)
         Write-Ok "Fetched $($allRepos.Count) repos"
         $fetchRepos = $true
     } catch {
-        Write-Host "  [warn] API call failed: $_" -ForegroundColor Yellow
-        Write-Info "Continuing without live repo list — you can re-run with -Force later."
+        $errMsg = $_.ToString()
+        Write-Host "  [warn] API call failed: $errMsg" -ForegroundColor Yellow
+        if ($errMsg -match 'not supported for this endpoint') {
+            Write-Host "  [hint] This token appears to be repo/project-scoped." -ForegroundColor Yellow
+            Write-Host "         Create a WORKSPACE-level token at:" -ForegroundColor Yellow
+            Write-Host "         https://bitbucket.org/account/settings/access-tokens" -ForegroundColor Yellow
+        }
+        Write-Info "Continuing without live repo list -- re-run with -Force to retry."
     }
 }
 
