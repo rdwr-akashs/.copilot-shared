@@ -14,7 +14,9 @@ memory-bank/
 # Shared memory — org-specific knowledge (repo names, bug IDs, customer case patterns)
 # These grow from real work and must NOT be exposed externally.
 # Share them via your internal Bitbucket repo, not GitHub.
-shared/memory/
+shared/memory/*
+!shared/memory/templates/
+!shared/memory/templates/**
 
 # Org-specific sprint/feature plans — contain internal project codes and ticket numbers
 shared/plans/*.md
