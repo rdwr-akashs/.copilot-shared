@@ -165,6 +165,7 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │       ├── audit.ps1           # Batch doctor on all repos — single health report table
 │       ├── setup-all-repos.ps1 # Run setup-repo.ps1 on every repo missing .github/
 │       ├── generate-skill-index.ps1  # Auto-generate shared/skills/INDEX.md
+│       ├── repo-mix.ps1        # Repomix-style repository context exporter
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)
 │   └── .github\
@@ -203,6 +204,22 @@ notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\writing-plans\SKI
 ```
 
 Save → every linked repo sees the change immediately. No sync step.
+
+### Build a repo context pack (Repomix-style)
+
+Generate one markdown file with tree + selected text file contents:
+
+```powershell
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.ps1 -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo>
+```
+
+Useful flags:
+
+- `-OutputFile <path>` to control destination file (default: `<repo>/.agent_work/repo-mix-<repo>-<timestamp>.md`)
+- `-MaxFiles <n>` to cap included files (default `500`)
+- `-MaxFileSizeKB <n>` to skip large files (default `256`)
+- `-WithLineNumbers` to render line numbers inside each file block
+- `-UseAllFiles` to scan filesystem recursively instead of `git ls-files`
 
 ### Adding a new shared skill
 
