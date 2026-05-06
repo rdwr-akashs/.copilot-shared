@@ -27,6 +27,7 @@ Pick the target file based on what was found:
 | Known bug: ID, symptom, version, workaround | `shared/memory/known-bugs.md` |
 | Repo tech structure: ES index, RabbitMQ queue, Akka hierarchy, DB schema | `shared/memory/tech-discoveries.md` |
 | Build/test commands discovered for a repo | `shared/memory/tech-discoveries.md` (Build & Test Commands table) |
+| Cross-repo pattern: service communication, shared contracts, deploy dependencies | `shared/memory/cross-repo-learnings.md` |
 
 If the learning spans multiple types, append to each relevant file.
 

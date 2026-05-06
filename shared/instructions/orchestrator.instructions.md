@@ -32,10 +32,16 @@ Before reading any source code or running `semantic_search`:
    - **Present and < 30 days old** → read it (tiny, fast) → skip `semantic_search`
    - **Absent or stale** → run `acquire-codebase-knowledge` skill to generate it, then proceed
    - **If stale** → tell the user: *"Repo cache is N days old — rebuilding."*
-2. Check shared memory freshness (look for `<!-- Last updated: YYYY-MM-DD -->` in each file):
+2. Load the **Central Knowledge Store** (single source of truth for all repos):
+   - `shared/memory/active-context.md` — current work focus
+   - `shared/memory/architecture-map.md` — auto-generated topology (tech stacks, ports, inter-service refs, DBs)
+   - `shared/memory/cross-repo-learnings.md` — patterns spanning multiple repos
+   - For cross-repo questions → `shared/memory/repo-contexts/_index.md` + specific repo `.md`
+   - If the central store is stale or missing → tell user: *"Run `bin\full-context-refresh.cmd` to rebuild."*
+3. Check shared memory freshness (look for `<!-- Last updated: YYYY-MM-DD -->` in each file):
    - `shared/memory/known-bugs.md`, `customer-cases.md`, `tech-discoveries.md`
    - **> 90 days since last update** → warn: *"⚠ <file> hasn't been updated in N days. Consider reviewing."*
-3. Load task-specific docs only when cache is absent or the area is undocumented:
+4. Load task-specific docs only when cache is absent or the area is undocumented:
 
 | Task touches | Also read |
 |---|---|
@@ -44,6 +50,7 @@ Before reading any source code or running `semantic_search`:
 | DB, RabbitMQ, Config | `docs/codebase/INTEGRATIONS.md` |
 | Tests | `docs/codebase/TESTING.md` |
 | Dependencies | `docs/codebase/STACK.md` |
+| Customer case (SC-*, RSEG-*, INC-*) | `cases/_index.md` + grep `cases/*/signature.yml` for matching keywords |
 
 3. After completing any task: append one line to `## Recent Context` in `.github/repo-cache.md`
 

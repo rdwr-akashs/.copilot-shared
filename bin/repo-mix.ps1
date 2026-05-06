@@ -28,6 +28,7 @@ param(
     [int]$TreeDepth = 4,
     [switch]$WithLineNumbers,
     [switch]$UseAllFiles,
+    [switch]$Central,
     [string[]]$ExcludeDirs = @(
         '.git', 'node_modules', 'dist', 'build', 'out', '.next', '.nuxt',
         '.venv', 'venv', '__pycache__', 'target', 'coverage', '.idea', '.vscode'
@@ -68,8 +69,20 @@ function Get-RepoName {
 }
 
 function New-DefaultOutputPath {
-    param([Parameter(Mandatory)][string]$Root)
+    param([Parameter(Mandatory)][string]$Root, [bool]$UseCentral = $false)
     $repoName = Get-RepoName -Root $Root
+
+    if ($UseCentral) {
+        # Central store: .copilot-shared/shared/memory/repo-contexts/<repo-name>.md
+        $binDir = Split-Path -Parent $MyInvocation.ScriptName
+        $sharedRoot = Split-Path -Parent $binDir
+        $centralDir = Join-Path $sharedRoot 'shared\memory\repo-contexts'
+        if (-not (Test-Path -LiteralPath $centralDir)) {
+            New-Item -ItemType Directory -Path $centralDir -Force | Out-Null
+        }
+        return (Join-Path $centralDir "$repoName.md")
+    }
+
     $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $outDir = Join-Path $Root '.agent_work'
     if (-not (Test-Path -LiteralPath $outDir)) {
@@ -245,7 +258,7 @@ $isGitRepo = Test-IsGitRepo -Root $repoRoot
 $useGit = $isGitRepo -and (-not $UseAllFiles)
 
 if (-not $OutputFile) {
-    $OutputFile = New-DefaultOutputPath -Root $repoRoot
+    $OutputFile = New-DefaultOutputPath -Root $repoRoot -UseCentral:$Central
 }
 
 $outAbs = [System.IO.Path]::GetFullPath($OutputFile)

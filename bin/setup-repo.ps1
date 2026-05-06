@@ -27,11 +27,13 @@
 .EXAMPLE
     .\bin\setup-repo.ps1 C:\rdwr-intelij\df_core
     .\bin\setup-repo.ps1 C:\rdwr-intelij\kvision_collector -Force
+    .\bin\setup-repo.ps1 C:\rdwr-intelij\df_core -GenerateRepoMix
 #>
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$RepoPath,
-    [switch]$Force
+    [switch]$Force,
+    [switch]$GenerateRepoMix
 )
 
 Set-StrictMode -Version Latest
@@ -457,6 +459,27 @@ if ((Test-Path $hookScript) -and (Test-Path (Join-Path $RepoPath '.git'))) {
     Write-Info "install-hooks.cmd not found -- install hooks manually"
 }
 
+# ---- Step 11: Optional repo-mix context pack ----
+if ($GenerateRepoMix) {
+    Write-Step "Step 11: Generating repo-mix context pack"
+    $repoMixScript = Join-Path $PSScriptRoot 'repo-mix.ps1'
+    if (Test-Path $repoMixScript) {
+        $repoMixOutDir = Join-Path $RepoPath '.agent_work'
+        if (-not (Test-Path $repoMixOutDir)) {
+            New-Item -ItemType Directory -Path $repoMixOutDir -Force | Out-Null
+        }
+        $repoMixOutFile = Join-Path $repoMixOutDir 'repo-mix-bootstrap.md'
+        try {
+            & $repoMixScript -RepoPath $RepoPath -OutputFile $repoMixOutFile -MaxFiles 250 -MaxFileSizeKB 192
+            Write-Ok "repo-mix context generated: .agent_work/repo-mix-bootstrap.md"
+        } catch {
+            Write-Host "  [warn] repo-mix failed: $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Info "repo-mix.ps1 not found -- skipping context pack"
+    }
+}
+
 # ---- Summary ----
 Write-Host ""
 Write-Host "=== $repoName is ready ===" -ForegroundColor Green
@@ -467,6 +490,9 @@ Write-Host "  .github/instructions-local/project-rules.instructions.md"
 Write-Host "  .github/instructions-local/cli-commands.instructions.md"
 Write-Host "  .github/agents/  ($copied agents)"
 Write-Host "  .github/COPILOT-SETUP.md"
+if ($GenerateRepoMix) {
+    Write-Host "  .agent_work/repo-mix-bootstrap.md"
+}
 Write-Host ""
 Write-Host "Next -- open $repoName in IDE and run in Copilot Chat:" -ForegroundColor White
 Write-Host ""

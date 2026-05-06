@@ -84,6 +84,12 @@ git clone https://bitbucket.org/<bb-workspace>/<your-repo>.git
 .copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
 
+Optional: also generate an initial repo context pack during setup:
+
+```powershell
+.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<your-repo> -GenerateRepoMix
+```
+
 What it does automatically:
 - Detects repo category and description from your Bitbucket registry
 - Writes `.github/copilot-instructions.md` pre-filled with tech stack, Bitbucket URL, build commands
@@ -148,7 +154,18 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │   ├── shared\                 # Junctioned into every repo's .github\
 │   │   ├── skills\             # Reusable skills (cross-repo-exploration, customer-case-intake, rca-*, etc.)
 │   │   ├── instructions\       # Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
-│   │   └── prompts\            # Reusable prompt templates (investigate-customer-case, etc.)
+│   │   ├── prompts\            # Reusable prompt templates (investigate-customer-case, etc.)
+│   │   ├── plans\              # Cross-repo feature plans (junctioned to each repo)
+│   │   └── memory\             # *** CENTRAL KNOWLEDGE STORE ***
+│   │       ├── architecture-map.md       # Auto-generated service topology
+│   │       ├── active-context.md         # Current work focus
+│   │       ├── cross-repo-learnings.md   # Patterns spanning repos
+│   │       ├── customer-cases.md         # Solved case patterns
+│   │       ├── known-bugs.md             # Bug reference
+│   │       ├── tech-discoveries.md       # Tech stack registry
+│   │       └── repo-contexts/            # Per-repo Repomix context packs
+│   │           ├── _index.md             # Index of all scanned repos
+│   │           └── <repo-name>.md        # Full context per repo
 │   ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
 │   ├── cases\                  # Local-only solved-case archive (gitignored — contains customer data)
 │   ├── templates\              # Per-repo seed files (copilot-instructions, project-rules, etc.)
@@ -165,7 +182,14 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │       ├── audit.ps1           # Batch doctor on all repos — single health report table
 │       ├── setup-all-repos.ps1 # Run setup-repo.ps1 on every repo missing .github/
 │       ├── generate-skill-index.ps1  # Auto-generate shared/skills/INDEX.md
+│       ├── repo-mix.cmd        # CMD wrapper for repo-mix.ps1
 │       ├── repo-mix.ps1        # Repomix-style repository context exporter
+│       ├── repo-mix-all.ps1    # Batch scan all repos into central store
+│       ├── repo-mix-all.cmd    # CMD wrapper for repo-mix-all.ps1
+│       ├── workspace-scan.ps1  # Auto-generate architecture-map.md (tech stacks, ports, refs)
+│       ├── workspace-scan.cmd  # CMD wrapper for workspace-scan.ps1
+│       ├── full-context-refresh.ps1  # Master: runs workspace-scan + repo-mix-all
+│       ├── full-context-refresh.cmd  # CMD wrapper for full-context-refresh.ps1
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)
 │   └── .github\
@@ -213,6 +237,12 @@ Generate one markdown file with tree + selected text file contents:
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.ps1 -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
 
+Shortcut wrapper:
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo>
+```
+
 Useful flags:
 
 - `-OutputFile <path>` to control destination file (default: `<repo>/.agent_work/repo-mix-<repo>-<timestamp>.md`)
@@ -220,6 +250,31 @@ Useful flags:
 - `-MaxFileSizeKB <n>` to skip large files (default `256`)
 - `-WithLineNumbers` to render line numbers inside each file block
 - `-UseAllFiles` to scan filesystem recursively instead of `git ls-files`
+
+### Refresh the full Central Knowledge Store
+
+Rebuild everything (architecture map + all repo context packs) in one command:
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
+```
+
+Or just the architecture map:
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.cmd
+```
+
+Or just one repo into the central store:
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo> -Central
+```
+
+**When to refresh:**
+- After cloning new repos
+- Weekly (keeps architecture-map.md current)
+- Before starting cross-repo features
 
 ### Adding a new shared skill
 

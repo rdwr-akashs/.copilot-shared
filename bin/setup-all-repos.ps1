@@ -13,9 +13,11 @@
 .EXAMPLE
     powershell -File bin\setup-all-repos.ps1
     powershell -File bin\setup-all-repos.ps1 -Root D:\projects
+    powershell -File bin\setup-all-repos.ps1 -GenerateRepoMix
 #>
 param(
-    [string]$Root
+    [string]$Root,
+    [switch]$GenerateRepoMix
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,7 +63,11 @@ foreach ($dir in $dirs) {
 
     Write-Host "  SETUP $($dir.Name)" -ForegroundColor Yellow
     try {
-        & $setupScript -RepoPath $dir.FullName
+        if ($GenerateRepoMix) {
+            & $setupScript -RepoPath $dir.FullName -GenerateRepoMix
+        } else {
+            & $setupScript -RepoPath $dir.FullName
+        }
         $setup++
     } catch {
         Write-Host "  ERROR $($dir.Name): $_" -ForegroundColor Red

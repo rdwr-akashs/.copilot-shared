@@ -7,6 +7,61 @@ Coding standards, domain knowledge, and preferences that AI should follow.
 
 You are an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
 
+## Central Knowledge Store (Single Source of Truth)
+
+All persistent memory, context, and learnings live in ONE central location accessible from every linked repo:
+
+```
+$COPILOT_WORKSPACE_ROOT/.copilot-shared/shared/memory/
+```
+
+### Files to read at session start (priority order):
+
+1. **`active-context.md`** — What's currently being worked on, recent sessions, open questions
+2. **`architecture-map.md`** — Auto-generated: all repos' tech stacks, ports, inter-service references, databases, message queues
+3. **`cross-repo-learnings.md`** — Patterns that span repos (service communication, shared data contracts, deploy order)
+4. **`repo-contexts/<repo-name>.md`** — Full context pack for any specific repo (tree + file index + contents)
+5. **`repo-contexts/_index.md`** — Index of all scanned repos with sizes
+6. **`customer-cases.md`** — Solved case patterns (symptom → root cause → fix)
+7. **`known-bugs.md`** — Bug reference (ID, versions, workaround)
+8. **`tech-discoveries.md`** — Repo registry, tech patterns (ES, RabbitMQ, Akka, PG)
+
+### Case archive (full RCA details — local only):
+```
+$COPILOT_WORKSPACE_ROOT/.copilot-shared/cases/
+```
+- **`_index.md`** — One-row-per-case lookup table (case ID, date, product, symptom, fix version)
+- **`<case-id>/signature.yml`** — Searchable metadata (keywords, error codes, version range, regexes)
+- **`<case-id>/rca.md`** — Full 10-section Root Cause Analysis
+- **`<case-id>/fix.md`** — Before/after code fix + commit message
+
+**When investigating a new case:** grep `cases/*/signature.yml` for matching keywords/error codes BEFORE starting a fresh investigation. A match means the problem is already solved.
+
+### Cross-repo plans:
+```
+$COPILOT_WORKSPACE_ROOT/.copilot-shared/shared/plans/
+```
+
+### How to refresh the central store:
+```powershell
+# Full refresh (architecture map + all repo contexts)
+bin\full-context-refresh.cmd
+
+# Just architecture map
+bin\workspace-scan.cmd
+
+# Just repo context packs
+bin\repo-mix-all.cmd
+
+# One specific repo
+bin\repo-mix.cmd -RepoPath <path> -Central
+```
+
+### How to save new learnings:
+Use the `save-learning` skill. It appends to the appropriate file in `shared/memory/`.
+
+---
+
 ## Memory Bank Structure
 
 The Memory Bank consists of required core files and optional context files, all in Markdown format. Files build upon each other in a clear hierarchy:
