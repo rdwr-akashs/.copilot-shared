@@ -580,6 +580,48 @@ Never overwrites a customised agent.
 - Don't create `.github/copilot-instructions.md` in it. `link-all-copilot.cmd`
   skips repos without that file.
 
+**Q: I ran `setup-all-repos.ps1` BEFORE `setup-local.ps1`. How do I fix it?**
+
+`setup-repo.ps1` reads `.local.env` and `shared/memory/tech-discoveries.md`
+(both created by `setup-local.ps1`) to fill in Bitbucket URLs, build commands,
+and repo descriptions. Without them, all repos were set up with placeholder
+values (`https://bitbucket.org/your-workspace/<repo>`, no build commands, all
+categories defaulted to `service`).
+
+**Fix — 3 steps:**
+
+```powershell
+# 1. Run setup-local.ps1 (creates .local.env, copilot-local.instructions.md, memory files)
+powershell -File bin\setup-local.ps1
+
+# 2. Re-run setup on all repos with -Force to regenerate files with correct values
+Get-ChildItem (Split-Path $PWD -Parent) -Directory |
+  Where-Object { $_.Name -ne '.copilot-shared' -and (Test-Path "$($_.FullName)\.git") } |
+  ForEach-Object { & bin\setup-repo.ps1 $_.FullName -Force }
+
+# 3. Verify junctions are intact
+powershell -File bin\audit.ps1
+```
+
+**Alternative** — if you customised some agents and don't want to overwrite them,
+delete only the auto-generated instruction files and let `setup-all-repos` re-detect:
+
+```powershell
+# Remove just copilot-instructions.md (setup-all-repos skips repos that have it)
+Get-ChildItem (Split-Path $PWD -Parent) -Directory |
+  Where-Object { $_.Name -ne '.copilot-shared' -and (Test-Path "$($_.FullName)\.github\copilot-instructions.md") } |
+  ForEach-Object { Remove-Item "$($_.FullName)\.github\copilot-instructions.md" }
+
+# Now re-run (without -Force — agents are preserved)
+powershell -File bin\setup-all-repos.ps1
+```
+
+**What to check afterwards:**
+- Verify Bitbucket URLs no longer say `your-workspace`: `grep -r "your-workspace" ../*/.github/copilot-instructions.md`
+- If anyone already committed the placeholder files, amend those commits before pushing.
+
+> **Correct order:** Always run `setup-local.ps1` first (once per machine), THEN `setup-repo.ps1` or `setup-all-repos.ps1`.
+
 ---
 
 ## Removing the Integration from a Repo
