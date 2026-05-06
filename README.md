@@ -102,7 +102,12 @@ What it does automatically:
 **Existing repo** (already has `.github/` — junctions only):
 ```cmd
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\copy-agents.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
+
+> `link-copilot.cmd` creates junctions for skills, instructions, prompts, and
+> plans. Agents are per-repo customizations so `copy-agents.cmd` seeds them
+> separately (never overwrites existing agents).
 
 ### 4. Link ALL repos at once
 
