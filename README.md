@@ -195,6 +195,8 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │       ├── workspace-scan.cmd  # CMD wrapper for workspace-scan.ps1
 │       ├── full-context-refresh.ps1  # Master: runs workspace-scan + repo-mix-all
 │       ├── full-context-refresh.cmd  # CMD wrapper for full-context-refresh.ps1
+│       ├── token-profile.ps1   # Switch per-repo token profile (balanced/aggressive)
+│       ├── token-profile.cmd   # CMD wrapper for token-profile.ps1
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)
 │   └── .github\
@@ -262,6 +264,20 @@ Rebuild everything (architecture map + all repo context packs) in one command:
 
 ```cmd
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
+```
+
+### Switch token profile per repo
+
+Balanced (recommended):
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd balanced %COPILOT_WORKSPACE_ROOT%\<your-repo>
+```
+
+Aggressive (maximum savings):
+
+```cmd
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd aggressive %COPILOT_WORKSPACE_ROOT%\<your-repo>
 ```
 
 Or just the architecture map:

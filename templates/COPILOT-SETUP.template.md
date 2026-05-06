@@ -274,6 +274,19 @@ Balanced profile (recommended):
 - Keep quality instructions (`design-principles`, `performance-awareness`, `tdd`) scoped to source files only.
 - Use broad `applyTo: '**'` only for truly universal policy files.
 
+## Token Profile Toggle (Balanced vs Aggressive)
+
+Use a repo-local file to switch behavior without editing shared rules:
+
+1. Copy one profile template from `.copilot-shared/templates/` into:
+   `.github/instructions-local/token-profile.instructions.md`
+2. Keep only one active profile file at a time.
+3. Restart the chat session after switching.
+
+Available templates:
+- `token-profile-balanced.template.instructions.md` (recommended default)
+- `token-profile-aggressive.template.instructions.md` (maximum savings)
+
 If a shared rule conflicts with a per-repo rule, **the per-repo rule wins**.
 
 ---

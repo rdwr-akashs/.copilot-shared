@@ -17,6 +17,19 @@ picked up automatically.
 | `project-rules.instructions.md` | Hard rules: error types, dependency management, naming, must/must-not |
 | `cli-commands.instructions.md`  | Build, test, run commands specific to this repo |
 | `quick-reference.instructions.md` | One-page cheat sheet of paths, classes, and patterns |
+| `token-profile.instructions.md` | Optional token-usage profile override (balanced or aggressive) |
+
+## Token Profile Toggle
+
+To switch token behavior per repo, create:
+
+`.github/instructions-local/token-profile.instructions.md`
+
+Copy one of these templates from `.copilot-shared/templates/`:
+- `token-profile-balanced.template.instructions.md`
+- `token-profile-aggressive.template.instructions.md`
+
+Keep only one active profile file at a time.
 
 ## Editing flow
 
