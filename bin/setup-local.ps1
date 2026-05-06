@@ -12,14 +12,14 @@
 
     2. shared/memory/*.md  (customer-cases, known-bugs, tech-discoveries)
          Initialised from templates. Grows from real work via the save-learning
-         skill. Share these via your internal Bitbucket — never GitHub.
+         skill. Share these via your internal Bitbucket -- never GitHub.
 
     3. shared/skills/remote-repo-exploration/references/repo-categories.md
          Fetched from the Bitbucket API (optional) or built from your input.
          Used by remote-repo-exploration to filter which repos to search.
 
     4. .local.env
-         BB_WORKSPACE and BB_BASE_URL — used by scripts that clone or call the
+         BB_WORKSPACE and BB_BASE_URL -- used by scripts that clone or call the
          Bitbucket API.
 
     Re-running is safe: existing files are preserved unless you pass -Force.
@@ -56,7 +56,7 @@ $ROOT = Split-Path $PSScriptRoot -Parent  # .copilot-shared root
 
 function Write-Step { param([string]$msg) Write-Host "`n==> $msg" -ForegroundColor Cyan }
 function Write-Ok   { param([string]$msg) Write-Host "  [ok] $msg" -ForegroundColor Green }
-function Write-Skip { param([string]$msg) Write-Host "  [skip] $msg (already exists — use -Force to overwrite)" -ForegroundColor DarkGray }
+function Write-Skip { param([string]$msg) Write-Host "  [skip] $msg (already exists -- use -Force to overwrite)" -ForegroundColor DarkGray }
 function Write-Info { param([string]$msg) Write-Host "  $msg" -ForegroundColor DarkYellow }
 function Prompt-Input {
     param([string]$Question, [string]$Default = '')
@@ -145,7 +145,7 @@ if ($doFetch -match '^[Yy]') {
     try {
         # Match MCP exactly: no fields filter, pagelen=100 per page
         $url = "$bbApiBase/2.0/repositories/$BBWorkspace`?pagelen=100"
-        $maxPages = 200  # safety cap: 200 pages × 100 = 20,000 repos max
+        $maxPages = 200  # safety cap: 200 pages x 100 = 20,000 repos max
         $page = 0
         do {
             $resp    = Invoke-RestMethod -Uri $url -Headers $authHeader -TimeoutSec 30
@@ -167,7 +167,7 @@ if ($doFetch -match '^[Yy]') {
         Write-Info "Continuing without live repo list -- re-run with -Force to retry."
     }
 
-    # Clear credential variables — no longer needed
+    # Clear credential variables -- no longer needed
     $bbPass = $null; $creds = $null; $authHeader = $null
 }
 
@@ -215,19 +215,19 @@ foreach ($f in $memFiles) {
         Copy-Item $tpl $dest -Force
         Write-Ok "initialised $f from template"
     } else {
-        Write-Info "template not found for $f — skipping (run acquire-codebase-knowledge + save-learning to populate)"
+        Write-Info "template not found for $f -- skipping (run acquire-codebase-knowledge + save-learning to populate)"
     }
 }
 
 # Inject fetched repos into tech-discoveries.md Repo Registry
 $tdPath = Join-Path $memDir 'tech-discoveries.md'
 
-# Build $categories whenever we have repos — used by Steps 5, 6, and the injection below
+# Build $categories whenever we have repos -- used by Steps 5, 6, and the injection below
 $categories = $null
 if ($fetchRepos) {
     $categories = @{
-        'core-primary'   = @{ Title = "Core Services — Primary Product"; Repos = @() }
-        'core-secondary' = @{ Title = "Core Services — Secondary Product"; Repos = @() }
+        'core-primary'   = @{ Title = "Core Services -- Primary Product"; Repos = @() }
+        'core-secondary' = @{ Title = "Core Services -- Secondary Product"; Repos = @() }
         'libs'           = @{ Title = "Shared Libraries & APIs"; Repos = @() }
         'ui'             = @{ Title = "UI / Frontend"; Repos = @() }
         'infra'          = @{ Title = "Infrastructure & Deployment"; Repos = @() }
@@ -277,9 +277,9 @@ if ((Test-Path $catFile) -and -not $Force) {
     Write-Skip 'repo-categories.md'
 } else {
     $catLines = @(
-        "# Repository Categories — $BBWorkspace Bitbucket Workspace",
+        "# Repository Categories -- $BBWorkspace Bitbucket Workspace",
         "> Last updated: $(Get-Date -Format 'yyyy-MM-dd') | Workspace: ``$BBWorkspace``",
-        "> Quick grep: ``shared/memory/tech-discoveries.md`` → Repo Registry",
+        "> Quick grep: ``shared/memory/tech-discoveries.md`` -> Repo Registry",
         ''
     )
     if ($fetchRepos) {
@@ -291,7 +291,7 @@ if ((Test-Path $catFile) -and -not $Force) {
             $catLines += '| Repo | Description | Search Priority |'
             $catLines += '|------|-------------|----------------|'
             foreach ($row in $categories[$cat].Repos) {
-                $catLines += $row -replace '\|$', '| ✅ |'
+                $catLines += $row -replace '\|$', '| Yes |'
             }
             $catLines += ''
         }
@@ -303,20 +303,20 @@ if ((Test-Path $catFile) -and -not $Force) {
         $catLines += ''
         $catLines += '| Repo | Description | Search Priority |'
         $catLines += '|------|-------------|----------------|'
-        $catLines += '| _(add your repos here)_ | | ✅ |'
+        $catLines += '| _(add your repos here)_ | | Yes |'
     }
     New-Item -ItemType Directory -Force -Path (Split-Path $catFile) | Out-Null
     Set-Content $catFile ($catLines -join "`n")
     if ($fetchRepos) {
         Write-Ok "repo-categories.md written ($($allRepos.Count) repos, categorised)"
     } else {
-        Write-Ok "repo-categories.md written (template — add repos or re-run with credentials)"
+        Write-Ok "repo-categories.md written (template -- add repos or re-run with credentials)"
     }
 }
 
 # ---------------------------------------------------------------------------
 Write-Step "Step 6: Writing copilot-local.instructions.md"
-Write-Info "This is the KEY file — junctioned into every linked repo so agents"
+Write-Info "This is the KEY file -- junctioned into every linked repo so agents"
 Write-Info "always know your workspace and key repos without extra prompting."
 
 $localInstrPath = Join-Path $ROOT 'shared\instructions\copilot-local.instructions.md'
@@ -342,7 +342,7 @@ if ((Test-Path $localInstrPath) -and -not $Force) {
 ---
 applyTo: "**"
 ---
-# Org Context — Local Configuration
+# Org Context -- Local Configuration
 # Generated by bin/setup-local.ps1 on $(Get-Date -Format 'yyyy-MM-dd').
 # This file is gitignored. Re-run setup-local.ps1 -Force to regenerate.
 
@@ -359,7 +359,7 @@ $productLine
 $keyRepoList
 
 ## Repo Discovery
-- Full list: ``shared/memory/tech-discoveries.md`` → Repo Registry ($(if ($fetchRepos) { $allRepos.Count.ToString() + ' repos' } else { 'run setup-local.ps1 to populate' }))
+- Full list: ``shared/memory/tech-discoveries.md`` -> Repo Registry ($(if ($fetchRepos) { $allRepos.Count.ToString() + ' repos' } else { 'run setup-local.ps1 to populate' }))
 - Category filter: ``shared/skills/remote-repo-exploration/references/repo-categories.md``
 - All repos live under: ``%COPILOT_WORKSPACE_ROOT%\``
 
@@ -377,7 +377,7 @@ $keyRepoList
 Write-Step "Step 7: Writing .local.env"
 
 $envContent = @"
-# Local environment — generated by bin/setup-local.ps1
+# Local environment -- generated by bin/setup-local.ps1
 # Used by scripts that call the Bitbucket API or clone repos.
 BB_WORKSPACE=$BBWorkspace
 BB_BASE_URL=$BBBaseUrl
@@ -413,7 +413,7 @@ Write-Host "     This replaces <placeholders> in agents/ with real names from th
 Write-Host ""
 Write-Host "  3. In each repo, run:"
 Write-Host "       'Run the acquire-codebase-knowledge skill.'" -ForegroundColor Yellow
-Write-Host "     This builds .github/repo-cache.md — makes every future session instant."
+Write-Host "     This builds .github/repo-cache.md -- makes every future session instant."
 Write-Host ""
 Write-Host "  4. As you investigate cases and bugs, run the save-learning skill."
 Write-Host "     Your shared/memory/ files will grow and agents get faster over time."
