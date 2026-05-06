@@ -1,6 +1,6 @@
 ---
 description: "TDD-first mandate. Applies to every agent and every developer. No production code without a failing test first."
-applyTo: "**"
+applyTo: "**/*.java,**/*.kt,**/*.js,**/*.jsx,**/*.ts,**/*.tsx"
 ---
 
 # TDD Mandate

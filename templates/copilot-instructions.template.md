@@ -3,6 +3,14 @@ applyTo: '**'
 ---
 # Copilot Instructions — <REPO NAME>
 
+## Token Usage Defaults
+
+- Default to concise answers (3-7 lines) unless the user asks for detail.
+- Ask at most one clarifying question when blocked; otherwise proceed with reasonable assumptions.
+- Read only the files needed for the current task; avoid broad scans for simple requests.
+- Avoid restating large plans, unchanged context, or boilerplate guidance.
+- For simple asks, answer directly without agent-routing narration.
+
 ## Auto-Agent Dispatch
 
 When the user sends any message **without** an explicit `@agent` prefix:
@@ -11,6 +19,8 @@ When the user sends any message **without** an explicit `@agent` prefix:
 2. Announce: **"[Agent: `<agent-name>`] — <one-line task summary>"**
 3. Act as that agent immediately — no confirmation required
 4. If classification is ambiguous, state both candidates and pick the more specific one
+
+For simple, low-risk tasks (Q&A, tiny edits, one-file changes), skip the dispatch announcement and execute directly.
 
 Examples of announcements:
 - `[Agent: debugger] — Investigating why the RabbitMQ consumer stopped processing`
@@ -25,6 +35,10 @@ Before writing any code, check `.github/repo-cache.md` if it exists:
 - If present and **< 30 days old**: read it instead of running `semantic_search` — it contains the module map, patterns, and commands already
 - If absent or stale: run `acquire-codebase-knowledge` skill to generate it, then proceed
 - After every completed task: append one line to `## Recent Context` in the cache
+
+Token guardrails:
+- Do not run `acquire-codebase-knowledge` for straightforward single-file work.
+- Prefer targeted search/read over full repository indexing.
 
 > **Task Routing:** See `.github/instructions/orchestrator.instructions.md` for the routing layer that selects agents, skills, and execution flow.
 >

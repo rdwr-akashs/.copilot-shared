@@ -5,6 +5,15 @@ applyTo: '**'
 
 Every task flows through: **Prompt Boost (if needed) → Classify → Cache-Check → Design → Test Plan → Execute → Validate → Save Learning**
 
+## Token Budget Mode (Default)
+
+Optimize for low token usage unless the task is clearly complex.
+
+- Prefer **Fast Mode** for simple requests, Q&A, and single-file edits.
+- Do not auto-load broad context or memory packs for straightforward tasks.
+- Keep responses concise by default: short answer first, details only on request.
+- Skip agent announcement chatter unless it adds real value to the user.
+
 ---
 
 ## Auto-Dispatch Rule
@@ -33,13 +42,13 @@ Before reading any source code or running `semantic_search`:
    - **Absent or stale** → run `acquire-codebase-knowledge` skill to generate it, then proceed
    - **If stale** → tell the user: *"Repo cache is N days old — rebuilding."*
 2. Load the **Central Knowledge Store** (single source of truth for all repos):
-   - `shared/memory/active-context.md` — current work focus
-   - `shared/memory/architecture-map.md` — auto-generated topology (tech stacks, ports, inter-service refs, DBs)
-   - `shared/memory/cross-repo-learnings.md` — patterns spanning multiple repos
-   - For cross-repo questions → `shared/memory/repo-contexts/_index.md` + specific repo `.md`
+   - Default: do not load central memory files automatically
+   - For normal coding tasks: at most load `shared/memory/active-context.md` when needed
+   - For cross-repo questions: load `shared/memory/repo-contexts/_index.md` first, then a specific repo `.md` only if required
+   - For customer-case investigations: load only the smallest relevant files first (`known-bugs.md`, `customer-cases.md`)
    - If the central store is stale or missing → tell user: *"Run `bin\full-context-refresh.cmd` to rebuild."*
 3. Check shared memory freshness (look for `<!-- Last updated: YYYY-MM-DD -->` in each file):
-   - `shared/memory/known-bugs.md`, `customer-cases.md`, `tech-discoveries.md`
+   - Perform this check only for files that were actually read in this task
    - **> 90 days since last update** → warn: *"⚠ <file> hasn't been updated in N days. Consider reviewing."*
 4. Load task-specific docs only when cache is absent or the area is undocumented:
 
@@ -52,7 +61,7 @@ Before reading any source code or running `semantic_search`:
 | Dependencies | `docs/codebase/STACK.md` |
 | Customer case (SC-*, RSEG-*, INC-*) | `cases/_index.md` + grep `cases/*/signature.yml` for matching keywords |
 
-3. After completing any task: append one line to `## Recent Context` in `.github/repo-cache.md`
+5. After completing substantial tasks: append one line to `## Recent Context` in `.github/repo-cache.md`
 
 ---
 
@@ -163,6 +172,7 @@ Fast-path: Edit → get_errors → done
 Use when ALL true: single file, no driver-api changes, no new endpoints, no cross-module deps, change is obvious.
 - Skip plan block. Read file → edit → `get_errors` → done.
 - No agent delegation. No codebase doc reads.
+- Prefer this mode by default when uncertain.
 
 ### Deep Mode
 Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, architecture decision.

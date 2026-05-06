@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: '**/cases/**,**/.agent_work/**'
 ---
 
 # Customer Case RCA — Process Instruction

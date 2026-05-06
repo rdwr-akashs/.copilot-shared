@@ -257,15 +257,22 @@ These instructions are loaded into every Copilot interaction in this repo:
 
 | File | What it enforces |
 |---|---|
-| `instructions/orchestrator.instructions.md` | Task routing, output format |
-| `instructions/agent-skills.instructions.md` | When/how to invoke skills |
-| `instructions/memory-bank.instructions.md` | Memory file management |
-| `instructions/design-principles.instructions.md` | SOLID, DRY, KISS, YAGNI, naming, smell list |
-| `instructions/performance-awareness.instructions.md` | N+1, allocation, I/O, concurrency |
+| `instructions/orchestrator.instructions.md` | Lean routing + token budget defaults |
+| `instructions/memory-bank.instructions.md` | Targeted memory reads only |
 | `instructions-local/project-rules.instructions.md` | Repo-specific hard rules |
 
 Add more files under `instructions-local/` as needed — anything matching
 `*.instructions.md` with `applyTo: '**'` frontmatter is auto-loaded.
+
+Token optimization recommendation:
+- Keep always-on files to the minimum set above.
+- Load `agent-skills`, `design-principles`, and `performance-awareness` only for tasks that need them.
+- Prefer narrower `applyTo` patterns instead of `**` whenever possible.
+
+Balanced profile (recommended):
+- Keep `orchestrator`, `memory-bank`, and `project-rules` always-on.
+- Keep quality instructions (`design-principles`, `performance-awareness`, `tdd`) scoped to source files only.
+- Use broad `applyTo: '**'` only for truly universal policy files.
 
 If a shared rule conflicts with a per-repo rule, **the per-repo rule wins**.
 

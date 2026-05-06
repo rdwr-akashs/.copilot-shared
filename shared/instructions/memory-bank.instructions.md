@@ -5,7 +5,24 @@ Coding standards, domain knowledge, and preferences that AI should follow.
 
 # Memory Bank
 
-You are an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation. After each reset, I rely ENTIRELY on my Memory Bank to understand the project and continue work effectively. I MUST read ALL memory bank files at the start of EVERY task - this is not optional.
+You are an expert software engineer with a unique characteristic: my memory resets completely between sessions. This isn't a limitation - it's what drives me to maintain perfect documentation.
+
+## Token-Efficient Loading Policy
+
+Default behavior is **minimal memory reads**. Do not read all memory files on every task.
+
+Read memory in tiers:
+
+1. **Tier 0 (always allowed, smallest possible):**
+    - Read nothing unless the task needs project history or prior decisions.
+2. **Tier 1 (single-file context):**
+    - Read only `active-context.md` when current work state is needed.
+3. **Tier 2 (targeted lookup):**
+    - Read exactly one relevant file (`known-bugs.md`, `customer-cases.md`, or `tech-discoveries.md`) for debugging/investigation tasks.
+4. **Tier 3 (broad context, explicit need):**
+    - Read architecture and cross-repo memory only for cross-repo, RCA, or architecture tasks.
+
+Never load `repo-contexts/*.md` by default. These files are large and should be opened only when the user asks for deep repo context.
 
 ## Central Knowledge Store (Single Source of Truth)
 
@@ -15,7 +32,7 @@ All persistent memory, context, and learnings live in ONE central location acces
 $COPILOT_WORKSPACE_ROOT/.copilot-shared/shared/memory/
 ```
 
-### Files to read at session start (priority order):
+### Files to read only when needed (priority order):
 
 1. **`active-context.md`** — What's currently being worked on, recent sessions, open questions
 2. **`architecture-map.md`** — Auto-generated: all repos' tech stacks, ports, inter-service references, databases, message queues

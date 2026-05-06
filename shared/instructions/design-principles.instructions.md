@@ -1,5 +1,5 @@
 ---
-applyTo: '**'
+applyTo: '**/*.java,**/*.kt,**/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.py,**/*.go,**/*.cs,**/*.rb,**/*.php,**/*.scala,**/*.sql'
 ---
 # Design Principles — Universal Rules
 

@@ -1,6 +1,6 @@
 ---
 description: 'Mandatory ways of working for spec implementation: TDD, very small steps, stop-and-confirm, structured per-step output. Activates whenever the user asks to implement a spec/feature/bugfix.'
-applyTo: '**'
+applyTo: '**/requirements.md,**/design.md,**/tasks.md,**/*.spec.ts,**/*.spec.tsx,**/*.spec.js,**/*.spec.jsx,**/*Test.java'
 ---
 
 # Ways of Working — Spec Implementation Protocol
