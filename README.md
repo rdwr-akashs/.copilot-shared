@@ -1,219 +1,133 @@
-# `.copilot-shared` — Radware Shared Copilot Configuration
+﻿# `.copilot-shared` — Radware Shared Copilot Configuration
 
-Single source of truth for GitHub Copilot **agents, skills, instructions, and
-prompts** shared across all Radware repos under `%COPILOT_WORKSPACE_ROOT%\`.
-Edit once, every linked repo sees the change instantly — via filesystem junctions.
+Single source of truth for GitHub Copilot **agents, skills, instructions, prompts, and memory** shared across all Radware repos under `%COPILOT_WORKSPACE_ROOT%\`.
+Edit once — every linked repo sees the change instantly via filesystem junctions.
 
-> **This repo is public** so the community can learn from and adapt our Copilot
-> workflow. The skills and agents are Radware-specific but the patterns are
-> reusable. Contributions from Radware team members are welcome — see
-> [CONTRIBUTING.md](CONTRIBUTING.md).
+> **This repo is public** so the community can learn from and adapt our workflow.
+> Skills and agents are Radware-specific but the patterns are reusable.
+> Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## Quick Start (New Team Member)
+## Quick Start — New Team Member
 
-### 0. Set your workspace root
+### Step 0: Set workspace root
 
-All Radware repos live side-by-side under one folder. Set the env var so the
-scripts know where to find them:
+All repos live side-by-side under one folder:
 
-**Windows (cmd — permanent):**
 ```cmd
-setx COPILOT_WORKSPACE_ROOT "C:\your\workspace\path"
+:: Windows (permanent)
+setx COPILOT_WORKSPACE_ROOT "C:\rdwr-intelij"
 ```
 
-**Windows (PowerShell — permanent):**
-```powershell
-[Environment]::SetEnvironmentVariable("COPILOT_WORKSPACE_ROOT", "C:\your\workspace\path", "User")
-```
+> Scripts auto-detect the parent of `.copilot-shared\` if the env var is not set.
 
-**macOS / Linux:**
-```bash
-echo 'export COPILOT_WORKSPACE_ROOT="$HOME/workspace"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-> If you don't set the env var, the scripts auto-detect by using the parent
-> folder of `.copilot-shared/`.
-
-### 1. Clone this repo
+### Step 1: Clone this repo
 
 ```cmd
 cd %COPILOT_WORKSPACE_ROOT%
-gh repo clone Radware/copilot-shared .copilot-shared
-# No gh? winget install --id GitHub.cli && gh auth login
-# Or: git clone https://github.com/Radware/copilot-shared.git .copilot-shared
+git clone https://github.com/Radware/copilot-shared.git .copilot-shared
 ```
-### 1.5. Run first-time local setup
 
-This is what makes the toolkit **org-specific and powerful**. Run it once after cloning:
+### Step 2: Personalise (run once)
 
 ```powershell
 .copilot-shared\bin\setup-local.ps1
 ```
 
-You'll be asked for:
-1. Your **Bitbucket workspace slug** (e.g. `mycompany`)
-2. Your **product names** (used in agent context)
-3. Optional: **Bitbucket App Password** to auto-fetch your full repo list
+Prompts for your Bitbucket workspace slug, product names, and optionally fetches your full repo list. Generates these gitignored files:
 
-What it generates (all gitignored):
+| File | Purpose |
+|------|---------|
+| `shared/instructions/copilot-local.instructions.md` | Injected into every session — agents know your workspace, products, repos |
+| `shared/memory/*.md` | Knowledge store seeded from templates, grows with real work |
+| `.local.env` | `BB_WORKSPACE` and `BB_BASE_URL` for other scripts |
 
-| File | What it does |
-|------|-------------|
-| `shared/instructions/copilot-local.instructions.md` | **Most impactful** — junctioned into every linked repo so agents always know your workspace name, product names, and key repos. No more `<bb-workspace>` placeholders. |
-| `shared/memory/*.md` | Initialised from templates — grows as you investigate cases and bugs |
-| `remote-repo-exploration/references/repo-categories.md` | Your real repo list, fetched from Bitbucket API and categorised |
-| `.local.env` | `BB_WORKSPACE` and `BB_BASE_URL` for scripts |
-
-Re-run with `-Force` to refresh (e.g. after your repo list grows).
-### 2. Clone your product repos from Bitbucket
+### Step 3: Clone your product repos
 
 ```cmd
 cd %COPILOT_WORKSPACE_ROOT%
-git clone https://bitbucket.org/<bb-workspace>/<your-repo>.git
-:: ... clone whichever repos you work on
+git clone <bitbucket-url>/repo1.git
+git clone <bitbucket-url>/repo2.git
 ```
 
-### 3. Set up each repo fully (new repos)
-
-**One command creates `.github/`, agents, instructions-local, junctions and auto-fills what it can from your Bitbucket registry:**
+### Step 4a: New repo — full setup
 
 ```powershell
-.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<your-repo>
+:: Creates .github/, copies agents, creates all junctions, wires memory-bank/
+.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Optional: also generate an initial context pack
+.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<repo> -GenerateRepoMix
 ```
 
-Optional: also generate an initial repo context pack during setup:
+### Step 4b: Existing repo — add Copilot wiring
+
+For repos that already have a `.github/` but aren't yet connected to the shared store:
+
+```cmd
+:: 1. Junction skills, instructions, prompts, plans, learning, cases
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: 2. Seed agent templates (skips any already customised)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\copy-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+```
 
 ```powershell
-.copilot-shared\bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<your-repo> -GenerateRepoMix
+:: 3. Wire memory-bank/ junction → central store
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "%COPILOT_WORKSPACE_ROOT%" `
+  -Repos "<repo>" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
 ```
 
-What it does automatically:
-- Detects repo category and description from your Bitbucket registry
-- Writes `.github/copilot-instructions.md` pre-filled with tech stack, Bitbucket URL, build commands
-- Writes `.github/instructions-local/project-rules.instructions.md` (stub to edit)
-- Writes `.github/instructions-local/cli-commands.instructions.md` (pre-filled build/test commands)
-- Copies all agent templates to `.github/agents/`
-- Junctions `skills/`, `instructions/`, `prompts/`, `plans/` from the shared store
-- Writes `.github/COPILOT-SETUP.md` (team onboarding doc)
+Any existing `memory-bank/` content is migrated to central and replaced with a junction automatically.
 
-**Existing repo** (already has `.github/` — junctions only):
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\copy-agents.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
-```
-
-> `link-copilot.cmd` creates junctions for skills, instructions, prompts, and
-> plans. Agents are per-repo customizations so `copy-agents.cmd` seeds them
-> separately (never overwrites existing agents).
-
-### 4. Link ALL repos at once
+### Step 4c: All repos at once
 
 ```cmd
+:: Wire junctions for every repo under the workspace root
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
+
+:: Set up any repo missing .github/copilot-instructions.md
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\setup-all-repos.ps1
 ```
 
-Walks `%COPILOT_WORKSPACE_ROOT%\*`. Prints the `setup-repo.ps1` command for any repos that don't have `.github/` yet.
-
-### 5. Finish tailoring in Copilot Chat (3 commands, one-time per repo)
-
-After running `setup-repo.ps1`, open the repo in your IDE and run these in order:
-
-```
-# Step A — replaces <placeholders> in agents/ with real names from this codebase
-Run the customize-agents skill on this repo.
-
-# Step B — builds .github/repo-cache.md, makes every future session instant
-Run the acquire-codebase-knowledge skill.
-
-# Step C — optional: describe the project overview you want agents to know
-Fill in the project overview section of .github/copilot-instructions.md based on this codebase.
-```
-
-Restart your IDE after Step B. Done — Copilot now has full context for this repo.
-
----
-
-## Centralized Memory, Learning & Cases Setup
-
-**Optional but recommended:** Consolidate all memory, learning docs, and case files from individual repos into the central `.copilot-shared` hub. This ensures:
-
-- ✅ **Single source of truth** — Update once, visible in all repos
-- ✅ **No duplication** — All repos symlink to central location
-- ✅ **Organized structure** — Memory / Learning / Cases separated
-- ✅ **Cross-repo insights** — Shared patterns and learnings
-
-### Quick Setup
-
-**1. Run the centralization script:**
 ```powershell
-.copilot-shared\bin\centralize-memory.ps1 `
-  -RepoPath "C:\repos" `
-  -Repos @("repo1", "repo2", "repo3") `
-  -CreateSymlinks $true `
-  -DeleteLocal $false `
-  -Verify $true
+:: Centralise memory for multiple repos in one command
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "%COPILOT_WORKSPACE_ROOT%" `
+  -Repos "repo1,repo2,repo3" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
 ```
 
-**2. Verify symlinks work in each repo:**
-```bash
-cd /c/repos/repo1/.github
-ls -la copilot-memory/
-cat copilot-memory/memory.md
-```
+### Step 5: Finish in Copilot Chat (one-time per repo)
 
-**3. Update `.copilot-instructions.md` in each repo:**
-```markdown
-## Memory & Learning Resources
-
-- **This Repo's Memory**: [See .github/copilot-memory](../../.copilot-shared/shared/memory/repo1/)
-- **Learning Docs**: [See .github/learning](../../.copilot-shared/shared/learning/)
-- **Case Documentation**: [See .github/cases](../../.copilot-shared/shared/cases/)
-- **Cross-Repo Insights**: [See central memory](../../.copilot-shared/shared/memory/cross-repo/)
-```
-
-### Centralized Structure
+Open the repo in VS Code and run in Copilot Chat:
 
 ```
-shared/
-├── memory/
-│   ├── cross-repo/              ← Shared learnings across all repos
-│   ├── <repo-name>/             ← Per-repo memory (symlinked from .github/copilot-memory)
-│   └── ...
-├── learning/                    ← Best practices & learning materials
-│   ├── best-practices/
-│   ├── troubleshooting/
-│   └── design-patterns/
-└── cases/                       ← Customer cases & RCA documents
-    ├── customer-cases/
-    └── root-cause-analysis/
+Run the customize-agents skill on this repo.
+Run the acquire-codebase-knowledge skill.
 ```
 
-### Full Documentation
-
-- **[CENTRALIZED_MEMORY_SETUP.md](./CENTRALIZED_MEMORY_SETUP.md)** — Architecture, phases, detailed setup
-- **[CENTRALIZATION_CHECKLIST.md](./CENTRALIZATION_CHECKLIST.md)** — Step-by-step migration checklist
-- **[MEMORY_QUICK_REFERENCE.md](./MEMORY_QUICK_REFERENCE.md)** — Quick lookup for common tasks
-- **[shared/memory/README.md](./shared/memory/README.md)** — Memory organization
-- **[shared/learning/README.md](./shared/learning/README.md)** — Learning materials
-- **[cases/README.md](./cases/README.md)** — Case documentation structure
+Restart VS Code after the second command. Done — full context is live.
 
 ---
 
-## Prerequisites
+## How Central Memory Works
 
-| Requirement | Notes |
-|---|---|
-| JetBrains IDE or VS Code | With GitHub Copilot plugin installed |
-| GitHub Copilot subscription | Individual or business plan |
-| Workspace at `%COPILOT_WORKSPACE_ROOT%\` | All Radware repos cloned here |
-| Bitbucket access | `<bb-workspace>` workspace — for product repos |
-| Git Bash (recommended) | For terminal operations on Windows |
+Every repo's `memory-bank/` is a **junction** pointing to `.copilot-shared\shared\memory\<repo>\`. Writing there writes to central. No sync needed.
 
-> **macOS / Linux:** Use symlinks (`ln -s`) instead of junctions. Adapt the
-> `.cmd` scripts or create shell equivalents — PRs welcome.
+```
+<repo>/memory-bank/              ← junction (not a real folder)
+        │
+        └──▶  .copilot-shared/shared/memory/<repo>/    ← files physically live here
+
+<repo>/.github/learning/         ← junction → shared/learning/
+<repo>/.github/cases/            ← junction → shared/cases/
+```
+
+Agents write `memory-bank/activeContext.md` → file is immediately readable from every other linked repo.
 
 ---
 
@@ -221,285 +135,133 @@ shared/
 
 ```
 %COPILOT_WORKSPACE_ROOT%\
-├── .copilot-shared\            ← THIS REPO (cloned from GitHub)
-│   ├── shared\                 # Junctioned into every repo's .github\
-│   │   ├── skills\             # Reusable skills (cross-repo-exploration, customer-case-intake, rca-*, etc.)
-│   │   ├── instructions\       # Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
-│   │   ├── prompts\            # Reusable prompt templates (investigate-customer-case, etc.)
-│   │   ├── plans\              # Cross-repo feature plans (junctioned to each repo)
-│   │   ├── memory\             # *** CENTRAL KNOWLEDGE STORE *** 
-│   │   │   ├── cross-repo/             # Shared learnings & patterns across all repos
-│   │   │   ├── <repo-name>/            # Per-repo memory (symlinked from each repo's .github/copilot-memory)
-│   │   │   ├── architecture-map.md     # Auto-generated service topology
-│   │   │   ├── active-context.md       # Current work focus
-│   │   │   ├── cross-repo-learnings.md # Patterns spanning repos
-│   │   │   ├── customer-cases.md       # Solved case patterns
-│   │   │   ├── known-bugs.md           # Bug reference
-│   │   │   ├── tech-discoveries.md     # Tech stack registry
-│   │   │   └── repo-contexts/          # Per-repo Repomix context packs
-│   │   ├── learning\           # *** CENTRAL LEARNING MATERIALS ***
-│   │   │   ├── best-practices/         # Patterns by technology
-│   │   │   ├── troubleshooting/        # Debugging guides
-│   │   │   └── design-patterns/        # Architectural patterns
-│   │   └── [other directories]
-│   ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
-│   ├── cases\                  # *** CENTRAL CASE ARCHIVE ***
-│   │   ├── customer-cases/             # Customer case files (symlinked from each repo's .github/cases)
-│   │   └── root-cause-analysis/        # RCA documents & fixes
-│   ├── templates\              # Per-repo seed files (copilot-instructions, project-rules, etc.)
-│   └── bin\                    # Setup scripts
-│       ├── setup-local.ps1     # ONE-TIME: personalise toolkit after GitHub clone
-│       ├── setup-repo.ps1      # ONE-TIME per repo: full .github/ setup + junctions
-│       ├── link-copilot.cmd    # (Re)create junctions for one repo (existing .github/)
-│       ├── link-all-copilot.cmd# Walk %COPILOT_WORKSPACE_ROOT%\; link every repo
-│       ├── unlink-copilot.cmd  # Remove junctions from one repo
-│       ├── copy-agents.cmd     # Seed .github\agents\ from agent-templates\
-│       ├── extract-support-bundle.ps1  # Smart extraction of DefenseFlow support bundles
-│       ├── doctor.cmd          # Health-check one repo's Copilot wiring (legacy)
-│       ├── doctor.ps1          # Health-check one repo (colored output, hooks + cache checks)
-│       ├── audit.ps1           # Batch doctor on all repos — single health report table
-│       ├── setup-all-repos.ps1 # Run setup-repo.ps1 on every repo missing .github/
-│       ├── generate-skill-index.ps1  # Auto-generate shared/skills/INDEX.md
-│       ├── repo-mix.cmd        # CMD wrapper for repo-mix.ps1
-│       ├── repo-mix.ps1        # Repomix-style repository context exporter
-│       ├── repo-mix-all.ps1    # Batch scan all repos into central store
-│       ├── repo-mix-all.cmd    # CMD wrapper for repo-mix-all.ps1
-│       ├── workspace-scan.ps1  # Auto-generate architecture-map.md (tech stacks, ports, refs)
-│       ├── workspace-scan.cmd  # CMD wrapper for workspace-scan.ps1
-│       ├── full-context-refresh.ps1  # Master: runs workspace-scan + repo-mix-all
-│       ├── full-context-refresh.cmd  # CMD wrapper for full-context-refresh.ps1
+├── .copilot-shared\
+│   ├── shared\
+│   │   ├── instructions\       # Copilot rules (orchestrator, memory-bank, customer-case-rca …)
+│   │   ├── skills\             # Reusable skills (cross-repo-exploration, rca-*, save-learning …)
+│   │   ├── prompts\            # Reusable prompt templates
+│   │   ├── plans\              # Cross-repo feature plans
+│   │   ├── learning\           # Central learning materials (best-practices/, troubleshooting/, …)
+│   │   └── memory\             # *** CENTRAL KNOWLEDGE STORE ***
+│   │       ├── <repo-name>/            # Per-repo memory — junctioned as memory-bank/ in each repo
+│   │       ├── cross-repo/             # Learnings spanning multiple repos
+│   │       ├── repo-contexts/          # Auto-generated context packs (repo-mix-all)
+│   │       ├── active-context.md       # Current work focus
+│   │       ├── architecture-map.md     # Auto-generated service topology
+│   │       ├── cross-repo-learnings.md # Patterns spanning repos
+│   │       ├── customer-cases.md       # Solved case patterns
+│   │       ├── known-bugs.md           # Bug reference
+│   │       ├── tech-discoveries.md     # Repo registry & tech stacks
+│   │       └── logs/                   # Script run logs (gitignored)
+│   ├── agent-templates\        # Seed agents — copied (not junctioned) per repo
+│   ├── cases\                  # Central case archive (junctioned as .github/cases/ in each repo)
+│   ├── templates\              # Seed files for setup-repo.ps1
+│   └── bin\
+│       ├── setup-local.ps1     # ONE-TIME: personalise after clone
+│       ├── setup-repo.ps1      # ONE-TIME per repo: full .github/ + memory junction
+│       ├── centralize-memory.ps1  # Wire memory-bank junctions for existing repos
+│       ├── link-copilot.cmd    # (Re)create shared junctions for one repo
+│       ├── link-all-copilot.cmd   # Walk workspace and link every repo
+│       ├── copy-agents.cmd     # Seed .github/agents/ from agent-templates/
+│       ├── setup-all-repos.ps1 # Run setup-repo on every repo missing .github/
+│       ├── full-context-refresh.ps1  # Rebuild architecture-map + all repo context packs
+│       ├── workspace-scan.ps1  # Generate architecture-map.md
+│       ├── repo-mix.ps1        # Generate context pack for one repo
+│       ├── repo-mix-all.ps1    # Generate context packs for all repos
+│       ├── audit.ps1           # Health-check all repos in one table
+│       ├── doctor.ps1          # Health-check one repo
 │       ├── token-profile.ps1   # Switch per-repo token profile (balanced/aggressive)
-│       ├── token-profile.cmd   # CMD wrapper for token-profile.ps1
-│       ├── centralize-memory.ps1 # Consolidate memory/learning/cases from repos → central hub
-│       └── refresh-agents.cmd  # Pull upstream agent-template improvements
-├── <your-repo-1>\               ← product repo (Bitbucket)
+│       └── export-memory.ps1 / import-memory.ps1  # Backup/restore central memory
+│
+├── <repo-1>\
+│   ├── memory-bank\        → JUNCTION → .copilot-shared\shared\memory\<repo-1>\
 │   └── .github\
 │       ├── copilot-instructions.md
-│       ├── agents\             # Copied from agent-templates\, customised
-│       ├── instructions-local\ # Per-repo rules
-│       ├── instructions\ → JUNCTION → .copilot-shared\shared\instructions
-│       ├── skills\       → JUNCTION → .copilot-shared\shared\skills
-│       └── prompts\      → JUNCTION → .copilot-shared\shared\prompts
-├── <your-repo-2>\               ← another product repo
-└── ...                         ← all repos in your Bitbucket workspace
+│       ├── agents\             # Per-repo customised agents
+│       ├── instructions-local\ # Per-repo rules (project-rules, cli-commands)
+│       ├── instructions\   → JUNCTION → shared\instructions\
+│       ├── skills\         → JUNCTION → shared\skills\
+│       ├── prompts\        → JUNCTION → shared\prompts\
+│       ├── plans\          → JUNCTION → shared\plans\
+│       ├── learning\       → JUNCTION → shared\learning\
+│       └── cases\          → JUNCTION → .copilot-shared\cases\
+│
+└── <repo-2>\  …
 ```
 
 ---
 
 ## What's Shared vs Per-Repo
 
-| Item | Shared? | Why |
-|---|---|---|
-| `skills/` | Junction | Same workflow patterns for any Radware repo |
-| `instructions/` (generic) | Junction | Routing + memory + skill-loading rules |
-| `prompts/` | Junction | Reusable prompt templates |
-| `agents/` | Copy | Agents encode project-specific conventions |
-| `copilot-instructions.md` | Per-repo | Project overview is unique per product |
-| `instructions-local/` | Per-repo | Exception types, build commands, domain rules |
-| `personal-instructions.md` | Per-developer | Local paths, shell preference (gitignored) |
+| Item | Type | Edit? |
+|------|------|-------|
+| `skills/` | Junction → central | Edit in `.copilot-shared` |
+| `instructions/` | Junction → central | Edit in `.copilot-shared` |
+| `prompts/` | Junction → central | Edit in `.copilot-shared` |
+| `plans/` | Junction → central | Edit in `.copilot-shared` |
+| `learning/` | Junction → central | Edit in `.copilot-shared` |
+| `cases/` | Junction → central | Edit in `.copilot-shared` |
+| `memory-bank/` | Junction → `shared/memory/<repo>/` | Agents write here automatically |
+| `agents/` | Per-repo copy | Customise per codebase |
+| `copilot-instructions.md` | Per-repo | Describes this specific project |
+| `instructions-local/` | Per-repo | Project rules, build commands |
+| `personal-instructions.md` | Per-developer (gitignored) | Local paths, shell preferences |
 
 ---
 
 ## Daily Workflow
 
-### Editing a shared skill
+### Editing a shared skill or instruction
 
 ```cmd
-notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\writing-plans\SKILL.md
+:: Edit in .copilot-shared — every linked repo sees it immediately
+notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\save-learning\SKILL.md
 ```
 
-Save → every linked repo sees the change immediately. No sync step.
-
-### Build a repo context pack (Repomix-style)
-
-Generate one markdown file with tree + selected text file contents:
-
-```powershell
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.ps1 -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo>
-```
-
-Shortcut wrapper:
+### Refresh the central knowledge store
 
 ```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo>
-```
-
-Useful flags:
-
-- `-OutputFile <path>` to control destination file (default: `<repo>/.agent_work/repo-mix-<repo>-<timestamp>.md`)
-- `-MaxFiles <n>` to cap included files (default `500`)
-- `-MaxFileSizeKB <n>` to skip large files (default `256`)
-- `-WithLineNumbers` to render line numbers inside each file block
-- `-UseAllFiles` to scan filesystem recursively instead of `git ls-files`
-
-### Refresh the full Central Knowledge Store
-
-Rebuild everything (architecture map + all repo context packs) in one command:
-
-```cmd
+:: Full refresh: architecture map + all repo context packs (~5 min)
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
+
+:: Architecture map only
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.cmd
+
+:: One repo context pack
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
-### Centralize Memory, Learning & Cases (Optional)
+Run weekly or after adding/removing repos.
 
-Consolidate memory bank, learning docs, and case files from individual repos into central hub (one-time setup):
+### Switch token profile
+
+```cmd
+:: Balanced (recommended)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd balanced %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Aggressive (maximum savings)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd aggressive %COPILOT_WORKSPACE_ROOT%\<repo>
+```
+
+### Health-check all repos
 
 ```powershell
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\centralize-memory.ps1 `
-  -RepoPath "C:\your\workspace" `
-  -Repos @("repo1", "repo2") `
-  -CreateSymlinks $true `
-  -Verify $true
+.copilot-shared\bin\audit.ps1
 ```
-
-This creates symlinks in each repo's `.github/` pointing to the central memory. See [CENTRALIZATION_CHECKLIST.md](./CENTRALIZATION_CHECKLIST.md) for full details and verification steps.
-
-### Switch token profile per repo
-
-Balanced (recommended):
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd balanced %COPILOT_WORKSPACE_ROOT%\<your-repo>
-```
-
-Aggressive (maximum savings):
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd aggressive %COPILOT_WORKSPACE_ROOT%\<your-repo>
-```
-
-Or just the architecture map:
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.cmd
-```
-
-Or just one repo into the central store:
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<your-repo> -Central
-```
-
-**When to refresh:**
-- After cloning new repos
-- Weekly (keeps architecture-map.md current)
-- Before starting cross-repo features
-
-### Adding a new shared skill
-
-1. `mkdir %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\my-skill`
-2. Create `SKILL.md` (see `shared/instructions/agent-skills.instructions.md` for conventions).
-3. Done. Every linked repo can now invoke it.
-4. **Push to GitHub** so teammates get it too: `git add . && git commit -m "feat: add my-skill" && git push`
-
-### Per-repo override
-
-If one repo needs a different version of a shared skill:
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\unlink-copilot.cmd %COPILOT_WORKSPACE_ROOT%\my_repo
-mkdir %COPILOT_WORKSPACE_ROOT%\my_repo\.github\skills
-xcopy /e %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills %COPILOT_WORKSPACE_ROOT%\my_repo\.github\skills
-REM Edit .github\skills\commit-push\SKILL.md as needed
-```
-
-Re-running `link-copilot.cmd` will see the real `skills/` folder and skip
-junctioning it (preserving your override).
 
 ---
 
-## Updating After Upstream Changes
+## Prerequisites
 
-When someone pushes improvements to `.copilot-shared` (new skills, agent fixes, orchestrator updates, etc.), here's how to get them into your repos.
+| Requirement | Notes |
+|---|---|
+| VS Code or JetBrains IDE | With GitHub Copilot plugin |
+| GitHub Copilot subscription | Individual or Business |
+| Workspace at `%COPILOT_WORKSPACE_ROOT%\` | All repos cloned here side-by-side |
+| Bitbucket access | For product repos |
+| Git Bash (Windows) | For terminal operations |
 
-### What propagates automatically vs manually
-
-| What changed | Propagation | Action needed |
-|---|---|---|
-| **Skills** (`shared/skills/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
-| **Instructions** (`shared/instructions/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
-| **Prompts** (`shared/prompts/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
-| **Plans** (`shared/plans/`) | **Instant** — filesystem junction | Just `git pull` in `.copilot-shared` |
-| **Agent templates** (`agent-templates/`) | **Manual** — agents are copied per-repo | Run `refresh-agents.cmd` per repo |
-| **Scripts** (`bin/`) | **Instant** — scripts run from `.copilot-shared` directly | Just `git pull` in `.copilot-shared` |
-
-### Step-by-step: pull + refresh
-
-```bash
-# 1. Pull the latest shared config
-cd %COPILOT_WORKSPACE_ROOT%\.copilot-shared
-git pull
-
-# Skills, instructions, prompts, plans are now live in ALL linked repos.
-# No further action needed for those.
-
-# 2. Refresh agent templates in a single repo
-bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<your-repo>
-
-# 3. Or refresh ALL repos at once (Git Bash)
-for d in /c/rdwr-intelij/*/; do
-  [ -d "$d/.github/agents" ] && bin/refresh-agents.cmd "$d"
-done
-
-# 3b. Or refresh ALL repos at once (PowerShell)
-Get-ChildItem "$env:COPILOT_WORKSPACE_ROOT" -Directory |
-  Where-Object { Test-Path "$($_.FullName)\.github\agents" } |
-  ForEach-Object { & "$env:COPILOT_WORKSPACE_ROOT\.copilot-shared\bin\refresh-agents.cmd" $_.FullName }
-```
-
-### What `refresh-agents.cmd` does
-
-For each file in `agent-templates/*.agent.md`:
-
-| Status | Meaning | What happens |
-|---|---|---|
-| **NEW** | Repo doesn't have this agent yet | Copied in automatically. Run `customize-agents` skill afterwards. |
-| **SAME** | Repo's copy is byte-identical to template | Skipped — nothing to do. |
-| **CONFLICT** | Both sides changed | Saves upstream version as `<agent>.agent.md.template.new`. You diff and merge manually. |
-
-> **Never overwrites a customised agent.** Your per-repo customisations are always safe.
-
-### After resolving conflicts
-
-```
-# In Copilot Chat, inside the repo:
-Run the customize-agents skill on this repo.
-```
-
-This re-applies repo-specific substitutions (project names, tech stack, paths) to any newly merged agent sections.
-
-### Health check after updating
-
-```cmd
-powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
-```
-
-Or audit all repos at once:
-
-```powershell
-powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\audit.ps1
-```
-
-### Customer Case RCA Workflow
-
-> Full guide: [`shared/instructions/customer-case-rca.README.md`](shared/instructions/customer-case-rca.README.md)
-
-When you're handed a customer escalation (RSEG-/SC-/INC-/JIRA- ticket with a
-DefenseFlow/Vision support bundle), use the `case-investigator` agent. Kick off
-via the prompt at `shared/prompts/investigate-customer-case.md`.
-
-| Phase | What happens |
-|-------|--------------|
-| 0     | Scaffolds `.agent_work/<case-id>/investigation.md`; auto-unzips archives |
-| 0.5   | Prior-case lookup against `cases/_index.md` |
-| 1     | Problem framing |
-| 2     | 9 parallel triage subagents (Identity, Connectivity, Replication, HA, Resources, etc.) |
-| 3     | Maps findings to `repo / file / method / line` in the relevant codebase |
-| 5–6   | Authors `rca-<case-id>.md` with draft commit message |
-| 7     | Archives to `cases/<case-id>/` |
-| 8     | Hands fix off to `developer` agent |
-
-> **⚠️ `cases/` is gitignored** — it contains customer data and must NEVER be pushed.
+> **macOS / Linux:** Use `ln -s` instead of junctions. Adapt `.cmd` scripts to shell equivalents — PRs welcome.
 
 ---
 
@@ -519,7 +281,7 @@ via the prompt at `shared/prompts/investigate-customer-case.md`.
 | `case-investigator` | Customer escalation RCA (DefenseFlow / Vision) |
 | `gem-code-simplifier` | Code simplification |
 | `expert-react-frontend-engineer` | React frontend (webui_* repos) |
-| `full-stack-feature` | End-to-end feature: Java backend + React frontend together |
+| `full-stack-feature` | End-to-end feature: Java backend + React frontend |
 | `elasticsearch-expert` | ES query debugging, mapping conflicts, index design |
 | `akka-expert` | Actor hierarchy design, dead-letter debugging, dispatcher tuning |
 | `perf-investigator` | Performance triage across JVM, Akka, ES, RabbitMQ, React |
@@ -527,218 +289,249 @@ via the prompt at `shared/prompts/investigate-customer-case.md`.
 
 ### Skills (35)
 
-Organized in `shared/skills/`:
-
 | Skill | What it does |
 |---|---|
-| **TDD & Testing** | |
-| `tdd-java` | Java TDD: JUnit 5, Mockito, TestContainers, MockMvc. Red→Green→Refactor |
-| `tdd-react` | React TDD: RTL, Jest, MSW. Component, hook, and page testing |
+| `tdd-java` | JUnit 5 / Mockito / TestContainers Red→Green→Refactor |
+| `tdd-react` | RTL / Jest / MSW component, hook, and page testing |
 | `java-test-coverage` | Jacoco analysis — find uncovered branches, write targeted tests |
-| **API Design** | |
-| `api-contract-first` | OpenAPI spec-first — spec before code; generate TS types and Java DTOs |
+| `api-contract-first` | OpenAPI spec-first — spec before code |
 | `adding-rest-endpoints` | REST endpoint scaffolding |
-| **Debugging** | |
-| `elasticsearch-debug` | ES query wrong/slow: `_explain`, `_profile`, mapping checks, index health. Checks memory first. |
-| `rabbitmq-debug` | Consumer lag, dead-letter, prefetch tuning, poison messages. Checks memory first. |
-| `akka-debug` | Dead letters, dispatcher starvation, ask timeout, blocking actors. Checks memory first. |
-| `systematic-debugging` | General structured bug investigation |
-| `log-analysis` | Parse logs, find error patterns, correlate events, extract stack traces |
-| **Memory & Learning** | |
-| `save-learning` | Append investigation findings to shared memory. Run after every RCA or bug fix. |
-| `acquire-codebase-knowledge` | Deep-dive into unfamiliar repos; writes `.github/repo-cache.md` |
+| `elasticsearch-debug` | `_explain`, `_profile`, mapping checks, index health |
+| `rabbitmq-debug` | Consumer lag, dead-letter, prefetch tuning |
+| `akka-debug` | Dead letters, dispatcher starvation, ask timeout |
+| `systematic-debugging` | Structured bug investigation |
+| `log-analysis` | Parse logs, find error patterns, extract stack traces |
+| `save-learning` | Append investigation findings to shared memory |
+| `acquire-codebase-knowledge` | Deep-dive unfamiliar repos; writes `.github/repo-cache.md` |
 | `remember` | Save lessons and patterns for future sessions |
-| **Customer Cases** | |
-| `customer-case-intake` | Ingest support bundles; checks `customer-cases.md` memory first |
+| `customer-case-intake` | Ingest support bundles; checks memory first |
 | `support-file-triage` | Parallel subagent triage of support files |
 | `rca-document` / `rca-evidence-mapping` | Generate structured RCA docs |
-| `case-archive` | Persist solved cases; also appends to shared memory |
-| **Dependencies** | |
-| `dependency-upgrade` | Safe Maven/npm upgrade: CVE check, one-at-a-time, tests after each |
+| `case-archive` | Persist solved cases; appends to shared memory |
+| `dependency-upgrade` | Safe Maven/npm upgrade with CVE check |
 | `npm-errors` | npm/UI build failure triage |
-| **Planning & Design** | |
 | `writing-plans` / `executing-plans` | Design-first development |
 | `brainstorming` | Structured ideation and requirements exploration |
-| `dispatching-parallel-agents` | Fan-out independent tasks to subagents (includes two-stage review) |
-| **Git Workflow** | |
+| `dispatching-parallel-agents` | Fan-out independent tasks to subagents |
 | `commit-push` | Git commit + push with conventional commits |
 | `requesting-pr-review` / `handling-pr-review-comments` | Bitbucket PR workflow |
 | `finishing-a-development-branch` | Merge prep checklist |
-| `receiving-code-review` / `requesting-code-review` | Self-review and receiving feedback |
-| **Cross-Repo** | |
 | `cross-repo-exploration` | Read/search sibling repos via terminal |
-| `remote-repo-exploration` | Search across 90+ Bitbucket repos using MCP + shallow clones |
-| **Other** | |
+| `remote-repo-exploration` | Search across Bitbucket repos using MCP + shallow clones |
 | `verification-before-completion` | Never claim done without proof |
-| `using-git-worktrees` | Workspace isolation |
 | `customize-agents` | Tailor agent templates to a specific repo |
 | `writing-skills` | Create and edit Copilot skills |
 
-### Shared Memory (grows over time)
+### Shared Instructions
 
-Located in `shared/memory/` — **gitignored here, maintain in your internal repo**.
-The structure is provided as a template; each team populates it from real work:
+| File | Purpose |
+|---|---|
+| `orchestrator.instructions.md` | Auto-dispatch, cache-first context loading, agent routing |
+| `memory-bank.instructions.md` | Persistent memory — write paths and tiered loading policy |
+| `tdd.instructions.md` | TDD-first mandate |
+| `java-conventions.instructions.md` | Constructor injection, no null returns, exception hierarchy |
+| `react-conventions.instructions.md` | Component naming, hooks patterns, accessibility-first |
+| `design-principles.instructions.md` | SOLID, DRY, KISS, YAGNI |
+| `performance-awareness.instructions.md` | N+1, allocation, I/O, concurrency |
+| `customer-case-rca.instructions.md` | Customer case investigation process |
+| `shell.instructions.md` | Terminal usage conventions |
+| `agent-skills.instructions.md` | Guidelines for writing skills |
+
+### Central Memory (grows from real work)
+
+`shared/memory/` — gitignored in this public repo; maintain in your internal repo.
 
 | File | Contains |
 |---|---|
-| `customer-cases.md` | Symptom → root cause → fix matrix. Checked automatically before every case intake. |
-| `known-bugs.md` | Bug table with log evidence patterns and workarounds. |
-| `tech-discoveries.md` | ES indexes, RabbitMQ queues, Akka topologies, PG configs, repo registry. |
+| `customer-cases.md` | Symptom → root cause → fix patterns |
+| `known-bugs.md` | Bug table with log evidence and workarounds |
+| `tech-discoveries.md` | ES indexes, RabbitMQ queues, Akka topologies, repo registry |
+| `active-context.md` | Current work focus across all repos |
+| `architecture-map.md` | Auto-generated service topology (workspace-scan) |
+| `cross-repo-learnings.md` | Patterns spanning multiple repos |
+| `<repo-name>/` | Per-repo memory — junctioned as `memory-bank/` in each repo |
 
-### Instructions
+---
 
-- **`orchestrator.instructions.md`** — Auto-dispatch, cache-first context loading, agent/skill routing
-- **`tdd.instructions.md`** — TDD-first mandate: no production code without a failing test
-- **`java-conventions.instructions.md`** — Constructor injection, no null returns, exception hierarchy, boundary validation
-- **`react-conventions.instructions.md`** — Component naming, hooks patterns, MSW mocking, accessibility-first
-- **`agent-skills.instructions.md`** — Guidelines for writing high-quality skills
-- **`design-principles.instructions.md`** — SOLID, DRY, KISS, YAGNI as hard rules
-- **`performance-awareness.instructions.md`** — N+1, allocation, I/O, concurrency
-- **`customer-case-rca.instructions.md`** — Customer case investigation process
-- **`memory-bank.instructions.md`** — Persistent context management
-- **`shell.instructions.md`** — Terminal usage conventions
+## Updating After Upstream Changes
 
-### Prompts (6)
+```bash
+# Pull latest shared config — skills, instructions, prompts, plans go live immediately
+cd %COPILOT_WORKSPACE_ROOT%\.copilot-shared
+git pull
 
-- **`start-feature.md`** — Kick off a full-stack feature (triggers `full-stack-feature` agent)
-- **`bug-report.md`** — Structured bug investigation (triggers `debugger` + `systematic-debugging`)
-- **`review-request.md`** — Pre-PR self-review (triggers `reviewer` agent)
-- **`dependency-audit.md`** — Dependency upgrade prompt (triggers `dependency-upgrade` skill)
-- **`investigate-customer-case.md`** — Customer case RCA prompt
-- **`cross-repo-knowledge.md`** — Cross-repo exploration prompt
+# Refresh agent templates in a specific repo (merges new templates, skips customised ones)
+bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+```
 
-### Git Hooks
-
-Located in `shared/hooks/`, installed via `bin/install-hooks.cmd <repo-path>`:
-
-| Hook | What it enforces |
+| What changed | Propagation |
 |---|---|
-| `commit-msg` | Conventional Commits format (`feat:`, `fix:`, `docs:`, etc.) |
-| `pre-push` | Runs `mvnw test` or `npx jest` before push (bypass with `SKIP_TESTS=1`) |
+| `shared/skills/`, `shared/instructions/`, `shared/prompts/`, `shared/plans/` | **Instant** via junction — just `git pull` |
+| `agent-templates/` | **Manual** — run `refresh-agents.cmd` per repo |
+| `bin/` scripts | **Instant** — scripts run from `.copilot-shared` directly |
 
 ---
 
-## Contributing
+## Command Reference
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. In short:
+Full list of every script in `bin/` with usage.
 
-1. Clone this repo from GitHub (not Bitbucket — this lives on GitHub)
-2. Create a branch: `git checkout -b feat/my-improvement`
-3. Make your changes (new skill, agent improvement, instruction fix)
-4. Test by running `link-copilot.cmd` on a repo and verifying in Copilot Chat
-5. Push and open a PR on GitHub
+### Setup Scripts
 
-**What to contribute:**
-- New shared skills that work across repos
-- Agent template improvements
-- Instruction fixes and enhancements
-- Bug fixes in `bin/` scripts
-
-**What NOT to commit:**
-- Customer data or support bundles (`cases/` is gitignored)
-- Personal paths in `personal-instructions.md` (gitignored)
-- Secrets, tokens, or credentials
-
----
-
-## Troubleshooting
-
-**Q: How do I check if a repo is wired up correctly?**
-
-```cmd
-powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
-```
-
-Reports PASS/WARN/FAIL on: `.github/` layout, junctions pointing into
-`.copilot-shared\shared`, `.gitignore` marker block, unresolved
-`<placeholder>` tokens, and stale template terms.
-
-**Q: I improved an agent template. How do I push that into existing repos?**
-
-```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
-```
-
-For each `agent-templates/*.agent.md`:
-- **NEW** — repo is missing it; copied in (then run `customize-agents` skill).
-- **SAME** — repo's copy is byte-identical; nothing to do.
-- **CONFLICT** — saved as `<agent>.agent.md.template.new` for manual merge.
-
-Never overwrites a customised agent.
-
-**Q: IDE doesn't see the shared skills.**
-- Verify the junction: `dir %COPILOT_WORKSPACE_ROOT%\<repo>\.github` should show
-  `<JUNCTION>` next to `skills`, `instructions`, `prompts`.
-- Restart the IDE; it caches `.github/` on project open.
-
-**Q: Junction creation fails.**
-- `mklink /J` does not require admin. Confirm `cmd.exe` (not WSL) is being used.
-- If running from PowerShell, `mklink` is a cmd built-in: use `cmd /c mklink ...`
-  or just call the `.cmd` scripts (which auto-handle this).
-
-**Q: A repo's junctions disappeared.**
-- Some IDE/refactor tools recreate junctioned folders as real (empty) folders.
-  Re-run `link-copilot.cmd <repo>` — it's idempotent.
-
-**Q: I want a repo excluded from auto-linking.**
-- Don't create `.github/copilot-instructions.md` in it. `link-all-copilot.cmd`
-  skips repos without that file.
-
-**Q: I ran `setup-all-repos.ps1` BEFORE `setup-local.ps1`. How do I fix it?**
-
-`setup-repo.ps1` reads `.local.env` and `shared/memory/tech-discoveries.md`
-(both created by `setup-local.ps1`) to fill in Bitbucket URLs, build commands,
-and repo descriptions. Without them, all repos were set up with placeholder
-values (`https://bitbucket.org/your-workspace/<repo>`, no build commands, all
-categories defaulted to `service`).
-
-**Fix — 3 steps:**
+| Script | What it does |
+|--------|-------------|
+| `setup-local.ps1` | **One-time** — personalise after cloning. Prompts for Bitbucket workspace/products, generates `copilot-local.instructions.md`, seeds memory templates, writes `.local.env` |
+| `setup-repo.ps1 <repo-path>` | **One-time per repo** — full `.github/` setup: creates junctions (skills, instructions, prompts, plans, learning, cases), copies agent templates, wires `memory-bank/` to central |
+| `setup-all-repos.ps1` | Runs `setup-repo.ps1` on every repo under workspace root that is missing `.github/copilot-instructions.md` |
 
 ```powershell
-# 1. Run setup-local.ps1 (creates .local.env, copilot-local.instructions.md, memory files)
-powershell -File bin\setup-local.ps1
+# One repo
+powershell -File bin\setup-repo.ps1 %COPILOT_WORKSPACE_ROOT%\<repo>
 
-# 2. Re-run setup on all repos with -Force to regenerate files with correct values
-Get-ChildItem (Split-Path $PWD -Parent) -Directory |
-  Where-Object { $_.Name -ne '.copilot-shared' -and (Test-Path "$($_.FullName)\.git") } |
-  ForEach-Object { & bin\setup-repo.ps1 $_.FullName -Force }
-
-# 3. Verify junctions are intact
-powershell -File bin\audit.ps1
-```
-
-**Alternative** — if you customised some agents and don't want to overwrite them,
-delete only the auto-generated instruction files and let `setup-all-repos` re-detect:
-
-```powershell
-# Remove just copilot-instructions.md (setup-all-repos skips repos that have it)
-Get-ChildItem (Split-Path $PWD -Parent) -Directory |
-  Where-Object { $_.Name -ne '.copilot-shared' -and (Test-Path "$($_.FullName)\.github\copilot-instructions.md") } |
-  ForEach-Object { Remove-Item "$($_.FullName)\.github\copilot-instructions.md" }
-
-# Now re-run (without -Force — agents are preserved)
+# All repos at once
 powershell -File bin\setup-all-repos.ps1
 ```
 
-**What to check afterwards:**
-- Verify Bitbucket URLs no longer say `your-workspace`: `grep -r "your-workspace" ../*/.github/copilot-instructions.md`
-- If anyone already committed the placeholder files, amend those commits before pushing.
-
-> **Correct order:** Always run `setup-local.ps1` first (once per machine), THEN `setup-repo.ps1` or `setup-all-repos.ps1`.
-
 ---
 
-## Removing the Integration from a Repo
+### Junction Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `link-copilot.cmd <repo-path>` | Create (or recreate) junctions for skills, instructions, prompts, plans, learning, cases in one repo. Also writes `memory-bank/` to `.gitignore` |
+| `link-all-copilot.cmd` | Walk every sibling repo under workspace root and run `link-copilot.cmd` on each |
+| `unlink-copilot.cmd <repo-path>` | Remove all `copilot-shared` junctions from a repo (safe — only removes junction points, never deletes files) |
+| `copy-agents.cmd <repo-path>` | Seed `.github/agents/` from `agent-templates/`. Skips any agent file that already exists (won't overwrite customisations) |
+| `install-hooks.cmd <repo-path>` | Install shared git hooks (`commit-msg`, `pre-push`) from `shared/hooks/` into the repo's `.git/hooks/` |
 
 ```cmd
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\unlink-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
-```
+:: Wire one repo
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 
-Junctions are removed. Real folders (`agents/`, `instructions-local/`,
-`copilot-instructions.md`) are left untouched.
+:: Wire all repos
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-all-copilot.cmd
+
+:: Remove wiring from a repo
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\unlink-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Seed agents (new repos or after adding a new agent template)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\copy-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Install git hooks
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\install-hooks.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+```
 
 ---
 
-## License
+### Memory Scripts
 
-[MIT](LICENSE) — Copyright 2025 Radware Ltd.
+| Script | What it does |
+|--------|-------------|
+| `centralize-memory.ps1` | Migrate existing `memory-bank/` content to central store and replace with junction. Idempotent — safe to re-run |
+| `export-memory.ps1` | Export `shared/memory/` to a timestamped zip archive (backup before sharing) |
+| `import-memory.ps1` | Restore `shared/memory/` from a previously exported archive |
+
+```powershell
+:: Wire memory-bank junction — one repo
+powershell -File bin\centralize-memory.ps1 `
+  -RepoPath "%COPILOT_WORKSPACE_ROOT%" `
+  -Repos "<repo>" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
+
+:: Wire memory-bank junction — multiple repos
+powershell -File bin\centralize-memory.ps1 `
+  -RepoPath "%COPILOT_WORKSPACE_ROOT%" `
+  -Repos "repo1,repo2,repo3" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
+
+:: Backup memory
+powershell -File bin\export-memory.ps1
+
+:: Restore memory
+powershell -File bin\import-memory.ps1 -ArchivePath "path\to\archive.zip"
+```
+
+---
+
+### Context / Knowledge Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `workspace-scan.ps1` | Scan all repos and generate `shared/memory/architecture-map.md` — service topology |
+| `repo-mix.ps1 -RepoPath <path>` | Generate a single-file context pack for one repo → `shared/memory/repo-contexts/<repo>.md` |
+| `repo-mix-all.ps1` | Generate context packs for all repos in the workspace |
+| `full-context-refresh.ps1` | Run `workspace-scan` + `repo-mix-all` in one pass (~5 min) |
+| `generate-skill-index.ps1` | Auto-generate `shared/skills/INDEX.md` from all `SKILL.md` frontmatter |
+| `extract-support-bundle.ps1` | Extract RCA-critical files from a DefenseFlow/Vision support bundle (reads zip index, decompresses only what matters — fast even for 4–5 GB bundles) |
+
+```cmd
+:: Full refresh (weekly / after adding repos)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
+
+:: Architecture map only
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.cmd
+
+:: One repo context pack
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<repo>
+```
+
+```powershell
+:: Extract support bundle (RCA)
+powershell -File bin\extract-support-bundle.ps1 -BundlePath "path\to\bundle.zip"
+```
+
+---
+
+### Health-Check Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `doctor.ps1 <repo-path>` | Health check one repo — verifies all junctions, agent files, `memory-bank/`, gitignore entries |
+| `doctor.cmd <repo-path>` | Thin cmd wrapper for `doctor.ps1` |
+| `audit.ps1` | Run `doctor` on every repo under workspace root and print a summary table |
+
+```cmd
+:: Check one repo
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\doctor.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Check all repos
+powershell -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\audit.ps1
+```
+
+---
+
+### Agent / Token Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `refresh-agents.cmd <repo-path>` | Pull updates from `agent-templates/` into a repo's `.github/agents/`. Merges new templates, skips customised files (saves conflicts as `.template.new`) |
+| `merge-agent-templates.ps1` | Auto-merge `.agent.md.template.new` conflict files into live agent files after a `refresh-agents` run |
+| `token-profile.ps1 <profile> <repo-path>` | Switch Copilot token profile for a repo (`balanced` or `aggressive`) — copies the appropriate template instructions file |
+| `token-profile.cmd <profile> <repo-path>` | Thin cmd wrapper for `token-profile.ps1` |
+
+```cmd
+:: Refresh agents after upstream update
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\refresh-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Balanced profile (default — good quality, fewer tokens)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd balanced %COPILOT_WORKSPACE_ROOT%\<repo>
+
+:: Aggressive profile (maximum token savings)
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\token-profile.cmd aggressive %COPILOT_WORKSPACE_ROOT%\<repo>
+```
+
+---
+
+## Reference
+
+| Doc | Purpose |
+|-----|---------|
+| [CENTRALIZED_MEMORY_SETUP.md](./CENTRALIZED_MEMORY_SETUP.md) | Full memory architecture and setup guide |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute to this repo |
+| [shared/memory/README.md](./shared/memory/README.md) | Central knowledge store structure |
+| [cases/README.md](./cases/README.md) | Case archive structure |
+| [TOKEN_OPTIMIZATION_ANALYSIS.md](./TOKEN_OPTIMIZATION_ANALYSIS.md) | Where tokens are being spent and why |
+| [TOKEN_OPTIMIZATION_IMPLEMENTATION.md](./TOKEN_OPTIMIZATION_IMPLEMENTATION.md) | Step-by-step guide to reduce token usage |
+| [TOKEN_USAGE_BEST_PRACTICES.md](./TOKEN_USAGE_BEST_PRACTICES.md) | Ongoing best practices |
+
+---

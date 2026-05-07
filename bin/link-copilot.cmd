@@ -121,6 +121,7 @@ if not errorlevel 1 (
   echo .github/instructions
   echo .github/prompts
   echo .github/plans
+  echo memory-bank/
   echo # ^<^<^< copilot-shared junctions
 ) >> "%GI%"
 exit /b 0

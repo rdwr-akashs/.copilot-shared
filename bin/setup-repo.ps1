@@ -436,6 +436,63 @@ if (Test-Path $linkScript) {
     Write-Host "  [warn] link-copilot.cmd not found -- run it manually" -ForegroundColor Yellow
 }
 
+# ---- Step 8: Junction via link-copilot.cmd ----
+Write-Step "Step 8: Creating junctions"
+$linkScript = Join-Path $PSScriptRoot 'link-copilot.cmd'
+if (Test-Path $linkScript) {
+    & cmd.exe /c "$linkScript" "$RepoPath"
+    # Verify at least the critical junctions were created
+    $missingJunctions = @()
+    foreach ($jName in @('skills', 'instructions', 'prompts', 'plans')) {
+        $jPath = Join-Path $github $jName
+        if (-not (Test-Path $jPath)) { $missingJunctions += $jName }
+    }
+    if ($missingJunctions.Count -gt 0) {
+        Write-Host "  [warn] Junctions missing after link-copilot.cmd: $($missingJunctions -join ', ')" -ForegroundColor Yellow
+        Write-Host "         Try running link-copilot.cmd manually from an elevated prompt." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  [warn] link-copilot.cmd not found -- run it manually" -ForegroundColor Yellow
+}
+
+# ---- Step 8b: memory-bank junction -> central memory store ----
+Write-Step "Step 8b: Junctioning memory-bank to central memory"
+$centralMemDir = Join-Path $ROOT "shared\memory\$repoName"
+if (-not (Test-Path $centralMemDir)) {
+    New-Item -ItemType Directory -Path $centralMemDir -Force | Out-Null
+    Write-Ok "Created central memory dir: shared/memory/$repoName"
+}
+$memBankPath = Join-Path $RepoPath 'memory-bank'
+$isJunction  = $false
+if (Test-Path $memBankPath) {
+    $mbItem = Get-Item $memBankPath -Force -ErrorAction SilentlyContinue
+    if ($mbItem -and $mbItem.LinkType) { $isJunction = $true }
+}
+if ($isJunction) {
+    Write-Ok "memory-bank already a junction -- skipping"
+} else {
+    if (Test-Path $memBankPath) {
+        # Copy any existing content to central before replacing with junction
+        Copy-Item "$memBankPath\*" $centralMemDir -Force -Recurse -ErrorAction SilentlyContinue
+        Remove-Item $memBankPath -Force -Recurse -ErrorAction SilentlyContinue
+    }
+    cmd /c mklink /j "$memBankPath" "$centralMemDir" 2>&1 | Out-Null
+    if (Test-Path $memBankPath) {
+        Write-Ok "memory-bank -> shared/memory/$repoName"
+    } else {
+        Write-Host "  [warn] Could not create memory-bank junction -- run centralize-memory.ps1" -ForegroundColor Yellow
+    }
+}
+
+# Ensure memory-bank is in .gitignore (it's a junction, not tracked)
+$gi8b = Join-Path $RepoPath '.gitignore'
+if (-not (Test-Path $gi8b)) { New-Item -ItemType File -Path $gi8b -Force | Out-Null }
+$gi8bText = [System.IO.File]::ReadAllText($gi8b, [System.Text.Encoding]::UTF8)
+if ($gi8bText -notmatch 'memory-bank') {
+    [System.IO.File]::AppendAllText($gi8b, "`n# Central memory junction -- do not commit`nmemory-bank/`n", [System.Text.Encoding]::UTF8)
+    Write-Ok ".gitignore: added memory-bank/"
+}
+
 # ---- Step 9: .gitignore ----
 Write-Step "Step 9: Updating .gitignore"
 $gi = Join-Path $RepoPath '.gitignore'

@@ -1,4 +1,180 @@
-# Centralized Memory, Learning & Case Documentation
+# Centralized Memory Setup
+
+**Single source of truth** for all AI context across every linked repo. Memory written in any repo flows automatically to `.copilot-shared/shared/memory/` — no manual sync.
+
+## Architecture
+
+```
+<workspace>/
+├── .copilot-shared/
+│   └── shared/
+│       ├── memory/
+│       │   ├── active-context.md         ← current work focus (global)
+│       │   ├── architecture-map.md       ← auto-generated service topology
+│       │   ├── cross-repo-learnings.md   ← patterns spanning repos
+│       │   ├── customer-cases.md         ← solved case patterns
+│       │   ├── known-bugs.md             ← bug reference
+│       │   ├── tech-discoveries.md       ← repo registry & tech stacks
+│       │   ├── cross-repo/               ← shared architectural learnings
+│       │   ├── <repo-name>/              ← per-repo memory (see below)
+│       │   └── repo-contexts/            ← auto-generated context packs
+│       ├── learning/
+│       │   ├── best-practices/
+│       │   ├── troubleshooting/
+│       │   └── design-patterns/
+│       └── cases/
+│           ├── customer-cases/
+│           └── root-cause-analysis/
+│
+├── <repo>/
+│   ├── memory-bank/          ← JUNCTION → shared/memory/<repo>/
+│   └── .github/
+│       ├── copilot-memory/   ← JUNCTION → shared/memory/<repo>/
+│       ├── learning/         ← JUNCTION → shared/learning/
+│       └── cases/            ← JUNCTION → shared/cases/
+```
+
+When an agent writes `memory-bank/activeContext.md` in any repo, the file physically lives in `shared/memory/<repo>/activeContext.md` and is immediately readable from every other linked repo.
+
+---
+
+## Setup: New Repo
+
+Run this one command after cloning a new repo:
+
+```powershell
+.copilot-shared\bin\setup-repo.ps1 C:\your\workspace\<repo-name>
+```
+
+This automatically:
+- Creates `.copilot-shared/shared/memory/<repo-name>/` if missing
+- Migrates any existing `memory-bank/` content to central
+- Replaces `memory-bank/` with a junction → central
+- Creates `.github/copilot-memory`, `.github/learning`, `.github/cases` junctions
+- Adds `memory-bank/` to `.gitignore`
+- Junctions `skills/`, `instructions/`, `prompts/`, `plans/`
+- Copies agent templates and writes `copilot-instructions.md`
+
+---
+
+## Setup: Existing Repo
+
+For repos that already have `.github/` set up but aren't wired to central memory:
+
+```powershell
+# Step 1: shared junctions (skills, instructions, prompts, plans)
+.copilot-shared\bin\link-copilot.cmd C:\your\workspace\<repo-name>
+
+# Step 2: seed agents (skips any already customised)
+.copilot-shared\bin\copy-agents.cmd C:\your\workspace\<repo-name>
+
+# Step 3: wire up central memory
+powershell -File .copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "C:\your\workspace" `
+  -Repos "<repo-name>" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
+```
+
+Step 3 will:
+1. Copy any content from `memory-bank/`, `.github/memory/`, `docs/memory/` into central
+2. Replace `memory-bank/` with a junction → `shared/memory/<repo-name>/`
+3. Create `.github/copilot-memory`, `.github/learning`, `.github/cases` junctions
+4. Print a verification report
+
+---
+
+## Setup: Multiple Repos at Once
+
+```powershell
+powershell -File .copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "C:\your\workspace" `
+  -Repos "repo1,repo2,repo3" `
+  -CreateSymlinks 1 -DeleteLocal 0 -Verify 1
+```
+
+---
+
+## Verification
+
+After running setup, verify junctions are wired correctly:
+
+```bash
+# List junction targets
+fsutil reparsepoint query C:\workspace\repo1\memory-bank | findstr "Print Name"
+fsutil reparsepoint query C:\workspace\repo1\.github\copilot-memory | findstr "Print Name"
+
+# Confirm files appear in both places (same physical location)
+ls C:\workspace\repo1\memory-bank\
+ls C:\workspace\.copilot-shared\shared\memory\repo1\
+```
+
+---
+
+## Per-Repo Memory Files
+
+Agents write these files inside `memory-bank/` (→ central):
+
+| File | Purpose |
+|------|---------|
+| `activeContext.md` | Current session: what's being worked on, recent decisions |
+| `projectbrief.md` | Project goals, scope, core requirements |
+| `systemPatterns.md` | Architecture, design patterns, component relationships |
+| `techContext.md` | Tech stack, dependencies, build setup |
+| `progress.md` | What works, what's left, known issues |
+| `tasks/_index.md` | Task list with statuses |
+| `tasks/<TASKID>-name.md` | One file per task with full history |
+
+---
+
+## Cross-Repo Memory Files (read from any repo)
+
+These live directly in `shared/memory/` and are read-only for most agents:
+
+| File | Updated by |
+|------|-----------|
+| `active-context.md` | Agent or user at session start/end |
+| `architecture-map.md` | `bin/workspace-scan.ps1` (auto) |
+| `cross-repo-learnings.md` | `save-learning` skill |
+| `customer-cases.md` | `save-learning` skill after case resolution |
+| `known-bugs.md` | `save-learning` skill after bug diagnosis |
+| `tech-discoveries.md` | `save-learning` skill / `setup-local.ps1` |
+| `repo-contexts/<repo>.md` | `bin/repo-mix-all.ps1` (auto) |
+
+---
+
+## Refresh Central Store
+
+```powershell
+# Full refresh: architecture map + all repo context packs
+.copilot-shared\bin\full-context-refresh.cmd
+
+# Architecture map only
+.copilot-shared\bin\workspace-scan.cmd
+
+# All repo context packs
+.copilot-shared\bin\repo-mix-all.cmd
+
+# One specific repo
+.copilot-shared\bin\repo-mix.cmd -RepoPath C:\workspace\<repo> -Central
+```
+
+---
+
+## .gitignore
+
+`memory-bank/` is a junction and must not be committed. The scripts handle this automatically, but verify:
+
+```gitignore
+# Central memory junction -- do not commit
+memory-bank/
+
+# >>> copilot-shared junctions (managed by link-copilot.cmd)
+.github/skills
+.github/instructions
+.github/prompts
+.github/plans
+# <<< copilot-shared junctions
+```
 
 **Purpose:** Consolidate all memory bank, learning docs, and case files from individual repos into the central `.copilot-shared` hub.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # Centralize Memory, Learning, and Case Documentation
-# 
+#
 # Usage: .\centralize-memory.ps1 -RepoPath "C:\repos" -CentralPath "C:\rdwr-intelij\.copilot-shared"
 #
 # This script:
@@ -12,27 +12,39 @@
 param(
     [string]$RepoPath = "C:\repos",
     [string]$CentralPath = "C:\rdwr-intelij\.copilot-shared",
-    [array]$Repos = @("common_policy_editor"),
-    [switch]$CreateSymlinks = $true,
-    [switch]$DeleteLocal = $false,
-    [switch]$Verify = $true
+    [string[]]$Repos = @("common_policy_editor"),
+    [bool]$CreateSymlinks = $true,
+    [bool]$DeleteLocal = $false,
+    [bool]$Verify = $true
 )
 
 $ErrorActionPreference = "Stop"
 
-# Colors for output
-function Write-Success { Write-Host $args -ForegroundColor Green }
-function Write-Warning { Write-Host $args -ForegroundColor Yellow }
-function Write-Error { Write-Host $args -ForegroundColor Red }
-function Write-Info { Write-Host $args -ForegroundColor Cyan }
+# Normalize Repos parameter - handle comma-separated strings
+if ($Repos.Count -eq 1 -and $Repos[0] -is [string] -and $Repos[0].Contains(',')) {
+    $Repos = @($Repos[0] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+}
 
-# Initialize logging
-$LogFile = Join-Path $CentralPath "centralize-memory-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+# Colors for output
+function Write-Success { param([string]$Msg) Write-Host $Msg -ForegroundColor Green }
+function Write-Warn { param([string]$Msg) Write-Host $Msg -ForegroundColor Yellow }
+function Write-Err { param([string]$Msg) Write-Host $Msg -ForegroundColor Red }
+function Write-Info { param([string]$Msg) Write-Host $Msg -ForegroundColor Cyan }
+
+# Ensure central path exists before creating log file
+if (-not (Test-Path $CentralPath)) {
+    New-Item -ItemType Directory -Path $CentralPath -Force | Out-Null
+}
+
+# Initialize logging — logs go to shared/memory/logs/ (not repo root)
+$LogDir = Join-Path $CentralPath "shared/memory/logs"
+if (-not (Test-Path $LogDir)) { New-Item -ItemType Directory -Path $LogDir -Force | Out-Null }
+$LogFile = Join-Path $LogDir "centralize-memory-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
 function Log {
     param([string]$Message)
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$timestamp - $Message" | Tee-Object -FilePath $LogFile -Append
+    $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$ts - $Message" | Tee-Object -FilePath $LogFile -Append
 }
 
 Write-Info "=== Central Memory Consolidation ==="
@@ -56,8 +68,8 @@ $dirs = @(
     "shared/cases/root-cause-analysis"
 )
 
-foreach ($repo in $Repos) {
-    $dirs += "shared/memory/$repo"
+for ($i = 0; $i -lt $Repos.Count; $i++) {
+    $dirs += "shared/memory/$($Repos[$i])"
 }
 
 foreach ($dir in $dirs) {
@@ -67,121 +79,144 @@ foreach ($dir in $dirs) {
         Log "Created: $fullPath"
     }
 }
-Write-Success "✓ Directory structure created"
+Write-Success "[OK] Directory structure created"
 
 # Step 2: Copy repo-specific memory from individual repos
 Write-Info "[2/5] Consolidating repo-specific memory..."
-foreach ($repo in $Repos) {
-    $repoPath = Join-Path $RepoPath $repo
-    $centralMemory = Join-Path $CentralPath "shared/memory/$repo"
-    
-    if (-not (Test-Path $repoPath)) {
-        Write-Warning "⚠ Repository not found: $repoPath"
-        Log "WARN: Repository not found: $repoPath"
+for ($i = 0; $i -lt $Repos.Count; $i++) {
+    $currentRepo = $Repos[$i]
+    $currentRepoPath = Join-Path $RepoPath $currentRepo
+    $currentCentralMemory = Join-Path $CentralPath "shared/memory/$currentRepo"
+
+    if (-not (Test-Path $currentRepoPath)) {
+        Write-Warn "[WARN] Repository not found: $currentRepoPath"
+        Log "WARN: Repository not found: $currentRepoPath"
         continue
     }
-    
-    Write-Info "  Processing: $repo"
-    
+
+    Write-Info "  Processing: $currentRepo"
+
+    # Copy from memory-bank if exists AND is a real directory (not already a junction)
+    $memoryBank = Join-Path $currentRepoPath "memory-bank"
+    if (Test-Path $memoryBank) {
+        $mbItem = Get-Item $memoryBank -Force -ErrorAction SilentlyContinue
+        if ($mbItem -and -not $mbItem.LinkType) {
+            Copy-Item "$memoryBank\*" $currentCentralMemory -Force -Recurse -ErrorAction SilentlyContinue
+            Log "  Copied memory-bank to $currentCentralMemory"
+        } else {
+            Log "  Skipped memory-bank (already a junction to central)"
+        }
+    }
+
     # Copy from .github/memory if exists
-    $githubMemory = Join-Path $repoPath ".github/memory"
+    $githubMemory = Join-Path $currentRepoPath ".github/memory"
     if (Test-Path $githubMemory) {
-        Copy-Item "$githubMemory/*" $centralMemory -Force -Recurse -ErrorAction SilentlyContinue
-        Log "  ✓ Copied .github/memory to $centralMemory"
+        Copy-Item "$githubMemory\*" $currentCentralMemory -Force -Recurse -ErrorAction SilentlyContinue
+        Log "  Copied .github/memory to $currentCentralMemory"
     }
-    
+
     # Copy from docs/memory if exists
-    $docsMemory = Join-Path $repoPath "docs/memory"
+    $docsMemory = Join-Path $currentRepoPath "docs/memory"
     if (Test-Path $docsMemory) {
-        Copy-Item "$docsMemory/*" $centralMemory -Force -Recurse -ErrorAction SilentlyContinue
-        Log "  ✓ Copied docs/memory to $centralMemory"
+        Copy-Item "$docsMemory\*" $currentCentralMemory -Force -Recurse -ErrorAction SilentlyContinue
+        Log "  Copied docs/memory to $currentCentralMemory"
     }
-    
+
     # Copy from docs/learning if exists
-    $docsLearning = Join-Path $repoPath "docs/learning"
+    $docsLearning = Join-Path $currentRepoPath "docs/learning"
     if (Test-Path $docsLearning) {
         $centralLearning = Join-Path $CentralPath "shared/learning"
         Copy-Item "$docsLearning/*" $centralLearning -Force -Recurse -ErrorAction SilentlyContinue
-        Log "  ✓ Copied docs/learning to $centralLearning"
+        Log "  Copied docs/learning to $centralLearning"
     }
 }
-Write-Success "✓ Repository memory consolidated"
+Write-Success "[OK] Repository memory consolidated"
 
 # Step 3: Copy case documentation
 Write-Info "[3/5] Consolidating case documentation..."
-foreach ($repo in $Repos) {
-    $repoPath = Join-Path $RepoPath $repo
-    $casePath = Join-Path $repoPath ".agent_work"
+for ($i = 0; $i -lt $Repos.Count; $i++) {
+    $currentRepo = $Repos[$i]
+    $currentRepoPath = Join-Path $RepoPath $currentRepo
+    $casePath = Join-Path $currentRepoPath ".agent_work"
     $centralCases = Join-Path $CentralPath "shared/cases/customer-cases"
-    
+
     if (Test-Path $casePath) {
-        # Copy all case files (RSEG-*, SC-*, INC-*)
         Get-ChildItem $casePath -Directory | Where-Object { $_.Name -match '^(RSEG|SC|INC)' } | ForEach-Object {
             Copy-Item $_.FullName "$centralCases/" -Force -Recurse -ErrorAction SilentlyContinue
-            Log "  ✓ Copied case: $($_.Name)"
+            Log "  Copied case: $($_.Name)"
         }
     }
 }
-Write-Success "✓ Case documentation consolidated"
+Write-Success "[OK] Case documentation consolidated"
 
 # Step 4: Create symlinks in individual repos
 if ($CreateSymlinks) {
     Write-Info "[4/5] Creating symlinks in individual repos..."
-    
-    foreach ($repo in $Repos) {
-        $repoPath = Join-Path $RepoPath $repo
-        $githubDir = Join-Path $repoPath ".github"
-        
+
+    for ($i = 0; $i -lt $Repos.Count; $i++) {
+        $currentRepo = $Repos[$i]
+        $currentRepoPath = Join-Path $RepoPath $currentRepo
+        $githubDir = Join-Path $currentRepoPath ".github"
+
         if (-not (Test-Path $githubDir)) {
-            Write-Warning "⚠ .github directory not found: $githubDir"
+            Write-Warn "[WARN] .github directory not found: $githubDir"
             continue
         }
-        
-        Write-Info "  ${repo}: Creating symlinks..."
-        
-        # Create memory symlink
-        $symlink = Join-Path $githubDir "copilot-memory"
-        $target = "$(Join-Path $CentralPath "shared/memory/$repo")"
-        
-        if (Test-Path $symlink) {
-            Remove-Item $symlink -Force -ErrorAction SilentlyContinue
-        }
-        
-        cmd /c mklink /d "$symlink" "$target" 2>&1 | Out-Null
-        if ($?) {
-            Log "  ✓ Symlink created: .github/copilot-memory → central memory"
-        } else {
-            Log "  ✗ Failed to create symlink (may require admin)"
-        }
-        
+
+        Write-Info "  ${currentRepo}: Creating junctions..."
+
         # Create learning symlink
         $learningLink = Join-Path $githubDir "learning"
-        $learningTarget = "$(Join-Path $CentralPath "shared/learning")"
-        
+        $learningTarget = Join-Path $CentralPath "shared/learning"
+
         if (Test-Path $learningLink) {
-            Remove-Item $learningLink -Force -ErrorAction SilentlyContinue
+            cmd /c rmdir "$learningLink" 2>&1 | Out-Null
+            if (Test-Path $learningLink) { Remove-Item $learningLink -Force -Recurse -ErrorAction SilentlyContinue }
         }
-        
-        cmd /c mklink /d "$learningLink" "$learningTarget" 2>&1 | Out-Null
+
+        cmd /c mklink /j "$learningLink" "$learningTarget" 2>&1 | Out-Null
         if ($?) {
-            Log "  ✓ Symlink created: .github/learning → central learning"
+            Log "  Junction created: .github/learning -> central learning"
         }
-        
+
         # Create cases symlink
         $casesLink = Join-Path $githubDir "cases"
-        $casesTarget = "$(Join-Path $CentralPath "shared/cases")"
-        
+        $casesTarget = Join-Path $CentralPath "shared/cases"
+
         if (Test-Path $casesLink) {
-            Remove-Item $casesLink -Force -ErrorAction SilentlyContinue
+            cmd /c rmdir "$casesLink" 2>&1 | Out-Null
+            if (Test-Path $casesLink) { Remove-Item $casesLink -Force -Recurse -ErrorAction SilentlyContinue }
         }
-        
-        cmd /c mklink /d "$casesLink" "$casesTarget" 2>&1 | Out-Null
+
+        cmd /c mklink /j "$casesLink" "$casesTarget" 2>&1 | Out-Null
         if ($?) {
-            Log "  ✓ Symlink created: .github/cases → central cases"
+            Log "  Junction created: .github/cases -> central cases"
+        }
+
+        # Junction memory-bank at repo root -> central memory (so agent writes go to central)
+        $memBankLink = Join-Path $currentRepoPath "memory-bank"
+        $memBankTarget = Join-Path $CentralPath "shared/memory/$currentRepo"
+
+        if (Test-Path $memBankLink) {
+            $item = Get-Item $memBankLink -Force -ErrorAction SilentlyContinue
+            if ($item -and $item.LinkType) {
+                # Already a junction - remove just the junction point (not the target contents)
+                cmd /c rmdir "$memBankLink" 2>&1 | Out-Null
+            } else {
+                # Real directory - content was already copied to central in Step 2, delete it
+                cmd /c rmdir /s /q "$memBankLink" 2>&1 | Out-Null
+            }
+        }
+
+        cmd /c mklink /j "$memBankLink" "$memBankTarget" 2>&1 | Out-Null
+        if ($?) {
+            Log "  Junction created: memory-bank -> central memory/$currentRepo"
+        } else {
+            Log "  WARN: Failed to create memory-bank junction for $currentRepo"
         }
     }
-    
-    Write-Success "✓ Symlinks created"
+
+    Write-Success "[OK] Symlinks created"
 } else {
     Write-Info "[4/5] Skipping symlink creation (-CreateSymlinks not set)"
 }
@@ -189,35 +224,36 @@ if ($CreateSymlinks) {
 # Step 5: Optional cleanup of local copies
 if ($DeleteLocal) {
     Write-Info "[5/5] Cleaning up local copies..."
-    
-    foreach ($repo in $Repos) {
-        $repoPath = Join-Path $RepoPath $repo
-        
+
+    for ($i = 0; $i -lt $Repos.Count; $i++) {
+        $currentRepo = $Repos[$i]
+        $currentRepoPath = Join-Path $RepoPath $currentRepo
+
         # Remove local memory (if not a symlink)
-        $memory = Join-Path $repoPath ".github/memory"
+        $memory = Join-Path $currentRepoPath ".github/memory"
         if ((Test-Path $memory) -and -not (Get-Item $memory -ErrorAction SilentlyContinue).LinkType) {
             Remove-Item $memory -Force -Recurse
-            Log "  ✓ Deleted local copy: .github/memory"
+            Log "  Deleted local copy: .github/memory"
         }
-        
+
         # Remove docs/memory and docs/learning if they exist
-        $docsMemory = Join-Path $repoPath "docs/memory"
-        $docsLearning = Join-Path $repoPath "docs/learning"
-        
+        $docsMemory = Join-Path $currentRepoPath "docs/memory"
+        $docsLearning = Join-Path $currentRepoPath "docs/learning"
+
         if (Test-Path $docsMemory) {
             Remove-Item $docsMemory -Force -Recurse
-            Log "  ✓ Deleted local copy: docs/memory"
+            Log "  Deleted local copy: docs/memory"
         }
         if (Test-Path $docsLearning) {
             Remove-Item $docsLearning -Force -Recurse
-            Log "  ✓ Deleted local copy: docs/learning"
+            Log "  Deleted local copy: docs/learning"
         }
     }
-    
-    Write-Success "✓ Local copies cleaned up"
+
+    Write-Success "[OK] Local copies cleaned up"
 } else {
     Write-Info "[5/5] Skipping cleanup (-DeleteLocal not set)"
-    Write-Warning "⚠ Consider deleting local copies manually after verifying centralization"
+    Write-Warn "[NOTE] Consider deleting local copies manually after verifying centralization"
 }
 
 # Verification
@@ -225,49 +261,54 @@ if ($Verify) {
     Write-Info ""
     Write-Info "=== Verification ==="
     Write-Info "Checking central structure..."
-    
+
     $errors = 0
-    
-    # Check central directories exist
+
     foreach ($dir in $dirs) {
         $fullPath = Join-Path $CentralPath $dir
         if (Test-Path $fullPath) {
-            Write-Success "✓ $dir"
+            Write-Success "[OK] $dir"
         } else {
-            Write-Warning "✗ $dir (missing)"
+            Write-Warn "[FAIL] $dir (missing)"
             $errors++
         }
     }
-    
-    # Check symlinks in repos
-    Write-Info "Checking symlinks in repositories..."
-    foreach ($repo in $Repos) {
-        $repoPath = Join-Path $RepoPath $repo
-        
-        $memoryLink = Join-Path $repoPath ".github/copilot-memory"
-        if (Test-Path $memoryLink) {
-            Write-Success "✓ ${repo}: .github/copilot-memory"
+
+    Write-Info "Checking junctions in repositories..."
+    for ($i = 0; $i -lt $Repos.Count; $i++) {
+        $currentRepo = $Repos[$i]
+        $currentRepoPath = Join-Path $RepoPath $currentRepo
+        $memBankCheck = Join-Path $currentRepoPath "memory-bank"
+
+        if (Test-Path $memBankCheck) {
+            $mbItem = Get-Item $memBankCheck -Force -ErrorAction SilentlyContinue
+            if ($mbItem -and $mbItem.LinkType) {
+                Write-Success "[OK] ${currentRepo}: memory-bank (junction)"
+            } else {
+                Write-Warn "[FAIL] ${currentRepo}: memory-bank exists but is NOT a junction"
+                $errors++
+            }
         } else {
-            Write-Warning "✗ ${repo}: .github/copilot-memory (missing)"
+            Write-Warn "[FAIL] ${currentRepo}: memory-bank (missing)"
             $errors++
         }
     }
-    
+
     Write-Info ""
     if ($errors -eq 0) {
-        Write-Success "✓ All verifications passed!"
+        Write-Success "[OK] All verifications passed!"
     } else {
-        Write-Warning "⚠ $errors verification(s) failed. Check log: $LogFile"
+        Write-Warn "[WARN] $errors verification(s) failed. Check log: $LogFile"
     }
 }
 
 Write-Info ""
 Write-Success "=== Centralization Complete ==="
-Write-Info "Log saved to: $LogFile"
+Write-Info "Log saved to: shared/memory/logs/$(Split-Path $LogFile -Leaf)"
 Write-Info ""
 Write-Info "Next steps:"
-Write-Info "1. Update .copilot-instructions.md in each repo to reference central memory"
-Write-Info "2. Test symlinks: cd <repo>/.github && ls -la copilot-memory"
-Write-Info "3. Review CENTRALIZED_MEMORY_SETUP.md for documentation"
-Write-Info "4. Commit changes and push (git add symlink references)"
-Log "Centralization completed successfully"
+Write-Info "1. Verify: ls <repo>/memory-bank/ -- should show your memory files"
+Write-Info "2. Verify: ls .copilot-shared/shared/memory/<repo>/ -- same files"
+Write-Info "3. Run 'full-context-refresh.cmd' to rebuild architecture-map and repo-contexts"
+
+Log 'Centralization completed successfully'
