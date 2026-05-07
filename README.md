@@ -136,6 +136,72 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 
 ---
 
+## Centralized Memory, Learning & Cases Setup
+
+**Optional but recommended:** Consolidate all memory, learning docs, and case files from individual repos into the central `.copilot-shared` hub. This ensures:
+
+- ✅ **Single source of truth** — Update once, visible in all repos
+- ✅ **No duplication** — All repos symlink to central location
+- ✅ **Organized structure** — Memory / Learning / Cases separated
+- ✅ **Cross-repo insights** — Shared patterns and learnings
+
+### Quick Setup
+
+**1. Run the centralization script:**
+```powershell
+.copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "C:\repos" `
+  -Repos @("repo1", "repo2", "repo3") `
+  -CreateSymlinks $true `
+  -DeleteLocal $false `
+  -Verify $true
+```
+
+**2. Verify symlinks work in each repo:**
+```bash
+cd /c/repos/repo1/.github
+ls -la copilot-memory/
+cat copilot-memory/memory.md
+```
+
+**3. Update `.copilot-instructions.md` in each repo:**
+```markdown
+## Memory & Learning Resources
+
+- **This Repo's Memory**: [See .github/copilot-memory](../../.copilot-shared/shared/memory/repo1/)
+- **Learning Docs**: [See .github/learning](../../.copilot-shared/shared/learning/)
+- **Case Documentation**: [See .github/cases](../../.copilot-shared/shared/cases/)
+- **Cross-Repo Insights**: [See central memory](../../.copilot-shared/shared/memory/cross-repo/)
+```
+
+### Centralized Structure
+
+```
+shared/
+├── memory/
+│   ├── cross-repo/              ← Shared learnings across all repos
+│   ├── <repo-name>/             ← Per-repo memory (symlinked from .github/copilot-memory)
+│   └── ...
+├── learning/                    ← Best practices & learning materials
+│   ├── best-practices/
+│   ├── troubleshooting/
+│   └── design-patterns/
+└── cases/                       ← Customer cases & RCA documents
+    ├── customer-cases/
+    └── root-cause-analysis/
+```
+
+### Full Documentation
+
+- **[CENTRALIZED_MEMORY_SETUP.md](./CENTRALIZED_MEMORY_SETUP.md)** — Architecture, phases, detailed setup
+- **[CENTRALIZATION_CHECKLIST.md](./CENTRALIZATION_CHECKLIST.md)** — Step-by-step migration checklist
+- **[MEMORY_QUICK_REFERENCE.md](./MEMORY_QUICK_REFERENCE.md)** — Quick lookup for common tasks
+- **[shared/memory/README.md](./shared/memory/README.md)** — Memory organization
+- **[shared/learning/README.md](./shared/learning/README.md)** — Learning materials
+- **[cases/README.md](./cases/README.md)** — Case documentation structure
+
+---
+
 ## Prerequisites
 
 | Requirement | Notes |
@@ -161,18 +227,25 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │   │   ├── instructions\       # Copilot rules (orchestrator, agent-skills, memory-bank, customer-case-rca)
 │   │   ├── prompts\            # Reusable prompt templates (investigate-customer-case, etc.)
 │   │   ├── plans\              # Cross-repo feature plans (junctioned to each repo)
-│   │   └── memory\             # *** CENTRAL KNOWLEDGE STORE ***
-│   │       ├── architecture-map.md       # Auto-generated service topology
-│   │       ├── active-context.md         # Current work focus
-│   │       ├── cross-repo-learnings.md   # Patterns spanning repos
-│   │       ├── customer-cases.md         # Solved case patterns
-│   │       ├── known-bugs.md             # Bug reference
-│   │       ├── tech-discoveries.md       # Tech stack registry
-│   │       └── repo-contexts/            # Per-repo Repomix context packs
-│   │           ├── _index.md             # Index of all scanned repos
-│   │           └── <repo-name>.md        # Full context per repo
+│   │   ├── memory\             # *** CENTRAL KNOWLEDGE STORE *** 
+│   │   │   ├── cross-repo/             # Shared learnings & patterns across all repos
+│   │   │   ├── <repo-name>/            # Per-repo memory (symlinked from each repo's .github/copilot-memory)
+│   │   │   ├── architecture-map.md     # Auto-generated service topology
+│   │   │   ├── active-context.md       # Current work focus
+│   │   │   ├── cross-repo-learnings.md # Patterns spanning repos
+│   │   │   ├── customer-cases.md       # Solved case patterns
+│   │   │   ├── known-bugs.md           # Bug reference
+│   │   │   ├── tech-discoveries.md     # Tech stack registry
+│   │   │   └── repo-contexts/          # Per-repo Repomix context packs
+│   │   ├── learning\           # *** CENTRAL LEARNING MATERIALS ***
+│   │   │   ├── best-practices/         # Patterns by technology
+│   │   │   ├── troubleshooting/        # Debugging guides
+│   │   │   └── design-patterns/        # Architectural patterns
+│   │   └── [other directories]
 │   ├── agent-templates\        # Copied (not junctioned) per-repo; customised locally
-│   ├── cases\                  # Local-only solved-case archive (gitignored — contains customer data)
+│   ├── cases\                  # *** CENTRAL CASE ARCHIVE ***
+│   │   ├── customer-cases/             # Customer case files (symlinked from each repo's .github/cases)
+│   │   └── root-cause-analysis/        # RCA documents & fixes
 │   ├── templates\              # Per-repo seed files (copilot-instructions, project-rules, etc.)
 │   └── bin\                    # Setup scripts
 │       ├── setup-local.ps1     # ONE-TIME: personalise toolkit after GitHub clone
@@ -197,6 +270,7 @@ Restart your IDE after Step B. Done — Copilot now has full context for this re
 │       ├── full-context-refresh.cmd  # CMD wrapper for full-context-refresh.ps1
 │       ├── token-profile.ps1   # Switch per-repo token profile (balanced/aggressive)
 │       ├── token-profile.cmd   # CMD wrapper for token-profile.ps1
+│       ├── centralize-memory.ps1 # Consolidate memory/learning/cases from repos → central hub
 │       └── refresh-agents.cmd  # Pull upstream agent-template improvements
 ├── <your-repo-1>\               ← product repo (Bitbucket)
 │   └── .github\
@@ -265,6 +339,20 @@ Rebuild everything (architecture map + all repo context packs) in one command:
 ```cmd
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
 ```
+
+### Centralize Memory, Learning & Cases (Optional)
+
+Consolidate memory bank, learning docs, and case files from individual repos into central hub (one-time setup):
+
+```powershell
+%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\centralize-memory.ps1 `
+  -RepoPath "C:\your\workspace" `
+  -Repos @("repo1", "repo2") `
+  -CreateSymlinks $true `
+  -Verify $true
+```
+
+This creates symlinks in each repo's `.github/` pointing to the central memory. See [CENTRALIZATION_CHECKLIST.md](./CENTRALIZATION_CHECKLIST.md) for full details and verification steps.
 
 ### Switch token profile per repo
 

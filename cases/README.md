@@ -14,14 +14,24 @@ Field issues recur. The same root cause shows up across customers, versions, and
 
 ```
 cases/
-├── README.md             # this file
-├── _index.md             # one row per archived case (lookup table)
+├── README.md                           # this file
+├── _index.md                           # one row per archived case (lookup table)
 ├── _template/
-│   └── signature.yml     # schema reference
-└── <case-id>/
-    ├── rca.md            # full Root Cause Analysis (10-section format)
-    ├── fix.md            # before/after snippet + commit message + target version
-    └── signature.yml     # searchable index entry (product, versions, keywords, codes, regexes)
+│   └── signature.yml                   # schema reference
+│
+├── customer-cases/                     # Customer case files from all repos
+│   ├── RSEG-*/
+│   │   ├── support-bundle.zip          # Support files from customer
+│   │   └── notes.md                    # Investigation notes
+│   ├── SC-*/
+│   └── INC-*/
+│
+└── root-cause-analysis/                # RCA documents & fixes
+    ├── <case-id>/
+    │   ├── rca.md                      # Full Root Cause Analysis (10-section format)
+    │   ├── fix.md                      # Before/after snippet + commit message
+    │   └── signature.yml               # Searchable index entry
+    └── known-issues.md                 # Common RCA patterns across all repos
 ```
 
 ---
