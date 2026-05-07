@@ -137,7 +137,7 @@ if ($CreateSymlinks) {
             continue
         }
         
-        Write-Info "  $repo: Creating symlinks..."
+        Write-Info "  ${repo}: Creating symlinks..."
         
         # Create memory symlink
         $symlink = Join-Path $githubDir "copilot-memory"
@@ -246,9 +246,9 @@ if ($Verify) {
         
         $memoryLink = Join-Path $repoPath ".github/copilot-memory"
         if (Test-Path $memoryLink) {
-            Write-Success "✓ $repo: .github/copilot-memory"
+            Write-Success "✓ ${repo}: .github/copilot-memory"
         } else {
-            Write-Warning "✗ $repo: .github/copilot-memory (missing)"
+            Write-Warning "✗ ${repo}: .github/copilot-memory (missing)"
             $errors++
         }
     }
