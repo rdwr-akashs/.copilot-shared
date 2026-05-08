@@ -163,6 +163,7 @@ Fast-path: Edit → get_errors → done
 | **Akka Actor issue** | "dead letters", "ask timeout", "actor stuck", dispatcher starvation | `akka-expert` agent | Deep |
 | **Performance investigation** | "slow", "high CPU/memory", "throughput dropped", "latency spike" | `perf-investigator` agent | Deep |
 | **Write Jira Story/Bug/Spike** | "write a story for", "create a Jira ticket", "document this as a bug" | `story-writer` agent | Fast |
+| **Shared Copilot Config** | editing `.copilot-shared`, shared skills, instructions, prompts, agent templates | Fast-path or `principal-engineer` for broad changes | Fast/Deep |
 | **Simple Edit** | single-file change, config update, rename | Fast-path (no agent) | Fast |
 | **Multi-Task** | 3+ independent items across modules | `dispatching-parallel-agents` skill | Deep |
 
@@ -250,6 +251,7 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Creating or editing a Copilot skill | `writing-skills` |
 | Save a lesson for future sessions | `save-learning` or `remember` |
 | Tailor agent to a specific repo | `customize-agents` |
+| Maintain `.copilot-shared` assets | `writing-skills` for skills, then run `bin\audit-copilot-assets.ps1` and `bin\generate-skill-index.ps1` with `-ExecutionPolicy Bypass` if local policy blocks scripts |
 
 ### Skill Chaining Rules
 
@@ -401,6 +403,22 @@ Trigger `dispatching-parallel-agents` when:
 - Don't repeat context already in conversation
 - Tables and bullets over prose
 - Evidence before claims — run commands before saying "done"
+
+## Shared Copilot Repo Guardrails
+
+When the current repo is `.copilot-shared`:
+- Treat `shared/skills`, `shared/instructions`, `shared/prompts`, and
+  `agent-templates` as team-wide production assets. Small wording changes can
+  affect every linked repo.
+- Preserve placeholders in templates unless editing `customize-agents`; they
+  are intentionally resolved per repo.
+- After changing skills, run `bin\generate-skill-index.ps1`.
+- Before finishing any shared asset change, run
+  `bin\audit-copilot-assets.ps1` and report warnings separately from errors.
+  Use `powershell -ExecutionPolicy Bypass -File ...` on Windows machines that
+  block local scripts by default.
+- Do not edit `shared/memory` or `cases/*` unless the user explicitly asks;
+  those may contain local or customer-specific data.
 
 ## Session-End Learning Prompt
 

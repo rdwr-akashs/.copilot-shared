@@ -218,6 +218,17 @@ Agents write `memory-bank/activeContext.md` → file is immediately readable fro
 notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\save-learning\SKILL.md
 ```
 
+After changing shared skills, instructions, prompts, or agent templates:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File bin\generate-skill-index.ps1
+powershell -ExecutionPolicy Bypass -File bin\audit-copilot-assets.ps1
+```
+
+The audit is the maintainer safety net for this central repo: it checks skill
+frontmatter, agent template metadata, prompt shape, oversized skills, and stale
+generated indexes before changes are shared with the team.
+
 ### Refresh the central knowledge store
 
 ```cmd
@@ -461,8 +472,9 @@ powershell -File bin\import-memory.ps1 -ArchivePath "path\to\archive.zip"
 | `repo-mix.ps1 -RepoPath <path>` | Generate a single-file context pack for one repo → `shared/memory/repo-contexts/<repo>.md` |
 | `repo-mix-all.ps1` | Generate context packs for all repos in the workspace |
 | `full-context-refresh.ps1` | Run `workspace-scan` + `repo-mix-all` in one pass (~5 min) |
-| `generate-skill-index.ps1` | Auto-generate `shared/skills/INDEX.md` from all `SKILL.md` frontmatter |
+| `generate-skill-index.ps1` | Regenerate `shared/skills/INDEX.md` from skill frontmatter after adding, removing, or renaming skills |
 | `extract-support-bundle.ps1` | Extract RCA-critical files from a DefenseFlow/Vision support bundle (reads zip index, decompresses only what matters — fast even for 4–5 GB bundles) |
+| `audit-copilot-assets.ps1` | Validate shared skills, instructions, prompts, and agent templates before publishing central repo changes |
 
 ```cmd
 :: Full refresh (weekly / after adding repos)

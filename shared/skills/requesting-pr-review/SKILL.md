@@ -55,23 +55,45 @@ Use this skill when:
 
 ## Step 1: Load PR Context
 
+### Primary: MCP Tools (always use these first)
+
+The `bitbucket-mcp` server is configured in `C:/Users/AkashS/AppData/Roaming/Code/User/mcp.json`
+with credentials injected automatically — **just call the tools directly, no setup needed**.
+
 Always start with the combined context call — it returns diff, diffstat, comments, metrics, and memory patterns in one shot:
 
 ```
-mcp_bitbucket-mcp_get_pr_context(pr_id, repo_slug)
+mcp_bitbucket-mcp_get_pr_context(pr_id, repo_slug, workspace="rdwr")
 ```
 
 If you need the raw unified diff for deeper inspection:
-
 ```
-mcp_bitbucket-mcp_get_pull_request_diff(pr_id, repo_slug)
+mcp_bitbucket-mcp_get_pull_request_diff(pr_id, repo_slug, workspace="rdwr")
 ```
 
 Check historical patterns for this repo before reviewing:
+```
+mcp_bitbucket-mcp_get_repo_patterns(repo="rdwr/common_policy_editor")
+```
 
+### Fallback: REST API via curl (only if MCP tools throw an error)
+
+If MCP tools fail, read credentials from `mcp.json` at:
 ```
-mcp_bitbucket-mcp_get_repo_patterns(repo)
+C:/Users/AkashS/AppData/Roaming/Code/User/mcp.json
+→ .servers["bitbucket-mcp"].env.BITBUCKET_USERNAME / BITBUCKET_PASSWORD
 ```
+
+Then fetch via curl (use `-L` to follow the 302 redirect on the diff endpoint):
+```bash
+BB_USER=$(python -c "import json; d=json.load(open('C:/Users/AkashS/AppData/Roaming/Code/User/mcp.json')); print(d['servers']['bitbucket-mcp']['env']['BITBUCKET_USERNAME'])")
+BB_PASS=$(python -c "import json; d=json.load(open('C:/Users/AkashS/AppData/Roaming/Code/User/mcp.json')); print(d['servers']['bitbucket-mcp']['env']['BITBUCKET_PASSWORD'])")
+
+curl -sL -u "$BB_USER:$BB_PASS" \
+  "https://api.bitbucket.org/2.0/repositories/rdwr/<repo>/pullrequests/<pr_id>/diff" > /tmp/pr.diff
+```
+
+**Never ask the user to paste credentials in chat.**
 
 **Key data to note:**
 - PR title, description, source → destination branch

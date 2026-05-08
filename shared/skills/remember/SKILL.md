@@ -1,6 +1,6 @@
 ---
 name: remember
-description: 'Use when the user wants to save a lesson, pattern, or workflow discovery for future sessions. Triggered by `/remember`, "remember this", "save this", "don\'t forget", or after solving a recurring mistake. Writes domain-organized memory instruction files (global or workspace). Syntax: `/remember [>domain [scope]] lesson`.'
+description: "Use when the user wants to save a lesson, pattern, or workflow discovery for future sessions. Triggered by `/remember`, 'remember this', 'save this', 'don't forget', or after solving a recurring mistake. Writes domain-organized memory instruction files (global or workspace). Syntax: `/remember [>domain [scope]] lesson`."
 ---
 
 # Memory Keeper

@@ -50,7 +50,9 @@ A **skill** is a reference guide for proven techniques, patterns, or tools. Skil
 skills/
   skill-name/
     SKILL.md              # Main reference (required)
-    supporting-file.*     # Only if needed
+    references/           # Optional, loaded only when needed
+    scripts/              # Optional, executable helpers
+    assets/               # Optional, static resources used as-is
 ```
 
 ## SKILL.md Structure
@@ -103,6 +105,11 @@ What goes wrong + fixes
 - Use words Copilot would search for
 - Don't summarize workflow in description
 - Test skills with pressure scenarios before deployment
+- Keep `SKILL.md` lean. If it grows past ~200 lines, move detailed examples,
+  command catalogs, or long checklists into `references/`.
+- Do not publish root-level `README.md`, `EXAMPLE.md`, `CREATION-SUMMARY.md`,
+  or other process notes inside a skill folder. Keep only `SKILL.md` plus
+  resources the agent should actually use.
 
 ## Agent Integration
 
@@ -129,6 +136,8 @@ What goes wrong + fixes
 3. Write Overview, When to Use, Core Pattern, Common Mistakes
 4. Test with a pressure scenario (dispatch agent without the skill, then with)
 5. Verify agent behavior improves with the skill
+6. Run `powershell -ExecutionPolicy Bypass -File bin\audit-copilot-assets.ps1`
+7. Run `powershell -ExecutionPolicy Bypass -File bin\generate-skill-index.ps1` when skills change
 
 ## Prompt Template
 
@@ -143,6 +152,8 @@ Use the writing-skills skill to structure it properly.
 - Keep skills concise — aim for actionable, not exhaustive
 - Description field is max 1024 chars — use triggering conditions only, not workflow summary
 - Test with at least 2 pressure scenarios before considering the skill complete
+- Treat 500 lines in `SKILL.md` as a hard stop. Split before the skill becomes
+  expensive to load in normal sessions.
 
 ## Inter-Skill References
 
