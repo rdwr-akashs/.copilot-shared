@@ -22,6 +22,11 @@ Read these files first:
 3. `docs/codebase/STRUCTURE.md` — where to put new files
 4. The architect's plan (if one exists)
 
+**Context shortcuts (load only when the task needs them):**
+- Cross-repo feature? → `shared/memory/repo-contexts/<sibling-repo>.md` (architecture + DTOs + endpoints — no terminal calls needed)
+- Touching an area with known issues? → `shared/memory/known-bugs.md` (avoid re-introducing fixed bugs)
+- Following a cross-service pattern? → `shared/memory/cross-repo-learnings.md` (integration contracts, shared conventions)
+
 > **Never guess build/test commands.** Always use what's in `cli-commands.instructions.md`.
 
 **Skills to use:**

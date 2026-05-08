@@ -24,6 +24,18 @@ Read memory in tiers:
 
 Never load `repo-contexts/*.md` by default. These files are large and should be opened only when the user asks for deep repo context.
 
+### Quick Decision Tree: Which Memory File Replaces What?
+
+| Instead of... | Load this (cheaper) | Saves |
+|---|---|---|
+| `semantic_search` on current repo | `.github/repo-cache.md` | ~5 tool calls |
+| `cross-repo-exploration` terminal calls | `shared/memory/repo-contexts/<repo>.md` | ~10 terminal calls |
+| Re-investigating a bug from scratch | `shared/memory/known-bugs.md` | Full debug session |
+| Asking user about prior case patterns | `shared/memory/customer-cases.md` | 1 round-trip |
+| Scanning all repos for service relationships | `shared/memory/architecture-map.md` | ~15 terminal calls |
+| Guessing integration contracts | `shared/memory/cross-repo-learnings.md` | Trial-and-error |
+| Full codebase scan for conventions | `docs/codebase/CONVENTIONS.md` (per-repo) | `semantic_search` overhead |
+
 ## Central Knowledge Store (Single Source of Truth)
 
 All persistent memory, context, and learnings live in ONE central location accessible from every linked repo:

@@ -24,6 +24,10 @@ Read these files before doing anything:
 5. `memory-bank/activeContext.md` — current work focus
 6. `memory-bank/tasks/_index.md` — existing tasks (avoid duplication)
 
+**Cross-repo features (load only when scope spans repos):**
+7. `shared/memory/repo-contexts/<sibling-repo>.md` — architecture of the affected sibling (avoids terminal exploration)
+8. `shared/memory/cross-repo-learnings.md` — known integration contracts between services
+
 ---
 
 ## Phase 1 — Design Doc (Architect role)

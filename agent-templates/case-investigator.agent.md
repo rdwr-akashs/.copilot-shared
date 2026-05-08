@@ -38,6 +38,11 @@ Code edits are handed off to the **developer** agent.
 - `.github/skills/case-archive/SKILL.md`
 - Any `.github/instructions-local/triage-rules.instructions.md` in the active repo (per-product overrides).
 
+**Memory quick-lookup (before starting triage):**
+- `shared/memory/known-bugs.md` — check if the symptom matches a known bug (can short-circuit the entire investigation)
+- `shared/memory/customer-cases.md` — check if a prior case had the same signature (Phase 0.5 also does this via archive, but this is faster for known patterns)
+- `shared/memory/repo-contexts/<product-repo>.md` — load the affected product's architecture to speed up Phase 3 code-evidence mapping
+
 ---
 
 ## Phase Map (Methodology)
@@ -133,6 +138,8 @@ After all return, append a unified **Findings** table to `investigation.md`.
 ---
 
 ## Phase 3 — Code-Evidence Mapping (sequential)
+
+> **Token saver:** Before dispatching the code-evidence subagent, read `shared/memory/repo-contexts/<product-repo>.md` for the affected product. This provides the full class/method map so the subagent can jump directly to the right file instead of scanning the entire repo tree.
 
 Dispatch **code-evidence subagent**:
 

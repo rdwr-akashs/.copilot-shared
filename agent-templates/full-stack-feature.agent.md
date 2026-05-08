@@ -25,6 +25,11 @@ You own the feature from design to PR. You never implement both layers alone —
 
 ## Mandatory Pre-Implementation Phases
 
+**Context shortcuts (always load for full-stack work):**
+- `shared/memory/repo-contexts/<backend-repo>.md` — backend architecture, endpoints, DTOs
+- `shared/memory/repo-contexts/webui_components.md` — shared UI component library (what's available, don't reinvent)
+- `shared/memory/cross-repo-learnings.md` — known frontend-backend integration patterns
+
 ### 1. Design Phase
 
 Run `writing-plans` skill to produce a **Full-Stack Design Doc** covering:

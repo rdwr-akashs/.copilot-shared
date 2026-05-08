@@ -46,7 +46,11 @@ Before reading any source code or running `semantic_search`:
    - For normal coding tasks: at most load `shared/memory/active-context.md` when needed
    - For cross-repo questions: load `shared/memory/repo-contexts/_index.md` first, then a specific repo `.md` only if required
    - For customer-case investigations: load only the smallest relevant files first (`known-bugs.md`, `customer-cases.md`)
+   - For debugging with cross-repo traces: load `shared/memory/cross-repo-learnings.md` (small, pattern-based)
    - If the central store is stale or missing → tell user: *"Run `bin\full-context-refresh.cmd` to rebuild."*
+
+   **Repo-context shortcut (saves full codebase scans):**
+   When a task references a sibling repo by name, load `shared/memory/repo-contexts/<repo-name>.md` INSTEAD of running `semantic_search` or `cross-repo-exploration` terminal calls. This provides architecture, packages, endpoints, and key classes in one read — no terminal overhead.
 3. Check shared memory freshness (look for `<!-- Last updated: YYYY-MM-DD -->` in each file):
    - Perform this check only for files that were actually read in this task
    - **> 90 days since last update** → warn: *"⚠ <file> hasn't been updated in N days. Consider reviewing."*
@@ -193,6 +197,10 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Tests | `docs/codebase/TESTING.md` |
 | Dependencies | `docs/codebase/STACK.md` |
 | Current work | `memory-bank/activeContext.md` |
+| Cross-repo code/API | `shared/memory/repo-contexts/<repo>.md` (replaces terminal exploration) |
+| Debugging known area | `shared/memory/known-bugs.md` + `shared/memory/tech-discoveries.md` |
+| Customer case | `shared/memory/customer-cases.md` + `shared/memory/known-bugs.md` |
+| Prior patterns/pitfalls | `shared/memory/cross-repo-learnings.md` |
 
 **Never read all 7 docs upfront.** Prefer `grep_search` over `semantic_search` for exact symbols. Batch file reads.
 
@@ -254,6 +262,8 @@ Use when ANY true: multi-file, new API, cross-module, debugging, cross-repo, arc
 | Maintain `.copilot-shared` assets | `writing-skills` for skills, then run `bin\audit-copilot-assets.ps1` and `bin\generate-skill-index.ps1` with `-ExecutionPolicy Bypass` if local policy blocks scripts |
 
 ### Skill Chaining Rules
+
+> **Token-saving rule:** When a skill chain includes `cross-repo-exploration`, ALWAYS read `shared/memory/repo-contexts/<repo>.md` first. If that provides sufficient context, skip the terminal-based exploration step entirely.
 
 | Scenario | Chain |
 |----------|-------|

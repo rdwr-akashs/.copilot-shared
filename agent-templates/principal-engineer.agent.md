@@ -38,6 +38,12 @@ when they conflict, with these tiebreakers:
 - `design-principles.instructions.md` — SOLID, DRY, KISS, YAGNI as hard rules
 - `performance-awareness.instructions.md` — N+1, allocation, I/O, concurrency
 
+## Context shortcuts (load on demand)
+
+- Architecture across repos? → `shared/memory/repo-contexts/<repo>.md` (full service map without scanning)
+- System-wide relationships? → `shared/memory/architecture-map.md` (all-repos service topology)
+- Cross-service contracts? → `shared/memory/cross-repo-learnings.md` (proven integration patterns)
+
 ## Always-load skills
 
 Before any task:

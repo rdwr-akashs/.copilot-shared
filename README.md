@@ -9,7 +9,19 @@ Edit once — every linked repo sees the change instantly via filesystem junctio
 
 ---
 
-## Quick Start — New Team Member
+## ⚡ Quick Reference — When to Refresh
+
+| Change type | Commands to run | When | Impact |
+|---|---|---|---|
+| **Instructions** (orchestrator, memory-bank, routing) | `full-context-refresh.ps1` | After every instruction edit | All agents use new routing rules |
+| **Agent templates** (agent.md files) | `full-context-refresh.ps1` | After template changes | Agents see updated capabilities |
+| **Skills** (.../SKILL.md) | `generate-skill-index.ps1` + `audit-copilot-assets.ps1` + `full-context-refresh.ps1` | After new/edited skills | Agents can discover/use skills |
+| **Prompts** (templates) | `generate-skill-index.ps1` | After prompt changes | Agents see updated templates |
+| **New repo added** | `full-context-refresh.ps1` | After cloning a new repo | Architecture map + fresh summary generated |
+| **Major codebase refactor** | `full-context-refresh.ps1` (default) | After significant code changes | Summaries auto-update with new modules |
+| **Need deep code browsing** | `full-context-refresh.ps1 -FullDumps` | On-demand only | Full content packs → `repo-contexts/full/` |
+
+---
 
 ### Step 0: Set workspace root
 
@@ -218,31 +230,45 @@ Agents write `memory-bank/activeContext.md` → file is immediately readable fro
 notepad %COPILOT_WORKSPACE_ROOT%\.copilot-shared\shared\skills\save-learning\SKILL.md
 ```
 
-After changing shared skills, instructions, prompts, or agent templates:
+⚠️ **After changing ANY shared assets** (skills, instructions, agents, prompts), run these **in order**:
 
 ```powershell
+:: Step 1: Regenerate skill index (discovery)
 powershell -ExecutionPolicy Bypass -File bin\generate-skill-index.ps1
+
+:: Step 2: Audit and validate all assets
 powershell -ExecutionPolicy Bypass -File bin\audit-copilot-assets.ps1
+
+:: Step 3: Rebuild repo context packs (so agents see the new routing rules)
+powershell -ExecutionPolicy Bypass -File bin\full-context-refresh.ps1
 ```
 
-The audit is the maintainer safety net for this central repo: it checks skill
-frontmatter, agent template metadata, prompt shape, oversized skills, and stale
-generated indexes before changes are shared with the team.
+The audit checks skill frontmatter, agent template metadata, prompt shape, oversized skills, and stale indexes. The full-context-refresh rebuilds architecture maps and repo context packs so agents can use the updated instructions immediately.
 
 ### Refresh the central knowledge store
 
+When to refresh:
+- **Weekly or after adding/removing repos** — full architecture rebuild
+- **After changing instructions** (orchestrator, memory-bank, agent routing) — context loading rules changed, all agents affected
+- **After linking a new repo** — generate its context pack
+- **After updating agent templates** — agents need new routing
+- **After major codebase changes** (new modules, refactored architecture) — context packs must reflect current state
+
 ```cmd
-:: Full refresh: architecture map + all repo context packs (~5 min)
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.cmd
+:: Full refresh: architecture map + lightweight repo summaries (~30s, safe to run anytime)
+powershell -ExecutionPolicy Bypass -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.ps1
 
-:: Architecture map only
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.cmd
+:: Architecture map only (even faster)
+powershell -ExecutionPolicy Bypass -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\workspace-scan.ps1
 
-:: One repo context pack
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.cmd -RepoPath %COPILOT_WORKSPACE_ROOT%\<repo>
+:: One repo summary only
+powershell -ExecutionPolicy Bypass -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\repo-mix.ps1 -RepoPath %COPILOT_WORKSPACE_ROOT%\<repo> -Central -SummaryOnly
+
+:: Full content dumps (large, for deep code browsing — goes to repo-contexts/full/)
+powershell -ExecutionPolicy Bypass -File %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\full-context-refresh.ps1 -FullDumps
 ```
 
-Run weekly or after adding/removing repos.
+**Default behaviour:** `full-context-refresh` generates fresh **1-2 KB summaries** per repo (module list, language, build cmd, entry point). These auto-update with every refresh so new modules are always captured. Full content dumps (10-100 MB total) are only generated on demand with `-FullDumps` and stored in `repo-contexts/full/` — agents never auto-load them.
 
 ### Switch token profile
 

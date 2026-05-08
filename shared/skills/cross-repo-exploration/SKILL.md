@@ -51,6 +51,24 @@ In examples below, substitute `<REPO>` with the actual repo name (e.g., `<siblin
 - All the code you need is inside the current repo
 - You only need public API docs (check Confluence/Swagger first)
 
+## Step 0: Check Repo-Context Cache FIRST (Token Saver)
+
+**Before ANY terminal call**, check if a pre-built context pack exists:
+
+```
+shared/memory/repo-contexts/<repo-name>.md
+```
+
+This file contains: architecture, packages, key classes, endpoints, DTOs, and config for the entire repo — often enough to answer cross-repo questions without a single terminal call.
+
+**Decision tree:**
+1. Read `shared/memory/repo-contexts/_index.md` → find the target repo
+2. Read `shared/memory/repo-contexts/<repo-name>.md`
+3. If the answer is there → **DONE, skip terminal exploration entirely**
+4. If you need live code (exact line numbers, recent uncommitted changes) → proceed to terminal steps below
+
+> This saves 5-10 terminal calls and thousands of tokens per cross-repo lookup.
+
 ## Available Repositories
 
 All repos live under the workspace root: **`%COPILOT_WORKSPACE_ROOT%\`**

@@ -49,6 +49,12 @@ For non-trivial bugs, produce this before any fix is attempted:
 
 Read `docs/codebase/ARCHITECTURE.md` to understand the request flow, then `docs/codebase/CONCERNS.md` for known issues.
 
+**Memory quick-lookup (before any code trace):**
+- `shared/memory/known-bugs.md` — check if this symptom matches a previously identified bug (saves full investigation)
+- `shared/memory/tech-discoveries.md` — check for known patterns in the affected component
+- `shared/memory/cross-repo-learnings.md` — if the bug crosses service boundaries, check known integration pitfalls
+- If the bug involves a sibling repo: read `shared/memory/repo-contexts/<repo>.md` before terminal exploration
+
 **Skill to use:** `.github/skills/systematic-debugging/SKILL.md` — read and follow this procedure.
 
 For full triage details, see `agents/roles/debugger.md`.

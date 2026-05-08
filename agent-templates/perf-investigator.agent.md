@@ -28,6 +28,11 @@ You profile first. You never recommend an optimization without evidence. You und
 
 ## Triage Checklist (run first)
 
+**Memory quick-lookup (before profiling):**
+- `shared/memory/tech-discoveries.md` → check for prior baselines and known perf characteristics of the affected service
+- `shared/memory/repo-contexts/<service-repo>.md` → get thread model, dispatcher config, connection pool settings without scanning source
+- `shared/memory/cross-repo-learnings.md` → check for known cross-service bottleneck patterns
+
 ```
 [ ] Where is the bottleneck? (network, CPU, memory, I/O, lock contention)
 [ ] Is it throughput or latency?

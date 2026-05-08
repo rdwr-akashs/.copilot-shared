@@ -35,7 +35,10 @@ param(
     [int]$MaxFiles = 300,
     [int]$MaxFileSizeKB = 192,
     [switch]$SkipRepoMix,
-    [switch]$SkipArchitectureScan
+    [switch]$SkipArchitectureScan,
+    # By default repo-context packs are lightweight summaries (1-2KB each).
+    # Pass -FullDumps to also generate full content packs into repo-contexts/full/
+    [switch]$FullDumps
 )
 
 Set-StrictMode -Version Latest
@@ -74,10 +77,12 @@ if (-not $SkipArchitectureScan) {
 
 # --- Step 2: Repo Context Packs ---
 if (-not $SkipRepoMix) {
-    Write-Host "--- Step 2/2: Repo Context Packs ---" -ForegroundColor Cyan
+    $modeLabel = if ($FullDumps) { 'full dumps -> repo-contexts/full/' } else { 'summaries (default)' }
+    Write-Host "--- Step 2/2: Repo Context Packs [$modeLabel] ---" -ForegroundColor Cyan
     $mixAllScript = Join-Path $BinDir 'repo-mix-all.ps1'
     if (Test-Path $mixAllScript) {
-        & $mixAllScript -Root $Root -MaxFiles $MaxFiles -MaxFileSizeKB $MaxFileSizeKB
+        $summaryOnly = -not $FullDumps
+        & $mixAllScript -Root $Root -MaxFiles $MaxFiles -MaxFileSizeKB $MaxFileSizeKB -SummaryOnly $summaryOnly
     } else {
         Write-Host "  [warn] repo-mix-all.ps1 not found" -ForegroundColor Yellow
     }

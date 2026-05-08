@@ -20,6 +20,8 @@ Read `docs/codebase/CONVENTIONS.md` and `docs/codebase/ARCHITECTURE.md`. Check `
 **Memory check** — before starting the review, scan the affected files against shared memory:
 - `shared/memory/known-bugs.md` — does the PR touch an area with a known bug? Flag it.
 - `shared/memory/customer-cases.md` — was a recent customer case caused by code in these files? Extra scrutiny.
+- `shared/memory/cross-repo-learnings.md` — does this change affect a known cross-service contract? Verify both sides.
+- If PR touches an API consumed by sibling repos → read `shared/memory/repo-contexts/<consumer-repo>.md` to verify compatibility.
 
 **Skills to use:**
 - `.github/skills/requesting-code-review/SKILL.md` — review methodology
