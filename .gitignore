@@ -1,9 +1,5 @@
 # Customer case data (local-only, never push — contains customer data)
-cases/*/
-!cases/README.md
-!cases/_index.md
-!cases/_template/
-!cases/_template/**
+cases/
 
 # Agent work directories (per-investigation artefacts)
 .agent_work/

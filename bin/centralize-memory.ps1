@@ -13,10 +13,28 @@ param(
     [string]$RepoPath = "C:\repos",
     [string]$CentralPath = "C:\rdwr-intelij\.copilot-shared",
     [string[]]$Repos = @("common_policy_editor"),
-    [bool]$CreateSymlinks = $true,
-    [bool]$DeleteLocal = $false,
-    [bool]$Verify = $true
+    [object]$CreateSymlinks = $true,
+    [object]$DeleteLocal = $false,
+    [object]$Verify = $true
 )
+
+# Helper function to convert various boolean-like values to proper boolean
+function ConvertToBool {
+    param([object]$Value)
+    
+    if ($Value -is [bool]) { return $Value }
+    if ($Value -is [int]) { return $Value -ne 0 }
+    if ($Value -is [string]) {
+        if ($Value -eq "1" -or $Value -ieq "true" -or $Value -ieq "yes") { return $true }
+        if ($Value -eq "0" -or $Value -ieq "false" -or $Value -ieq "no") { return $false }
+    }
+    return [bool]::Parse($Value.ToString())
+}
+
+# Convert parameters to proper boolean values
+$CreateSymlinks = ConvertToBool $CreateSymlinks
+$DeleteLocal = ConvertToBool $DeleteLocal
+$Verify = ConvertToBool $Verify
 
 $ErrorActionPreference = "Stop"
 
