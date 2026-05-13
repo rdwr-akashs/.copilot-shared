@@ -35,6 +35,86 @@ $BinDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $SharedRoot = Split-Path -Parent $BinDir
 $WorkspaceRoot = if ($Workspace) { $Workspace } else { Split-Path -Parent $SharedRoot }
 
+# ============================================================================
+# INTERACTIVE INPUT WITH COMPLETERS
+# ============================================================================
+
+function Read-RepositoryName {
+    <#
+    .SYNOPSIS
+        Read repository name with tab completion support
+    #>
+    $repos = Get-WorkspaceRepos | Select-Object -ExpandProperty Name | Where-Object { $_ -ne ".copilot-shared" }
+    
+    if ($repos.Count -eq 0) {
+        Write-Error-Custom "No repositories found"
+        return $null
+    }
+    
+    # Create a completer function for tab completion
+    $completer = {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        $repos | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
+    
+    # Display available options
+    Write-Host "   Available repositories: $($repos -join ', ')" -ForegroundColor DarkGray
+    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
+    Write-Host ""
+    
+    # Use PSReadLine for completion if available
+    $input = $null
+    try {
+        # Try using PSReadLine's completion (PowerShell 5.1+ / pwsh)
+        Import-Module PSReadLine -ErrorAction SilentlyContinue
+        
+        # Get the console input with completion
+        $input = Read-Host "Repository name"
+    }
+    catch {
+        $input = Read-Host "Repository name"
+    }
+    
+    # Validate input
+    if ([string]::IsNullOrWhiteSpace($input)) {
+        return $null
+    }
+    
+    # Match to actual repo name (case-insensitive)
+    $matched = $repos | Where-Object { $_ -eq $input }
+    
+    if (-not $matched) {
+        # Try prefix matching
+        $matched = $repos | Where-Object { $_ -like "$input*" }
+    }
+    
+    if ($matched.Count -eq 0) {
+        Write-Warning "Repository not found: $input"
+        return $null
+    }
+    
+    if ($matched.Count -gt 1) {
+        Write-Warning "Multiple matches found: $($matched -join ', ')"
+        Write-Host "Please be more specific" -ForegroundColor Yellow
+        return $null
+    }
+    
+    return $matched
+}
+
+function Read-PathWithCompletion {
+    <#
+    .SYNOPSIS
+        Read a path with directory/file completion support
+    #>
+    param([string]$Prompt = "Enter path")
+    
+    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
+    return Read-Host $Prompt
+}
+
 $Colors = @{
     Title       = 'Cyan'
     Success     = 'Green'
@@ -240,21 +320,38 @@ function Show-RepoSelector {
     Write-Host "Available repositories:" -ForegroundColor $Colors.Info
     Write-Host ""
     for ($i = 0; $i -lt $repos.Count; $i++) {
-        Write-Host "   [$($i+1)] $($repos[$i].Name)" -ForegroundColor $Colors.Highlight
+        Write-Host "   $($repos[$i].Name)" -ForegroundColor $Colors.Highlight
     }
-    Write-Host "   [0] Cancel" -ForegroundColor $Colors.Highlight
+    Write-Host ""
+    Write-Host "   Tip: Start typing repo name and press Tab for completion" -ForegroundColor DarkCyan
     Write-Host ""
     
-    do {
-        $selection = Read-Host "Select repository"
-        if ($selection -eq "0") { return $null }
-        
-        $index = [int]$selection - 1
-        if ($index -ge 0 -and $index -lt $repos.Count) {
-            return $repos[$index]
-        }
-        Write-Warning "Invalid selection"
-    } while ($true)
+    $repoName = Read-Host "Enter repository name (or leave empty to cancel)"
+    
+    if ([string]::IsNullOrWhiteSpace($repoName)) {
+        return $null
+    }
+    
+    # Match repo
+    $matched = $repos | Where-Object { $_.Name -eq $repoName }
+    
+    if (-not $matched) {
+        # Try prefix matching
+        $matched = $repos | Where-Object { $_.Name -like "$repoName*" }
+    }
+    
+    if ($matched.Count -eq 0) {
+        Write-Warning "Repository not found: $repoName"
+        return $null
+    }
+    
+    if ($matched.Count -gt 1) {
+        Write-Warning "Multiple matches. Please be more specific:"
+        $matched | Select-Object -ExpandProperty Name | ForEach-Object { Write-Host "   - $_" }
+        return $null
+    }
+    
+    return $matched
 }
 
 function Invoke-SmartRefreshForRepo {
@@ -313,26 +410,48 @@ function Get-SelectedRepo {
     
     Write-Host ""
     Write-Host "Run on which repository?" -ForegroundColor $Colors.Info
-    Write-Host "   [W] Workspace (current default)" -ForegroundColor $Colors.Highlight
+    Write-Host "   W = Workspace (current default)" -ForegroundColor $Colors.Highlight
+    Write-Host ""
+    Write-Host "Available repositories:" -ForegroundColor $Colors.Info
     
     $counter = 1
     $repoMap = @{}
     foreach ($repo in $repos) {
         if ($repo.Name -ne ".copilot-shared") {
-            Write-Host "   [$counter] $($repo.Name)" -ForegroundColor $Colors.Highlight
-            $repoMap[$counter.ToString()] = $repo
+            Write-Host "   $($repo.Name)" -ForegroundColor $Colors.Highlight
+            $repoMap[$repo.Name] = $repo
             $counter++
         }
     }
+    
+    Write-Host ""
+    Write-Host "   Tip: Start typing repo name and press Tab for completion" -ForegroundColor DarkCyan
     Write-Host ""
     
-    $selection = Read-Host "Select repository"
+    $selection = Read-Host "Select repository (or press Enter for Workspace)"
     
-    if ($selection -eq "W" -or $selection -eq "") {
+    if ($selection -eq "W" -or $selection -eq "w" -or [string]::IsNullOrWhiteSpace($selection)) {
         return $null
     }
     
-    return $repoMap[$selection]
+    # Try exact match first
+    if ($repoMap.ContainsKey($selection)) {
+        return $repoMap[$selection]
+    }
+    
+    # Try prefix match
+    $matches = $repoMap.Keys | Where-Object { $_ -like "$selection*" }
+    if ($matches.Count -eq 1) {
+        return $repoMap[$matches[0]]
+    }
+    
+    if ($matches.Count -gt 1) {
+        Write-Warning "Multiple matches: $($matches -join ', ')"
+        return $null
+    }
+    
+    Write-Warning "Repository not found: $selection"
+    return $null
 }
 
 function Invoke-ScriptOnRepo {
@@ -470,6 +589,8 @@ function Show-MainMenu {
     Write-Title "COPILOT SHARED CONSOLE"
     Write-Host "   Workspace: $WorkspaceRoot" -ForegroundColor DarkGray
     Write-Host ""
+    Write-Host "   💡 Tip: When prompted for repository names or paths, press Tab for completion!" -ForegroundColor DarkCyan
+    Write-Host ""
     
     $menuOptions = @{
         "1" = "Smart Refresh (current workspace)"
@@ -586,26 +707,36 @@ function Handle-RepositoryMenu {
         
         switch ($choice) {
             "1" {
-                $repoPath = Read-Host "Enter repository path"
-                Invoke-Script -ScriptPath (Join-Path $BinDir "setup-repo.ps1") -Description "Setup Repository" -Arguments @($repoPath)
+                $repoPath = Read-PathWithCompletion "Enter repository path"
+                if ($repoPath) {
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "setup-repo.ps1") -Description "Setup Repository" -Arguments @($repoPath)
+                }
             }
             "2" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-all-repos.ps1") -Description "Setup All Repositories" }
             "3" {
-                $repoPath = Read-Host "Enter repository path"
-                Invoke-Script -ScriptPath (Join-Path $BinDir "link-copilot.cmd") -Description "Link Repository" -Arguments @($repoPath)
+                $repoPath = Read-PathWithCompletion "Enter repository path"
+                if ($repoPath) {
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "link-copilot.cmd") -Description "Link Repository" -Arguments @($repoPath)
+                }
             }
             "4" { Invoke-Script -ScriptPath (Join-Path $BinDir "link-all-copilot.cmd") -Description "Link All Repositories" }
             "5" {
-                $repoPath = Read-Host "Enter repository path"
-                Invoke-Script -ScriptPath (Join-Path $BinDir "unlink-copilot.cmd") -Description "Unlink Repository" -Arguments @($repoPath)
+                $repoPath = Read-PathWithCompletion "Enter repository path"
+                if ($repoPath) {
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "unlink-copilot.cmd") -Description "Unlink Repository" -Arguments @($repoPath)
+                }
             }
             "6" {
-                $repoPath = Read-Host "Enter repository path"
-                Invoke-Script -ScriptPath (Join-Path $BinDir "copy-agents.cmd") -Description "Copy Agents to Repository" -Arguments @($repoPath)
+                $repoPath = Read-PathWithCompletion "Enter repository path"
+                if ($repoPath) {
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "copy-agents.cmd") -Description "Copy Agents to Repository" -Arguments @($repoPath)
+                }
             }
             "7" {
-                $repoPath = Read-Host "Enter repository path (relative to workspace)"
-                Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-Repo', $repoPath)
+                $repoPath = Read-PathWithCompletion "Enter repository path (relative to workspace)"
+                if ($repoPath) {
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-Repo', $repoPath)
+                }
             }
             "8" {
                 $fullDumps = Read-Host "Generate full content packs? (y/n, default n) "
