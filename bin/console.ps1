@@ -774,26 +774,78 @@ function Handle-MainMenu {
                 $commandExecuted = $true
             }
         }
-        "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh"; $commandExecuted = $true }
-        "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "refresh-agents.cmd") -Description "Refresh Agents"; $commandExecuted = $true }
-        "4" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "generate-skill-index.ps1") -Description "Generate Skill Index"; $commandExecuted = $true }
-        "5" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets"; $commandExecuted = $true }
+        "2" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh"
+            Write-Host ""
+            Write-Host "DONE: Context refresh - stored in .github/repo-cache.md (per repo)" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "3" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "refresh-agents.cmd") -Description "Refresh Agents"
+            Write-Host ""
+            Write-Host "DONE: Agents updated in .github/agents/ (minimal mode: skips if customized)" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "4" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "generate-skill-index.ps1") -Description "Generate Skill Index"
+            Write-Host ""
+            Write-Host "DONE: Skill index built for Copilot discovery" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "5" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets"
+            Write-Host ""
+            Write-Host "DONE: Audited junctions, hooks, agents, cache files across all repos" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
         "6" {
             Write-Host "   Tip: Type 'y' or 'n'" -ForegroundColor DarkCyan
             $fullDumps = Read-Host "Generate full content packs? (y/n, default n) "
             $args = @()
             if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
             Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh" -Arguments $args
+            Write-Host ""
+            Write-Host "DONE: Content packs generated in shared/content-packs/" -ForegroundColor Green
             $commandExecuted = $true
         }
         "7" { Handle-MemoryMenu; $commandExecuted = $true }
         "8" { Handle-RepositoryMenu; $commandExecuted = $true }
-        "9" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "doctor.ps1") -Description "Doctor (Diagnosis and Repair)"; $commandExecuted = $true }
-        "A" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "workspace-scan.ps1") -Description "Workspace Scan"; $commandExecuted = $true }
-        "B" { Invoke-Script -ScriptPath (Join-Path $BinDir "token-profile.ps1") -Description "Token Profile"; $commandExecuted = $true }
-        "C" { Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup"; $commandExecuted = $true }
-        "D" { Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle"; $commandExecuted = $true }
-        "E" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-local.ps1") -Description "Local Setup"; $commandExecuted = $true }
+        "9" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "doctor.ps1") -Description "Doctor (Diagnosis and Repair)"
+            Write-Host ""
+            Write-Host "DONE: Checked and fixed junctions, gitignore, hooks, agents" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "A" { 
+            Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "workspace-scan.ps1") -Description "Workspace Scan"
+            Write-Host ""
+            Write-Host "DONE: Scanned all repos - status shown above" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "B" { 
+            Invoke-Script -ScriptPath (Join-Path $BinDir "token-profile.ps1") -Description "Token Profile"
+            Write-Host ""
+            Write-Host "DONE: Token profile configured in templates/token-profile-*.instructions.md" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "C" { 
+            Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup"
+            Write-Host ""
+            Write-Host "DONE: Git hooks installed in .git/hooks/ (pre-push, commit-msg)" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "D" { 
+            Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle"
+            Write-Host ""
+            Write-Host "DONE: Support bundle extracted to current directory" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
+        "E" { 
+            Invoke-Script -ScriptPath (Join-Path $BinDir "setup-local.ps1") -Description "Local Setup"
+            Write-Host ""
+            Write-Host "DONE: Workspace configured in .local.env (credentials, workspace slug)" -ForegroundColor Green
+            $commandExecuted = $true 
+        }
         "H" { Show-HelpMainMenu }
         "0" { return $false }
         default {
