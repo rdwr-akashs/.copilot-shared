@@ -51,26 +51,15 @@ function Read-RepositoryName {
         return $null
     }
     
-    # Create a completer function for tab completion
-    $completer = {
-        param($wordToComplete, $commandAst, $cursorPosition)
-        $repos | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
-    }
-    
     # Display available options
     Write-Host "   Available repositories: $($repos -join ', ')" -ForegroundColor DarkGray
     Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
     Write-Host ""
     
-    # Use PSReadLine for completion if available
+    # Get the console input with completion
     $input = $null
     try {
-        # Try using PSReadLine's completion (PowerShell 5.1+ / pwsh)
         Import-Module PSReadLine -ErrorAction SilentlyContinue
-        
-        # Get the console input with completion
         $input = Read-Host "Repository name"
     }
     catch {
@@ -109,9 +98,78 @@ function Read-PathWithCompletion {
     .SYNOPSIS
         Read a path with directory/file completion support
     #>
-    param([string]$Prompt = "Enter path")
+    param([string]$Prompt = "Enter path", [string]$Filter = "*")
     
     Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
+    return Read-Host $Prompt
+}
+
+function Read-ArchiveFile {
+    <#
+    .SYNOPSIS
+        Read archive filename with .zip file completion
+    #>
+    $archives = @(Get-ChildItem -Path '.' -Filter '*memory*.zip' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+    
+    if ($archives.Count -gt 0) {
+        Write-Host "   Available archives: $($archives -join ', ')" -ForegroundColor DarkGray
+    }
+    
+    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
+    Write-Host ""
+    
+    $input = Read-Host "Archive path"
+    
+    if ([string]::IsNullOrWhiteSpace($input)) {
+        return $null
+    }
+    
+    # Try to match
+    if (Test-Path $input) {
+        return $input
+    }
+    
+    # Try prefix matching from current dir
+    $matched = Get-ChildItem -Path '.' -Filter "$input*" -ErrorAction SilentlyContinue
+    if ($matched.Count -eq 1) {
+        return $matched.FullName
+    }
+    
+    return $input  # Return as-is if not found
+}
+
+function Read-OutputDirectory {
+    <#
+    .SYNOPSIS
+        Read output directory with path completion
+    #>
+    Write-Host "   Common locations: '.', '$(Get-Location).Path', '\`$env:TEMP'" -ForegroundColor DarkGray
+    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
+    Write-Host ""
+    
+    $input = Read-Host "Output directory (default: current)"
+    
+    if ([string]::IsNullOrWhiteSpace($input)) {
+        return '.'
+    }
+    
+    return $input
+}
+
+function Read-MenuChoice {
+    <#
+    .SYNOPSIS
+        Read menu choice with validation
+    #>
+    param([string]$Prompt = "Choose action", [string[]]$ValidOptions = @())
+    
+    Write-Host ""
+    
+    if ($ValidOptions.Count -gt 0) {
+        Write-Host "   Valid options: $($ValidOptions -join ', ')" -ForegroundColor DarkGray
+        Write-Host "   Tip: Type option and press Tab for completion" -ForegroundColor DarkCyan
+    }
+    
     return Read-Host $Prompt
 }
 
@@ -622,6 +680,8 @@ function Show-MemoryMenu {
         "5" = "Import Memory"
     }
     
+    Write-Host ""
+    Write-Host "   💡 Tip: When prompted for paths/archives, press Tab for completion!" -ForegroundColor DarkCyan
     Show-Menu -Options $menuOptions -Title "MEMORY MANAGEMENT"
 }
 
@@ -637,6 +697,8 @@ function Show-RepositoryMenu {
         "8" = "Repo Mix All (context packs for all)"
     }
     
+    Write-Host ""
+    Write-Host "   💡 Tip: When prompted for paths, press Tab for completion!" -ForegroundColor DarkCyan
     Show-Menu -Options $menuOptions -Title "REPOSITORY SETUP"
 }
 
@@ -660,9 +722,10 @@ function Handle-MainMenu {
         "4" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "generate-skill-index.ps1") -Description "Generate Skill Index" }
         "5" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets" }
         "6" {
+            Write-Host "   Tip: Type 'y' or 'n'" -ForegroundColor DarkCyan
             $fullDumps = Read-Host "Generate full content packs? (y/n, default n) "
             $args = @()
-            if ($fullDumps -eq 'y') { $args += '-FullDumps' }
+            if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
             Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh" -Arguments $args
         }
         "7" { Handle-MemoryMenu }
@@ -686,14 +749,24 @@ function Handle-MainMenu {
 function Handle-MemoryMenu {
     do {
         Show-MemoryMenu
-        $choice = Read-Host "Choose action"
+        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "0")
         
         switch ($choice) {
             "1" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory" }
             "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify and Repair Central Memory" -Arguments @('-Repair') }
             "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "centralize-memory.ps1") -Description "Centralize Memory" }
-            "4" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "export-memory.ps1") -Description "Export Memory" }
-            "5" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "import-memory.ps1") -Description "Import Memory" }
+            "4" {
+                $outDir = Read-OutputDirectory
+                if ($outDir) {
+                    Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "export-memory.ps1") -Description "Export Memory" -Arguments @('-OutputDir', $outDir)
+                }
+            }
+            "5" {
+                $archivePath = Read-ArchiveFile
+                if ($archivePath) {
+                    Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "import-memory.ps1") -Description "Import Memory" -Arguments @('-ArchivePath', $archivePath)
+                }
+            }
             "0" { break }
             default { Write-Warning "Invalid option: $choice" }
         }
@@ -703,7 +776,7 @@ function Handle-MemoryMenu {
 function Handle-RepositoryMenu {
     do {
         Show-RepositoryMenu
-        $choice = Read-Host "Choose action"
+        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "6", "7", "8", "0")
         
         switch ($choice) {
             "1" {
@@ -735,13 +808,14 @@ function Handle-RepositoryMenu {
             "7" {
                 $repoPath = Read-PathWithCompletion "Enter repository path (relative to workspace)"
                 if ($repoPath) {
-                    Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-Repo', $repoPath)
+                    Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-RepoPath', $repoPath)
                 }
             }
             "8" {
+                Write-Host "   Tip: Type 'y' or 'n'" -ForegroundColor DarkCyan
                 $fullDumps = Read-Host "Generate full content packs? (y/n, default n) "
                 $args = @()
-                if ($fullDumps -eq 'y') { $args += '-FullDumps' }
+                if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
                 Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix-all.ps1") -Description "Repo Mix All" -Arguments $args
             }
             "0" { break }
@@ -762,7 +836,8 @@ function Start-Console {
     
     do {
         Show-MainMenu
-        $choice = Read-Host "Enter your choice"
+        $validOptions = @("1", "R", "r", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "0")
+        $choice = Read-MenuChoice -Prompt "Enter your choice" -ValidOptions $validOptions
         $continue = Handle-MainMenu -Choice $choice
     } while ($continue)
     
