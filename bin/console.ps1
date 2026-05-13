@@ -728,39 +728,72 @@ function Show-RepositoryMenu {
 }
 
 # ============================================================================
+# PAUSE & CONTINUE
+# ============================================================================
+
+function Wait-ForMenuReturn {
+    Write-Host ""
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+    Write-Host "  [R] Return to menu    [Q] Quit console" -ForegroundColor Cyan
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+    
+    $choice = Read-WithCompletion -Prompt "Choose action" -Options @('R', 'Q')
+    
+    if ($choice -eq 'Q' -or $choice -eq 'q') {
+        return 'quit'
+    }
+    return 'continue'
+}
+
+function Wait-ForSubmenuReturn {
+    Write-Host ""
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+    Write-Host "  [C] Continue in submenu    [B] Back to main menu    [Q] Quit" -ForegroundColor Cyan
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor DarkGray
+    
+    $choice = Read-WithCompletion -Prompt "Choose action" -Options @('C', 'B', 'Q')
+    
+    return ($choice[0]).ToUpper()
+}
+
+# ============================================================================
 # MENU HANDLERS
 # ============================================================================
 
 function Handle-MainMenu {
     param([string]$Choice)
     
+    $commandExecuted = $false
+    
     switch ($Choice) {
-        "1" { Invoke-QuickRefresh }
+        "1" { Invoke-QuickRefresh; $commandExecuted = $true }
         "R" {
             $repo = Show-RepoSelector
             if ($repo) {
                 Invoke-SmartRefreshForRepo -RepoPath $repo.Path
+                $commandExecuted = $true
             }
         }
-        "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh" }
-        "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "refresh-agents.cmd") -Description "Refresh Agents" }
-        "4" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "generate-skill-index.ps1") -Description "Generate Skill Index" }
-        "5" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets" }
+        "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh"; $commandExecuted = $true }
+        "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "refresh-agents.cmd") -Description "Refresh Agents"; $commandExecuted = $true }
+        "4" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "generate-skill-index.ps1") -Description "Generate Skill Index"; $commandExecuted = $true }
+        "5" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets"; $commandExecuted = $true }
         "6" {
             Write-Host "   Tip: Type 'y' or 'n'" -ForegroundColor DarkCyan
             $fullDumps = Read-Host "Generate full content packs? (y/n, default n) "
             $args = @()
             if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
             Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "full-context-refresh.ps1") -Description "Full Context Refresh" -Arguments $args
+            $commandExecuted = $true
         }
-        "7" { Handle-MemoryMenu }
-        "8" { Handle-RepositoryMenu }
-        "9" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "doctor.ps1") -Description "Doctor (Diagnosis and Repair)" }
-        "A" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "workspace-scan.ps1") -Description "Workspace Scan" }
-        "B" { Invoke-Script -ScriptPath (Join-Path $BinDir "token-profile.ps1") -Description "Token Profile" }
-        "C" { Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup" }
-        "D" { Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle" }
-        "E" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-local.ps1") -Description "Local Setup" }
+        "7" { Handle-MemoryMenu; $commandExecuted = $true }
+        "8" { Handle-RepositoryMenu; $commandExecuted = $true }
+        "9" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "doctor.ps1") -Description "Doctor (Diagnosis and Repair)"; $commandExecuted = $true }
+        "A" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "workspace-scan.ps1") -Description "Workspace Scan"; $commandExecuted = $true }
+        "B" { Invoke-Script -ScriptPath (Join-Path $BinDir "token-profile.ps1") -Description "Token Profile"; $commandExecuted = $true }
+        "C" { Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup"; $commandExecuted = $true }
+        "D" { Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle"; $commandExecuted = $true }
+        "E" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-local.ps1") -Description "Local Setup"; $commandExecuted = $true }
         "H" { Show-HelpMainMenu }
         "0" { return $false }
         default {
@@ -769,34 +802,60 @@ function Handle-MainMenu {
         }
     }
     
+    # After command finishes, ask user to return or quit (skip for Help)
+    if ($commandExecuted) {
+        $action = Wait-ForMenuReturn
+        if ($action -eq 'quit') {
+            return $false
+        }
+    }
+    
     return $true
 }
 
 function Handle-MemoryMenu {
     $running = $true
+    $backToMain = $false
+    
     do {
         Show-MemoryMenu
         $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "H", "0")
         
+        $commandExecuted = $false
+        
         switch ($choice) {
-            "1" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory" }
-            "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify and Repair Central Memory" -Arguments @('-Repair') }
-            "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "centralize-memory.ps1") -Description "Centralize Memory" }
+            "1" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory"; $commandExecuted = $true }
+            "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify and Repair Central Memory" -Arguments @('-Repair'); $commandExecuted = $true }
+            "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "centralize-memory.ps1") -Description "Centralize Memory"; $commandExecuted = $true }
             "4" {
                 $outDir = Read-OutputDirectory
                 if ($outDir) {
                     Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "export-memory.ps1") -Description "Export Memory" -Arguments @('-OutputDir', $outDir)
+                    $commandExecuted = $true
                 }
             }
             "5" {
                 $archivePath = Read-ArchiveFile
                 if ($archivePath) {
                     Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "import-memory.ps1") -Description "Import Memory" -Arguments @('-ArchivePath', $archivePath)
+                    $commandExecuted = $true
                 }
             }
             "H" { Show-HelpMemory }
             "0" { $running = $false }
             default { Write-Warning "Invalid option: $choice" }
+        }
+        
+        if ($commandExecuted) {
+            $action = Wait-ForSubmenuReturn
+            if ($action -eq 'B') {
+                $running = $false
+            }
+            elseif ($action -eq 'Q') {
+                $running = $false
+                $backToMain = $false
+                exit 0
+            }
         }
     } while ($running)
 }
@@ -807,37 +866,44 @@ function Handle-RepositoryMenu {
         Show-RepositoryMenu
         $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "6", "7", "8", "H", "0")
         
+        $commandExecuted = $false
+        
         switch ($choice) {
             "1" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "setup-repo.ps1") -Description "Setup Repository" -Arguments @($repoPath)
+                    $commandExecuted = $true
                 }
             }
-            "2" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-all-repos.ps1") -Description "Setup All Repositories" }
+            "2" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-all-repos.ps1") -Description "Setup All Repositories"; $commandExecuted = $true }
             "3" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "link-copilot.cmd") -Description "Link Repository" -Arguments @($repoPath)
+                    $commandExecuted = $true
                 }
             }
-            "4" { Invoke-Script -ScriptPath (Join-Path $BinDir "link-all-copilot.cmd") -Description "Link All Repositories" }
+            "4" { Invoke-Script -ScriptPath (Join-Path $BinDir "link-all-copilot.cmd") -Description "Link All Repositories"; $commandExecuted = $true }
             "5" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "unlink-copilot.cmd") -Description "Unlink Repository" -Arguments @($repoPath)
+                    $commandExecuted = $true
                 }
             }
             "6" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "copy-agents.cmd") -Description "Copy Agents to Repository" -Arguments @($repoPath)
+                    $commandExecuted = $true
                 }
             }
             "7" {
                 $repoPath = Read-PathWithCompletion "Enter repository path (relative to workspace)"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-RepoPath', $repoPath)
+                    $commandExecuted = $true
                 }
             }
             "8" {
@@ -846,10 +912,22 @@ function Handle-RepositoryMenu {
                 $args = @()
                 if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
                 Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix-all.ps1") -Description "Repo Mix All" -Arguments $args
+                $commandExecuted = $true
             }
             "H" { Show-HelpRepository }
             "0" { $running = $false }
             default { Write-Warning "Invalid option: $choice" }
+        }
+        
+        if ($commandExecuted) {
+            $action = Wait-ForSubmenuReturn
+            if ($action -eq 'B') {
+                $running = $false
+            }
+            elseif ($action -eq 'Q') {
+                $running = $false
+                exit 0
+            }
         }
     } while ($running)
 }
