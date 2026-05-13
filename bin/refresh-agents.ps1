@@ -76,7 +76,12 @@ if (-not (Test-Path $ghDir)) {
 }
 
 if (-not (Test-Path $templatesDir)) {
-    Write-Host "ERROR: Template agents directory not found: $templatesDir" -ForegroundColor Red
+    Write-Host "ERROR: Agent templates directory not found: $templatesDir" -ForegroundColor Red
+    exit 2
+}
+
+if ((Get-ChildItem "$templatesDir\*.agent.md" -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0) {
+    Write-Host "ERROR: No agent templates found in: $templatesDir" -ForegroundColor Red
     exit 2
 }
 
@@ -84,7 +89,58 @@ Write-Host "Refresh agents with level: $RefreshLevel" -ForegroundColor Green
 Write-Host "Repository: $repoPath" -ForegroundColor Cyan
 Write-Host ""
 
-# Implementation: refresh logic would go here
-Write-Host "[TODO] Agent refresh logic for level '$RefreshLevel'" -ForegroundColor Yellow
-Write-Host "Agents directory: $agentsDir" -ForegroundColor DarkGray
-Write-Host "Templates directory: $templatesDir" -ForegroundColor DarkGray
+if (-not (Test-Path $agentsDir)) {
+    Write-Host "ERROR: .github/agents/ not found. Nothing to refresh." -ForegroundColor Red
+    exit 2
+}
+
+# Determine which agents to refresh based on level
+$agentsToRefresh = @()
+
+if ($RefreshLevel -eq 'full') {
+    # Refresh all agents from templates
+    $agentsToRefresh = @(Get-ChildItem "$templatesDir\*.agent.md" -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+} elseif ($RefreshLevel -eq 'minimal') {
+    # Only refresh agents that don't exist in repo yet
+    Get-ChildItem "$templatesDir\*.agent.md" -ErrorAction SilentlyContinue | ForEach-Object {
+        $repoAgent = Join-Path $agentsDir $_.Name
+        if (-not (Test-Path $repoAgent)) {
+            $agentsToRefresh += $_.Name
+        }
+    }
+} elseif ($RefreshLevel -eq 'custom-only') {
+    # Refresh only agents marked as "custom" (contain [CUSTOM] tag)
+    Get-ChildItem "$agentsDir\*.agent.md" -ErrorAction SilentlyContinue | ForEach-Object {
+        $content = [System.IO.File]::ReadAllText($_.FullName, [System.Text.Encoding]::UTF8)
+        if ($content -match '\[CUSTOM\]|custom-agent:\s*true') {
+            $template = Join-Path $templatesDir $_.Name
+            if (Test-Path $template) {
+                $agentsToRefresh += $_.Name
+            }
+        }
+    }
+}
+
+if ($agentsToRefresh.Count -eq 0) {
+    Write-Host "No agents to refresh (level: $RefreshLevel)" -ForegroundColor DarkCyan
+    exit 0
+}
+
+$copied = 0
+$skipped = 0
+foreach ($agentName in $agentsToRefresh) {
+    $src = Join-Path $templatesDir $agentName
+    $dest = Join-Path $agentsDir $agentName
+    
+    if (-not (Test-Path $src)) {
+        Write-Host "  [warn] Template not found: $agentName" -ForegroundColor Yellow
+        continue
+    }
+    
+    Copy-Item $src $dest -Force
+    Write-Host "  [ok]   $agentName" -ForegroundColor Green
+    $copied++
+}
+
+Write-Host ""
+Write-Host "Refreshed: $copied agent(s) (level: $RefreshLevel)" -ForegroundColor Green

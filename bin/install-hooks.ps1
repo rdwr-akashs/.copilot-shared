@@ -81,6 +81,58 @@ Write-Host "Install Git hooks with scope: $HookScope" -ForegroundColor Green
 Write-Host "Repository: $repoPath" -ForegroundColor Cyan
 Write-Host ""
 
-# Implementation: hook installation logic would go here
-Write-Host "[TODO] Hook installation logic for scope '$HookScope'" -ForegroundColor Yellow
-Write-Host "Hooks directory: $hooksDir" -ForegroundColor DarkGray
+# Map scope to hook files
+$hookMap = @{
+    'pre-commit' = @('pre-push', 'commit-msg')
+    'commit-msg' = @('commit-msg')
+    'pre-push'   = @('pre-push')
+    'all'        = @('pre-push', 'commit-msg')
+}
+
+$hooksToInstall = $hookMap[$HookScope]
+if (-not $hooksToInstall) {
+    Write-Host "ERROR: Unknown scope '$HookScope'" -ForegroundColor Red
+    exit 1
+}
+
+$sharedHooksDir = Join-Path $root 'shared\hooks'
+if (-not (Test-Path $sharedHooksDir)) {
+    Write-Host "ERROR: Shared hooks directory not found: $sharedHooksDir" -ForegroundColor Red
+    exit 2
+}
+
+$installed = 0
+$skipped = 0
+foreach ($hookName in $hooksToInstall) {
+    $src = Join-Path $sharedHooksDir $hookName
+    $dest = Join-Path $hooksDir $hookName
+    
+    if (-not (Test-Path $src)) {
+        Write-Host "  [warn] Hook template not found: $hookName" -ForegroundColor Yellow
+        continue
+    }
+    
+    if ((Test-Path $dest) -and (Get-Item $src -ErrorAction SilentlyContinue).LastWriteTime -le (Get-Item $dest -ErrorAction SilentlyContinue).LastWriteTime) {
+        Write-Host "  [skip] $hookName (already up-to-date)" -ForegroundColor DarkGray
+        $skipped++
+    } else {
+        Copy-Item $src $dest -Force
+        # Make executable on Unix/Git Bash
+        if ($PSVersionTable.Platform -eq 'Unix' -or (Get-Command git -ErrorAction SilentlyContinue)) {
+            & cmd /c "icacls '$dest' /grant:r $env:USERNAME`:F 2>nul" | Out-Null
+        }
+        Write-Host "  [ok]   $hookName" -ForegroundColor Green
+        $installed++
+    }
+}
+
+Write-Host ""
+if ($installed -eq 0 -and $skipped -gt 0) {
+    Write-Host "All hooks already up-to-date." -ForegroundColor Green
+} else {
+    Write-Host "Installed: $installed, Skipped: $skipped" -ForegroundColor Green
+}
+
+Write-Host ""
+Write-Host "Note: Hooks are shell scripts (.git/hooks/ are executed by git, not PowerShell)." -ForegroundColor DarkCyan
+Write-Host "      On Windows, ensure Git for Windows (bash) is available for hooks to run." -ForegroundColor DarkCyan
