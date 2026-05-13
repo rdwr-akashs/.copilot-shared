@@ -24,7 +24,6 @@
 #>
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('balanced', 'aggressive')]
     [string]$Profile,
 
     [string]$RepoPath = '.'
@@ -36,20 +35,44 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $repoPath = [IO.Path]::GetFullPath($RepoPath)
 
+# Load dynamic profile discovery module
+Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+
+# Get available profiles and aliases
+try {
+    $options = Get-DynamicOptions -ProfileName 'token-profile' -WorkspaceRoot $root
+} catch {
+    Write-Host "ERROR: Could not load profile options: $_" -ForegroundColor Red
+    exit 1
+}
+
+# Expand aliases (e.g., 'aggr' → 'aggressive', 'bal' → 'balanced')
+$Profile = Expand-Alias -Value $Profile -Aliases $options.Aliases
+
+# Validate the profile
+if ($options.List -notcontains $Profile) {
+    Write-Host "ERROR: Invalid profile '$Profile'." -ForegroundColor Red
+    Write-Host "       Available: $($options.List -join ', ')" -ForegroundColor Yellow
+    Write-Host "" -ForegroundColor Yellow
+    Write-Host "       Aliases:" -ForegroundColor Yellow
+    $options.Aliases.GetEnumerator() | ForEach-Object {
+        Write-Host "         '$($_.Key)' → '$($_.Value)'" -ForegroundColor DarkYellow
+    }
+    exit 1
+}
+
 if (-not (Test-Path $repoPath)) {
     Write-Host "ERROR: repo not found: $repoPath" -ForegroundColor Red
     exit 2
 }
 
-$templateFile = if ($Profile -eq 'balanced') {
-    'token-profile-balanced.template.instructions.md'
-} else {
-    'token-profile-aggressive.template.instructions.md'
-}
-
+# Build template filename based on profile name
+$templateFile = "token-profile-$Profile.template.instructions.md"
 $templatePath = Join-Path $root "templates\$templateFile"
+
 if (-not (Test-Path $templatePath)) {
     Write-Host "ERROR: template not found: $templatePath" -ForegroundColor Red
+    Write-Host "       This may indicate the profile was discovered but template is missing." -ForegroundColor Yellow
     exit 2
 }
 

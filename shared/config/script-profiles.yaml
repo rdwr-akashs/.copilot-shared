@@ -1,0 +1,71 @@
+# Script Configuration Profiles
+#
+# Define available parameters and their dynamic sources for all scripts.
+# This eliminates hardcoded ValidateSet values and enables auto-discovery.
+#
+# Each script entry defines:
+#   - description: What the parameter does
+#   - type: 'template' (scan files) | 'config' (lookup in .yaml) | 'enum' (fixed list)
+#   - location: Where to find values (for template type)
+#   - aliases: Short-form mappings (bal → balanced, etc)
+#   - default: Fallback value if not specified
+
+token-profile:
+  description: "Copilot token usage profile (workspace-wide or repo-specific)"
+  type: "template"
+  location: "templates/token-profile-*.template.instructions.md"
+  pattern: "token-profile-(.+)\\.template"
+  aliases:
+    bal: balanced
+    b: balanced
+    agg: aggressive
+    aggr: aggressive
+    a: aggressive
+  default: "balanced"
+
+doctor-check-level:
+  description: "Health check depth for doctor.ps1"
+  type: "enum"
+  values:
+    - critical      # Only junction/required files
+    - standard      # + gitignore, hooks, registry
+    - exhaustive    # + every file and permission check
+  aliases:
+    c: critical
+    s: standard
+    e: exhaustive
+    min: critical
+    full: exhaustive
+  default: "standard"
+
+refresh-agents-level:
+  description: "Agent refresh scope (repo-specific)"
+  type: "enum"
+  values:
+    - minimal       # Skip if custom agents exist
+    - full          # Overwrite all (use -Force)
+    - custom-only   # Custom agents only
+  aliases:
+    min: minimal
+    full: full
+    custom: custom-only
+  default: "minimal"
+
+install-hooks-scope:
+  description: "Git hook installation scope (repo-specific)"
+  type: "enum"
+  values:
+    - pre-commit    # Only pre-commit hooks
+    - commit-msg    # Only commit message hooks
+    - all           # All available hooks
+  aliases:
+    pre: pre-commit
+    msg: commit-msg
+    all: all
+  default: "all"
+
+# Workspace-wide configuration (.local.env)
+# Not scripts, but important env vars:
+# - BB_WORKSPACE: Bitbucket workspace slug
+# - BB_BASE_URL: Bitbucket API base URL
+# - COPILOT_WORKSPACE_ROOT: Root .copilot-shared location

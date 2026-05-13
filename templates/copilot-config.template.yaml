@@ -1,0 +1,40 @@
+# Repository-Specific Copilot Configuration
+#
+# This file is created per-repo in .github/copilot-config.yaml
+# It overrides workspace defaults for this repository only.
+#
+# To apply these settings:
+# - Token Profile: Run `bin/token-profile.ps1 -RepoPath <repo>`
+# - Doctor Level: Run `bin/doctor.ps1 -RepoPath <repo>`
+# - Other settings are loaded automatically by their respective scripts
+
+# Token usage profile
+# Options: balanced (default), aggressive
+# Balanced: Standard optimizations, good for general development
+# Aggressive: Maximum token savings, for large codebases
+token-profile: balanced
+
+# Doctor check depth
+# Options: critical (junctions only), standard (includes gitignore/hooks), exhaustive (all checks)
+doctor-check-level: standard
+
+# Agent refresh behavior
+# Options: minimal (skip if custom), full (overwrite all), custom-only (custom agents only)
+refresh-agents-level: minimal
+
+# Git hook scope
+# Options: pre-commit, commit-msg, all
+install-hooks-scope: all
+
+# Excluded agents (won't be synced)
+# Format: List of agent filenames to skip
+excluded-agents: []
+  # - story-writer.agent.md
+  # - tester.agent.md
+
+# Skills index type
+# Options: full (comprehensive), minimal (essential only)
+generate-skill-index: full
+
+# Doctor profile (verbose output flag)
+doctor-verbose: false
