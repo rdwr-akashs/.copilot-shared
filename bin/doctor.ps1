@@ -44,7 +44,9 @@ $ghDir = Join-Path $RepoPath '.github'
 if (-not (Test-Path $ghDir)) {
     Fail ".github folder missing - run setup-repo.ps1 first"
     Write-Host ""
-    Write-Host "=== RESULT: $fails fail(s), $warns warning(s) ===" -ForegroundColor Red
+    $f = $fails
+    $w = $warns
+    Write-Host ('RESULT: ' + $f + ' fail and ' + $w + ' warning') -ForegroundColor Red
     exit 1
 }
 Pass ".github folder exists"
@@ -166,11 +168,11 @@ if (Test-Path $agentDir) {
 $commitHook = Join-Path $RepoPath '.git\hooks\commit-msg'
 $prePush    = Join-Path $RepoPath '.git\hooks\pre-push'
 if ((Test-Path $commitHook) -and (Test-Path $prePush)) {
-    Pass "Git hooks installed (commit-msg + pre-push)"
+    Pass 'Git hooks installed (commit-msg + pre-push)'
 } elseif (Test-Path (Join-Path $RepoPath '.git')) {
-    Warn "Git hooks not installed — run install-hooks.cmd"
+    Warn 'Git hooks not installed - run install-hooks.cmd'
 } else {
-    Info "Not a git repo — hooks check skipped"
+    Info 'Not a git repo - hooks check skipped'
 }
 
 # ---- 8. Repo-cache freshness ----
@@ -178,29 +180,32 @@ $rcFile = Join-Path $ghDir 'repo-cache.md'
 if (Test-Path $rcFile) {
     $days = ((Get-Date) - (Get-Item $rcFile).LastWriteTime).Days
     if ($days -le 30) {
-        Pass "repo-cache.md is fresh ($days days old)"
+        Pass 'repo-cache.md is fresh (' + $days + ' days old)'
     } else {
-        Warn "repo-cache.md is stale ($days days old) — regenerate with acquire-codebase-knowledge skill"
+        Warn 'repo-cache.md is stale (' + $days + ' days old) - regenerate with acquire-codebase-knowledge skill'
     }
 } else {
-    Info "repo-cache.md not generated yet — run acquire-codebase-knowledge skill"
+    Info 'repo-cache.md not generated yet - run acquire-codebase-knowledge skill'
 }
 
 # ---- 9. Personal instructions ----
 $piFile = Join-Path $ghDir 'personal-instructions.md'
 if (-not (Test-Path $piFile)) {
-    Info "personal-instructions.md not set — copy from templates/ if you want one"
+    Info 'personal-instructions.md not set - copy from templates/ if you want one'
 }
 
 # ---- Summary ----
 Write-Host ""
 if ($fails -eq 0 -and $warns -eq 0) {
-    Write-Host "=== RESULT: HEALTHY ===" -ForegroundColor Green
+    Write-Host ('RESULT: HEALTHY') -ForegroundColor Green
     exit 0
 } elseif ($fails -eq 0) {
-    Write-Host "=== RESULT: $warns warning(s) ===" -ForegroundColor Yellow
+    $w = $warns
+    Write-Host ('RESULT: ' + $w + ' warning') -ForegroundColor Yellow
     exit 0
 } else {
-    Write-Host "=== RESULT: $fails fail(s), $warns warning(s) ===" -ForegroundColor Red
+    $f = $fails
+    $w = $warns
+    Write-Host ('RESULT: ' + $f + ' fail and ' + $w + ' warning') -ForegroundColor Red
     exit 1
 }
