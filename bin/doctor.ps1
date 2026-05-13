@@ -23,36 +23,27 @@
     powershell -File bin\doctor.ps1 -CheckLevel exhaustive C:\rdwr-intelij\df_core
 #>
 
-# Tab completion for CheckLevel
-$CheckLevelCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    
-    try {
-        $root = Split-Path $PSScriptRoot -Parent
-        Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
-        
-        $options = Get-DynamicOptions -ProfileName 'doctor-check-level' -WorkspaceRoot $root
-        $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
-        
-        $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
-        
-        $matches | ForEach-Object {
-            if ($_ -in $options.List) {
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-            } else {
-                $expands = $options.Aliases[$_]
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
-            }
-        }
-    } catch { }
-}
-
 param(
     [Parameter(Mandatory=$true, Position=1)]
     [string]$RepoPath,
     
     [Parameter(Position=0)]
-    [ArgumentCompleter($CheckLevelCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $root = Split-Path $PSScriptRoot -Parent
+            Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+            $options = Get-DynamicOptions -ProfileName 'doctor-check-level' -WorkspaceRoot $root
+            $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
+            $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object | ForEach-Object {
+                if ($_ -in $options.List) {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                } else {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $($options.Aliases[$_])")
+                }
+            }
+        } catch { }
+    })]
     [string]$CheckLevel = 'standard'
 )
 

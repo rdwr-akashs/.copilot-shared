@@ -22,34 +22,25 @@
     .\bin\refresh-agents.ps1 -RefreshLevel full C:\rdwr-intelij\df_core
 #>
 
-# Tab completion for RefreshLevel
-$RefreshLevelCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    
-    try {
-        $root = Split-Path $PSScriptRoot -Parent
-        Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
-        
-        $options = Get-DynamicOptions -ProfileName 'refresh-agents-level' -WorkspaceRoot $root
-        $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
-        
-        $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
-        
-        $matches | ForEach-Object {
-            if ($_ -in $options.List) {
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-            } else {
-                $expands = $options.Aliases[$_]
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
-            }
-        }
-    } catch { }
-}
-
 param(
     [string]$RepoPath = '.',
     
-    [ArgumentCompleter($RefreshLevelCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $root = Split-Path $PSScriptRoot -Parent
+            Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+            $options = Get-DynamicOptions -ProfileName 'refresh-agents-level' -WorkspaceRoot $root
+            $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
+            $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object | ForEach-Object {
+                if ($_ -in $options.List) {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                } else {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $($options.Aliases[$_])")
+                }
+            }
+        } catch { }
+    })]
     [string]$RefreshLevel = 'minimal'
 )
 

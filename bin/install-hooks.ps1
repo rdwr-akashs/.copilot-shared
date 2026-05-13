@@ -21,34 +21,25 @@
     .\bin\install-hooks.ps1 -HookScope all C:\rdwr-intelij\df_core
 #>
 
-# Tab completion for HookScope
-$HookScopeCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    
-    try {
-        $root = Split-Path $PSScriptRoot -Parent
-        Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
-        
-        $options = Get-DynamicOptions -ProfileName 'install-hooks-scope' -WorkspaceRoot $root
-        $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
-        
-        $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
-        
-        $matches | ForEach-Object {
-            if ($_ -in $options.List) {
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-            } else {
-                $expands = $options.Aliases[$_]
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
-            }
-        }
-    } catch { }
-}
-
 param(
     [string]$RepoPath = '.',
     
-    [ArgumentCompleter($HookScopeCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $root = Split-Path $PSScriptRoot -Parent
+            Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+            $options = Get-DynamicOptions -ProfileName 'install-hooks-scope' -WorkspaceRoot $root
+            $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
+            $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object | ForEach-Object {
+                if ($_ -in $options.List) {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                } else {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $($options.Aliases[$_])")
+                }
+            }
+        } catch { }
+    })]
     [string]$HookScope = 'all'
 )
 

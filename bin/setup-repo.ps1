@@ -30,22 +30,17 @@
     .\bin\setup-repo.ps1 C:\rdwr-intelij\df_core -GenerateRepoMix
 #>
 
-# Tab completion for Force parameter
-$ForceCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    try {
-        $options = @('$true', '$false', 'yes', 'no')
-        $matches = $options | Where-Object { $_ -like "$wordToComplete*" }
-        $matches | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
-    } catch { }
-}
-
 param(
     [Parameter(Mandatory = $true, Position = 0)]
     [string]$RepoPath,
-    [ArgumentCompleter($ForceCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            @('yes', 'no') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            }
+        } catch { }
+    })]
     [switch]$Force,
     [switch]$GenerateRepoMix
 )

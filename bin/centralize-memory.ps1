@@ -9,17 +9,20 @@
 # 3. Creates symlinks in individual repos pointing to central location
 # 4. Cleans up local copies (optional)
 
-$RepoPathCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    Get-ChildItem -Path '.' -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty FullName | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository root')
-    }
-}
-
 param(
-    [ArgumentCompleter($RepoPathCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        Get-ChildItem -Path '.' -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty FullName | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository root')
+        }
+    })]
     [string]$RepoPath = "C:\repos",
-    [ArgumentCompleter($RepoPathCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        Get-ChildItem -Path '.' -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty FullName | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository root')
+        }
+    })]
     [string]$CentralPath = "C:\rdwr-intelij\.copilot-shared",
     [string[]]$Repos = @("common_policy_editor"),
     [object]$CreateSymlinks = $true,

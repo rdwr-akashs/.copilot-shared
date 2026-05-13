@@ -12,18 +12,28 @@
     powershell -File bin\console.ps1 -Quick
 #>
 
-$WorkspaceCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    try {
-        $parent = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-        Get-ChildItem -Path $parent -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty Name | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Repository")
-        }
-    } catch { }
-}
-
 param(
-    [ArgumentCompleter($WorkspaceCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            # Get the script path from the command being completed
+            $scriptPath = $commandAst.CommandElements[0].Value
+            if (-not [System.IO.Path]::IsPathRooted($scriptPath)) {
+                $scriptPath = Join-Path (Get-Location) $scriptPath
+            }
+            $scriptPath = Resolve-Path $scriptPath -ErrorAction SilentlyContinue
+            $scriptDir = Split-Path $scriptPath -Parent
+            $parent = Split-Path $scriptDir -Parent
+            
+            Get-ChildItem -Path $parent -Directory -ErrorAction SilentlyContinue | 
+                Where-Object { Test-Path (Join-Path $_.FullName '.git') } | 
+                Select-Object -ExpandProperty Name | 
+                Where-Object { $_ -like "$wordToComplete*" } | 
+                ForEach-Object {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                }
+        } catch { }
+    })]
     [string]$Workspace,
     [switch]$Quick
 )
@@ -36,141 +46,152 @@ $SharedRoot = Split-Path -Parent $BinDir
 $WorkspaceRoot = if ($Workspace) { $Workspace } else { Split-Path -Parent $SharedRoot }
 
 # ============================================================================
-# INTERACTIVE INPUT WITH COMPLETERS
+# INTERACTIVE INPUT WITH TAB COMPLETION
 # ============================================================================
 
-function Read-RepositoryName {
+function Read-WithCompletion {
     <#
     .SYNOPSIS
-        Read repository name with tab completion support
+        Read user input with real Tab key completion from a list of options.
     #>
-    $repos = Get-WorkspaceRepos | Select-Object -ExpandProperty Name | Where-Object { $_ -ne ".copilot-shared" }
-    
-    if ($repos.Count -eq 0) {
-        Write-Error-Custom "No repositories found"
-        return $null
+    param(
+        [string]$Prompt,
+        [string[]]$Options = @(),
+        [string]$Default = ''
+    )
+
+    $promptText = if ($Default) { "$Prompt (default: $Default)" } else { $Prompt }
+    Write-Host -NoNewline "$promptText`: " -ForegroundColor White
+
+    $buffer = ''
+    $tabIndex = -1
+    $tabMatches = @()
+
+    while ($true) {
+        $key = [System.Console]::ReadKey($true)
+
+        if ($key.Key -eq [System.ConsoleKey]::Enter) {
+            Write-Host ''
+            break
+        }
+        elseif ($key.Key -eq [System.ConsoleKey]::Tab) {
+            if ($Options.Count -eq 0) { continue }
+
+            if ($tabIndex -eq -1) {
+                # First Tab press - find matches
+                $tabMatches = @($Options | Where-Object { $_ -like "$buffer*" })
+                if ($tabMatches.Count -eq 0) { continue }
+                $tabIndex = 0
+            } else {
+                # Cycle through matches
+                $tabIndex = ($tabIndex + 1) % $tabMatches.Count
+            }
+
+            # Replace current buffer with match
+            $clear = "`b" * $buffer.Length + ' ' * $buffer.Length + "`b" * $buffer.Length
+            Write-Host -NoNewline $clear
+            $buffer = $tabMatches[$tabIndex]
+            Write-Host -NoNewline $buffer
+
+            # Show hint if multiple matches
+            if ($tabMatches.Count -gt 1) {
+                $pos = [System.Console]::CursorLeft
+                Write-Host -NoNewline "  [Tab: $($tabIndex+1)/$($tabMatches.Count)]" -ForegroundColor DarkGray
+                $extra = "  [Tab: $($tabIndex+1)/$($tabMatches.Count)]".Length
+                Write-Host -NoNewline ("`b" * $extra + ' ' * $extra + "`b" * $extra)
+            }
+        }
+        elseif ($key.Key -eq [System.ConsoleKey]::Backspace) {
+            if ($buffer.Length -gt 0) {
+                $buffer = $buffer.Substring(0, $buffer.Length - 1)
+                Write-Host -NoNewline "`b `b"
+                $tabIndex = -1
+                $tabMatches = @()
+            }
+        }
+        elseif ($key.Key -eq [System.ConsoleKey]::Escape) {
+            # Clear buffer
+            $clear = "`b" * $buffer.Length + ' ' * $buffer.Length + "`b" * $buffer.Length
+            Write-Host -NoNewline $clear
+            $buffer = ''
+            $tabIndex = -1
+            $tabMatches = @()
+        }
+        else {
+            $ch = $key.KeyChar
+            if ([char]::IsControl($ch)) { continue }
+            $buffer += $ch
+            Write-Host -NoNewline $ch
+            $tabIndex = -1
+            $tabMatches = @()
+        }
     }
-    
-    # Display available options
-    Write-Host "   Available repositories: $($repos -join ', ')" -ForegroundColor DarkGray
-    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
-    Write-Host ""
-    
-    # Get the console input with completion
-    $input = $null
-    try {
-        Import-Module PSReadLine -ErrorAction SilentlyContinue
-        $input = Read-Host "Repository name"
+
+    if ([string]::IsNullOrWhiteSpace($buffer) -and $Default) {
+        return $Default
     }
-    catch {
-        $input = Read-Host "Repository name"
-    }
-    
-    # Validate input
-    if ([string]::IsNullOrWhiteSpace($input)) {
-        return $null
-    }
-    
-    # Match to actual repo name (case-insensitive)
-    $matched = $repos | Where-Object { $_ -eq $input }
-    
-    if (-not $matched) {
-        # Try prefix matching
-        $matched = $repos | Where-Object { $_ -like "$input*" }
-    }
-    
-    if ($matched.Count -eq 0) {
-        Write-Warning "Repository not found: $input"
-        return $null
-    }
-    
+    return $buffer
+}
+
+function Read-RepositoryName {
+    $repos = @(Get-WorkspaceRepos | Select-Object -ExpandProperty Name | Where-Object { $_ -ne ".copilot-shared" })
+    if ($repos.Count -eq 0) { Write-Error-Custom "No repositories found"; return $null }
+
+    Write-Host "   Available: $($repos -join ', ')" -ForegroundColor DarkGray
+    Write-Host "   Press Tab to cycle through completions, Enter to confirm" -ForegroundColor DarkCyan
+    Write-Host ''
+
+    $input = Read-WithCompletion -Prompt "Repository name" -Options $repos
+    if ([string]::IsNullOrWhiteSpace($input)) { return $null }
+
+    $matched = @($repos | Where-Object { $_ -eq $input })
+    if ($matched.Count -eq 0) { $matched = @($repos | Where-Object { $_ -like "$input*" }) }
+    if ($matched.Count -eq 0) { Write-Warning "Repository not found: $input"; return $null }
     if ($matched.Count -gt 1) {
-        Write-Warning "Multiple matches found: $($matched -join ', ')"
-        Write-Host "Please be more specific" -ForegroundColor Yellow
+        Write-Warning "Multiple matches. Please be more specific:"
+        $matched | ForEach-Object { Write-Host "   - $_" -ForegroundColor Yellow }
         return $null
     }
-    
-    return $matched
+    return $matched[0]
 }
 
 function Read-PathWithCompletion {
-    <#
-    .SYNOPSIS
-        Read a path with directory/file completion support
-    #>
     param([string]$Prompt = "Enter path", [string]$Filter = "*")
-    
-    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
-    return Read-Host $Prompt
+    $suggestions = @(Get-ChildItem -Path '.' -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+    Write-Host "   Press Tab to cycle through path completions" -ForegroundColor DarkCyan
+    return Read-WithCompletion -Prompt $Prompt -Options $suggestions
 }
 
 function Read-ArchiveFile {
-    <#
-    .SYNOPSIS
-        Read archive filename with .zip file completion
-    #>
-    $archives = @(Get-ChildItem -Path '.' -Filter '*memory*.zip' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
-    
+    $archives = @(Get-ChildItem -Path '.' -Filter '*.zip' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
     if ($archives.Count -gt 0) {
         Write-Host "   Available archives: $($archives -join ', ')" -ForegroundColor DarkGray
     }
-    
-    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
-    Write-Host ""
-    
-    $input = Read-Host "Archive path"
-    
-    if ([string]::IsNullOrWhiteSpace($input)) {
-        return $null
-    }
-    
-    # Try to match
-    if (Test-Path $input) {
-        return $input
-    }
-    
-    # Try prefix matching from current dir
-    $matched = Get-ChildItem -Path '.' -Filter "$input*" -ErrorAction SilentlyContinue
-    if ($matched.Count -eq 1) {
-        return $matched.FullName
-    }
-    
-    return $input  # Return as-is if not found
+    Write-Host "   Press Tab to cycle through archive files" -ForegroundColor DarkCyan
+    Write-Host ''
+    $input = Read-WithCompletion -Prompt "Archive path" -Options $archives
+    if ([string]::IsNullOrWhiteSpace($input)) { return $null }
+    return $input
 }
 
 function Read-OutputDirectory {
-    <#
-    .SYNOPSIS
-        Read output directory with path completion
-    #>
-    Write-Host "   Common locations: '.', '$(Get-Location).Path', '\`$env:TEMP'" -ForegroundColor DarkGray
-    Write-Host "   Tip: Start typing and press Tab for completion" -ForegroundColor DarkCyan
-    Write-Host ""
-    
-    $input = Read-Host "Output directory (default: current)"
-    
-    if ([string]::IsNullOrWhiteSpace($input)) {
-        return '.'
-    }
-    
+    $suggestions = @('.', $env:TEMP, (Get-Location).Path)
+    Write-Host "   Common locations: $($suggestions -join ', ')" -ForegroundColor DarkGray
+    Write-Host "   Press Tab to cycle through suggestions" -ForegroundColor DarkCyan
+    Write-Host ''
+    $input = Read-WithCompletion -Prompt "Output directory" -Options $suggestions -Default '.'
+    if ([string]::IsNullOrWhiteSpace($input)) { return '.' }
     return $input
 }
 
 function Read-MenuChoice {
-    <#
-    .SYNOPSIS
-        Read menu choice with validation
-    #>
-    param([string]$Prompt = "Choose action", [string[]]$ValidOptions = @())
-    
-    Write-Host ""
-    
+    param([string]$Prompt = "Enter your choice", [string[]]$ValidOptions = @())
+    Write-Host ''
     if ($ValidOptions.Count -gt 0) {
         Write-Host "   Valid options: $($ValidOptions -join ', ')" -ForegroundColor DarkGray
-        Write-Host "   Tip: Type option and press Tab for completion" -ForegroundColor DarkCyan
+        Write-Host "   Press Tab to cycle, Enter to confirm" -ForegroundColor DarkCyan
     }
-    
-    return Read-Host $Prompt
+    return Read-WithCompletion -Prompt $Prompt -Options $ValidOptions
 }
 
 $Colors = @{
@@ -297,9 +318,9 @@ function Get-ChangedItems {
     }
     
     # Check for new/missing repos
-    $linkedRepos = Get-ChildItem -Path $WorkspaceRoot -Directory -ErrorAction SilentlyContinue | Where-Object { 
+    $linkedRepos = @(Get-ChildItem -Path $WorkspaceRoot -Directory -ErrorAction SilentlyContinue | Where-Object { 
         (Test-Path "$($_.FullName)\.github\copilot-instructions.md") 
-    }
+    })
     
     if ($linkedRepos.Count -lt 5) {  # Heuristic: assumes at least 5 repos
         $changes.Repos += "Possible missing repos detected"
@@ -381,21 +402,21 @@ function Show-RepoSelector {
         Write-Host "   $($repos[$i].Name)" -ForegroundColor $Colors.Highlight
     }
     Write-Host ""
-    Write-Host "   Tip: Start typing repo name and press Tab for completion" -ForegroundColor DarkCyan
-    Write-Host ""
+    Write-Host "   Enter the repository name. Press Tab to cycle through completions." -ForegroundColor DarkCyan
+    Write-Host ''
     
-    $repoName = Read-Host "Enter repository name (or leave empty to cancel)"
+    $repoName = Read-WithCompletion -Prompt "Repository name (empty to cancel)" -Options ($repos | Select-Object -ExpandProperty Name)
     
     if ([string]::IsNullOrWhiteSpace($repoName)) {
         return $null
     }
     
-    # Match repo
-    $matched = $repos | Where-Object { $_.Name -eq $repoName }
+    # Match repo (force array to avoid single-object Count issues)
+    $matched = @($repos | Where-Object { $_.Name -eq $repoName })
     
-    if (-not $matched) {
+    if ($matched.Count -eq 0) {
         # Try prefix matching
-        $matched = $repos | Where-Object { $_.Name -like "$repoName*" }
+        $matched = @($repos | Where-Object { $_.Name -like "$repoName*" })
     }
     
     if ($matched.Count -eq 0) {
@@ -405,11 +426,11 @@ function Show-RepoSelector {
     
     if ($matched.Count -gt 1) {
         Write-Warning "Multiple matches. Please be more specific:"
-        $matched | Select-Object -ExpandProperty Name | ForEach-Object { Write-Host "   - $_" }
+        $matched | Select-Object -ExpandProperty Name | ForEach-Object { Write-Host "   - $_" -ForegroundColor Yellow }
         return $null
     }
     
-    return $matched
+    return $matched[0]
 }
 
 function Invoke-SmartRefreshForRepo {
@@ -483,10 +504,11 @@ function Get-SelectedRepo {
     }
     
     Write-Host ""
-    Write-Host "   Tip: Start typing repo name and press Tab for completion" -ForegroundColor DarkCyan
-    Write-Host ""
+    Write-Host "   Enter the repository name. Press Tab to cycle, Enter for workspace." -ForegroundColor DarkCyan
+    Write-Host ''
     
-    $selection = Read-Host "Select repository (or press Enter for Workspace)"
+    $repoOptions = @('W') + @($repoMap.Keys)
+    $selection = Read-WithCompletion -Prompt "Repository (Enter for Workspace)" -Options $repoOptions
     
     if ($selection -eq "W" -or $selection -eq "w" -or [string]::IsNullOrWhiteSpace($selection)) {
         return $null
@@ -497,8 +519,8 @@ function Get-SelectedRepo {
         return $repoMap[$selection]
     }
     
-    # Try prefix match
-    $matches = $repoMap.Keys | Where-Object { $_ -like "$selection*" }
+    # Try prefix match (force array to avoid single-object Count issues)
+    $matches = @($repoMap.Keys | Where-Object { $_ -like "$selection*" })
     if ($matches.Count -eq 1) {
         return $repoMap[$matches[0]]
     }

@@ -13,19 +13,17 @@
     powershell -File bin\audit.ps1
 #>
 
-$RootCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    try {
-        $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-        $dirs = @(Get-ChildItem -Path $root -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty Name)
-        $dirs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Workspace root")
-        }
-    } catch { }
-}
-
 param(
-    [ArgumentCompleter($RootCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+            $dirs = @(Get-ChildItem -Path $root -Directory -ErrorAction SilentlyContinue | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty Name)
+            $dirs | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Workspace root")
+            }
+        } catch { }
+    })]
     [string]$Root
 )
 

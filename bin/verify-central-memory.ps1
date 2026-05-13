@@ -23,18 +23,16 @@
     .\verify-central-memory.ps1 -WorkspacePath "C:\rdwr-intelij" -Repair
 #>
 
-$WorkspaceCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    try {
-        $parent = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-        @($parent) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Workspace root')
-        }
-    } catch { }
-}
-
 param(
-    [ArgumentCompleter($WorkspaceCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $parent = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+            @($parent) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Workspace root')
+            }
+        } catch { }
+    })]
     [string]$WorkspacePath = (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent),
     [switch]$Repair = $false
 )

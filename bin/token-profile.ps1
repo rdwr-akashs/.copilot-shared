@@ -29,41 +29,27 @@
     .\bin\token-profile.ps1 -Profile <Tab>  # Shows: aggressive, balanced, agg, aggr, a, bal, b
 #>
 
-# Tab completion function
-$ProfileCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    
-    try {
-        $root = Split-Path $PSScriptRoot -Parent
-        Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
-        
-        $options = Get-DynamicOptions -ProfileName 'token-profile' -WorkspaceRoot $root
-        $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
-        
-        # Filter based on what user typed
-        $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
-        
-        # Return as CompletionResult objects with descriptions
-        $matches | ForEach-Object {
-            if ($_ -in $options.List) {
-                # Main option
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Profile: $_")
-            } else {
-                # Alias - show what it expands to
-                $expands = $options.Aliases[$_]
-                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
-            }
-        }
-    } catch {
-        # Fallback if completer fails
-        [System.Management.Automation.CompletionResult]::new('balanced', 'balanced', 'ParameterValue', 'Balanced profile')
-        [System.Management.Automation.CompletionResult]::new('aggressive', 'aggressive', 'ParameterValue', 'Aggressive profile')
-    }
-}
-
 param(
     [Parameter(Mandatory = $true)]
-    [ArgumentCompleter($ProfileCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        try {
+            $root = Split-Path $PSScriptRoot -Parent
+            Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+            $options = Get-DynamicOptions -ProfileName 'token-profile' -WorkspaceRoot $root
+            $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
+            $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object | ForEach-Object {
+                if ($_ -in $options.List) {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Profile: $_")
+                } else {
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $($options.Aliases[$_])")
+                }
+            }
+        } catch {
+            [System.Management.Automation.CompletionResult]::new('balanced', 'balanced', 'ParameterValue', 'Balanced profile')
+            [System.Management.Automation.CompletionResult]::new('aggressive', 'aggressive', 'ParameterValue', 'Aggressive profile')
+        }
+    })]
     [string]$Profile,
 
     [string]$RepoPath = '.'

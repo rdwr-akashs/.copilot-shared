@@ -19,25 +19,21 @@
     powershell -File bin\repo-mix.ps1 -RepoPath . -OutputFile .agent_work\mix.md -MaxFiles 300 -WithLineNumbers
 #>
 
-$RepoPathCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    @('.', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository path')
-    }
-}
-
-$OutputFileCompleter = {
-    param($wordToComplete, $commandAst, $cursorPosition)
-    @('.agent_work', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
-        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Output directory')
-    }
-}
-
 [CmdletBinding()]
 param(
-    [ArgumentCompleter($RepoPathCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        @('.', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository path')
+        }
+    })]
     [string]$RepoPath = (Get-Location).Path,
-    [ArgumentCompleter($OutputFileCompleter)]
+    [ArgumentCompleter({
+        param($wordToComplete, $commandAst, $cursorPosition)
+        @('.agent_work', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Output directory')
+        }
+    })]
     [string]$OutputFile,
     [int]$MaxFiles = 500,
     [int]$MaxFileSizeKB = 256,
