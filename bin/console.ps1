@@ -771,6 +771,8 @@ function Handle-MainMenu {
             $repo = Show-RepoSelector
             if ($repo) {
                 Invoke-SmartRefreshForRepo -RepoPath $repo.Path
+                Write-Host ""
+                Write-Host "DONE: Repository refreshed - agents and skills updated" -ForegroundColor Green
                 $commandExecuted = $true
             }
         }
