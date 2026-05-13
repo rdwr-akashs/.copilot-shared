@@ -19,9 +19,25 @@
     powershell -File bin\repo-mix.ps1 -RepoPath . -OutputFile .agent_work\mix.md -MaxFiles 300 -WithLineNumbers
 #>
 
+$RepoPathCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    @('.', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository path')
+    }
+}
+
+$OutputFileCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    @('.agent_work', (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Output directory')
+    }
+}
+
 [CmdletBinding()]
 param(
+    [ArgumentCompleter($RepoPathCompleter)]
     [string]$RepoPath = (Get-Location).Path,
+    [ArgumentCompleter($OutputFileCompleter)]
     [string]$OutputFile,
     [int]$MaxFiles = 500,
     [int]$MaxFileSizeKB = 256,
@@ -29,8 +45,6 @@ param(
     [switch]$WithLineNumbers,
     [switch]$UseAllFiles,
     [switch]$Central,
-    # SummaryOnly: generates a lightweight index (key modules, language, build cmds, related repos)
-    # instead of full file contents. Used by repo-mix-all by default to keep repo-contexts small.
     [switch]$SummaryOnly,
     [string[]]$ExcludeDirs = @(
         '.git', 'node_modules', 'dist', 'build', 'out', '.next', '.nuxt',

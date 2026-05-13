@@ -43,9 +43,17 @@ NOTE: Step 3 (repo fetch) uses a Bitbucket HTTP Access Token (Basic auth with us
       with Repositories: Read scope.
 #>
 
+$ForceCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    @('yes', 'no') | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
+
 param(
     [string]$BBWorkspace,
     [string]$BBBaseUrl,
+    [ArgumentCompleter($ForceCompleter)]
     [switch]$Force
 )
 

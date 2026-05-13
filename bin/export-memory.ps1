@@ -13,7 +13,16 @@
     powershell -File bin\export-memory.ps1
     powershell -File bin\export-memory.ps1 -OutputDir C:\backups
 #>
+
+$OutputCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    @('.', $env:TEMP, (Get-Location).Path) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
+
 param(
+    [ArgumentCompleter($OutputCompleter)]
     [string]$OutputDir = '.'
 )
 

@@ -30,8 +30,19 @@
     .\extract-support-bundle.ps1 -Bundle C:\cases\SC-12345\ -OutDir C:\cases\SC-12345\extracted
 #>
 
+$BundleCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    try {
+        @(Get-ChildItem -Path '.' -Include '*.zip', '*.tar.gz', '*.tgz' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name) | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Support bundle')
+        }
+    } catch { }
+}
+
 param(
-    [Parameter(Mandatory)][string]$Bundle,
+    [Parameter(Mandatory)]
+    [ArgumentCompleter($BundleCompleter)]
+    [string]$Bundle,
     [string]$OutDir,
     [switch]$Full,
     [int]$MaxDepth = 3

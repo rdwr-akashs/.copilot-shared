@@ -21,7 +21,19 @@
 .EXAMPLE
     powershell -File bin\workspace-scan.ps1
 #>
+
+$RootCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    try {
+        $parent = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+        Get-ChildItem -Path $parent -Directory | Where-Object { Test-Path (Join-Path $_.FullName '.git') } | Select-Object -ExpandProperty Name | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', 'Repository')
+        }
+    } catch { }
+}
+
 param(
+    [ArgumentCompleter($RootCompleter)]
     [string]$Root
 )
 

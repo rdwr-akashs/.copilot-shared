@@ -35,8 +35,27 @@
   # Piped from refresh-agents.cmd (see that script's comments):
   .\bin\merge-agent-templates.ps1 -AgentsDir C:\repo\.github\agents
 #>
+
+$AgentsDirCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    try {
+        $cur = $PWD.Path
+        while ($cur) {
+            $candidate = Join-Path $cur '.github\agents'
+            if (Test-Path $candidate) { 
+                [System.Management.Automation.CompletionResult]::new($candidate, $candidate, 'ParameterValue', 'Auto-detected agents directory')
+            }
+            $parent = Split-Path $cur -Parent
+            if ($parent -eq $cur) { break }
+            $cur = $parent
+        }
+    } catch { }
+}
+
 param(
+    [ArgumentCompleter($AgentsDirCompleter)]
     [string]$AgentsDir  = "",
+    [ArgumentCompleter($AgentsDirCompleter)]
     [string]$RepoPath   = ""
 )
 

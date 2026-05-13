@@ -64,6 +64,74 @@ install-hooks-scope:
     all: all
   default: "all"
 
+# Generic boolean flag modes (used by multiple scripts)
+force-mode:
+  description: "Force overwrite existing files (-Force switch)"
+  type: "enum"
+  values:
+    - yes           # Force overwrite
+    - no            # Never overwrite
+    - skip          # Interactive prompt
+  aliases:
+    y: yes
+    n: no
+    s: skip
+    f: yes
+  default: "skip"
+
+bundle-extraction-mode:
+  description: "Bundle extraction strategy (extract-support-bundle.ps1)"
+  type: "enum"
+  values:
+    - smart         # Extract RCA-critical files only
+    - full          # Extract everything
+  aliases:
+    s: smart
+    f: full
+  default: "smart"
+
+context-refresh-mode:
+  description: "Full context refresh mode (full-context-refresh.ps1)"
+  type: "enum"
+  values:
+    - full          # Run all scans
+    - skip-repo-mix # Skip repo-mix-all
+    - skip-scan     # Skip workspace-scan
+    - full-dumps    # Include full content dumps
+  aliases:
+    full: full
+    skip-mix: skip-repo-mix
+    skip-scan: skip-scan
+    dumps: full-dumps
+  default: "full"
+
+repo-mix-mode:
+  description: "Repo mix output mode (repo-mix-all.ps1)"
+  type: "enum"
+  values:
+    - summary       # Lightweight 1-2KB summaries
+    - full          # Full content dumps
+  aliases:
+    sum: summary
+    s: summary
+    f: full
+  default: "summary"
+
+centralize-memory-mode:
+  description: "Centralize memory operation mode (centralize-memory.ps1)"
+  type: "enum"
+  values:
+    - symlinks-create   # Create symlinks to central location
+    - symlinks-skip     # Skip symlink creation
+    - delete-local      # Delete local copies after centralizing
+    - verify            # Verify centralization success
+  aliases:
+    symlinks: symlinks-create
+    skip: symlinks-skip
+    delete: delete-local
+    verify: verify
+  default: "symlinks-create"
+
 # Workspace-wide configuration (.local.env)
 # Not scripts, but important env vars:
 # - BB_WORKSPACE: Bitbucket workspace slug
