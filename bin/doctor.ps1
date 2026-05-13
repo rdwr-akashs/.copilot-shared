@@ -6,16 +6,54 @@
     Verifies junctions, gitignore, required files, template leakage, hook
     installation, repo-cache freshness, and registry presence. Produces
     colored output with PASS/FAIL/WARN/INFO labels.
+    
+    Press Tab after -CheckLevel to see available options and aliases.
 
 .PARAMETER RepoPath
     Full path to the repository to check.
 
+.PARAMETER CheckLevel
+    Check depth: critical (junctions only), standard (default), or exhaustive (all).
+    Use Tab for auto-complete and aliases.
+
 .EXAMPLE
     powershell -File bin\doctor.ps1 C:\rdwr-intelij\df_core
+    
+.EXAMPLE
+    powershell -File bin\doctor.ps1 -CheckLevel exhaustive C:\rdwr-intelij\df_core
 #>
+
+# Tab completion for CheckLevel
+$CheckLevelCompleter = {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    
+    try {
+        $root = Split-Path $PSScriptRoot -Parent
+        Import-Module (Join-Path $root 'shared/modules/DynamicProfiles.psm1') -Force
+        
+        $options = Get-DynamicOptions -ProfileName 'doctor-check-level' -WorkspaceRoot $root
+        $allOptions = @() + $options.List + ($options.Aliases.Keys | ForEach-Object { $_ })
+        
+        $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
+        
+        $matches | ForEach-Object {
+            if ($_ -in $options.List) {
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+            } else {
+                $expands = $options.Aliases[$_]
+                [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
+            }
+        }
+    } catch { }
+}
+
 param(
-    [Parameter(Mandatory=$true)]
-    [string]$RepoPath
+    [Parameter(Mandatory=$true, Position=1)]
+    [string]$RepoPath,
+    
+    [Parameter(Position=0)]
+    [ArgumentCompleter($CheckLevelCompleter)]
+    [string]$CheckLevel = 'standard'
 )
 
 $ErrorActionPreference = 'Continue'
