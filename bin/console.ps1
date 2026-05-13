@@ -688,6 +688,7 @@ function Show-MainMenu {
         "C" = "Git Hooks Setup"
         "D" = "Extract Support Bundle"
         "E" = "Local Setup"
+        "H" = "Help (command reference)"
     }
     
     Show-Menu -Options $menuOptions -Title "MAIN MENU"
@@ -700,6 +701,7 @@ function Show-MemoryMenu {
         "3" = "Centralize Memory"
         "4" = "Export Memory"
         "5" = "Import Memory"
+        "H" = "Help"
     }
     
     Write-Host ""
@@ -717,6 +719,7 @@ function Show-RepositoryMenu {
         "6" = "Copy Agents to Repository"
         "7" = "Repo Mix (context pack for one repo)"
         "8" = "Repo Mix All (context packs for all)"
+        "H" = "Help"
     }
     
     Write-Host ""
@@ -758,6 +761,7 @@ function Handle-MainMenu {
         "C" { Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup" }
         "D" { Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle" }
         "E" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-local.ps1") -Description "Local Setup" }
+        "H" { Show-HelpMainMenu }
         "0" { return $false }
         default {
             Write-Warning "Invalid option: $Choice"
@@ -769,9 +773,10 @@ function Handle-MainMenu {
 }
 
 function Handle-MemoryMenu {
+    $running = $true
     do {
         Show-MemoryMenu
-        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "0")
+        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "H", "0")
         
         switch ($choice) {
             "1" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory" }
@@ -789,16 +794,18 @@ function Handle-MemoryMenu {
                     Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "import-memory.ps1") -Description "Import Memory" -Arguments @('-ArchivePath', $archivePath)
                 }
             }
-            "0" { break }
+            "H" { Show-HelpMemory }
+            "0" { $running = $false }
             default { Write-Warning "Invalid option: $choice" }
         }
-    } while ($true)
+    } while ($running)
 }
 
 function Handle-RepositoryMenu {
+    $running = $true
     do {
         Show-RepositoryMenu
-        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "6", "7", "8", "0")
+        $choice = Read-MenuChoice -Prompt "Choose action" -ValidOptions @("1", "2", "3", "4", "5", "6", "7", "8", "H", "0")
         
         switch ($choice) {
             "1" {
@@ -840,15 +847,145 @@ function Handle-RepositoryMenu {
                 if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
                 Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix-all.ps1") -Description "Repo Mix All" -Arguments $args
             }
-            "0" { break }
+            "H" { Show-HelpRepository }
+            "0" { $running = $false }
             default { Write-Warning "Invalid option: $choice" }
         }
-    } while ($true)
+    } while ($running)
 }
 
-# ============================================================================
-# MAIN LOOP
-# ============================================================================
+function Show-HelpMainMenu {
+    Write-Title "HELP: MAIN MENU COMMANDS"
+    Write-Host ""
+    Write-Host "REFRESH OPERATIONS" -ForegroundColor Cyan
+    Write-Host "  [1] Smart Refresh (current workspace)" -ForegroundColor White
+    Write-Host "      Analyzes the workspace for changes and runs recommended fixes automatically." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [R] Smart Refresh for Specific Repo" -ForegroundColor White
+    Write-Host "      Select a repo and run smart refresh targeting that repo only." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [2] Refresh Instructions" -ForegroundColor White
+    Write-Host "      Rebuilds instruction files from templates. Use when agent instructions change." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [3] Refresh Agents" -ForegroundColor White
+    Write-Host "      Updates agent templates in repos. Use after modifying shared agent templates." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [4] Generate Skill Index" -ForegroundColor White
+    Write-Host "      Generates an index of all available skills for quick reference." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [6] Full Context Refresh (workspace + repo-mix)" -ForegroundColor White
+    Write-Host "      Comprehensive refresh: rescans architecture, regenerates all repo context packs." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "SETUP & CONFIGURATION" -ForegroundColor Cyan
+    Write-Host "  [5] Audit Copilot Assets" -ForegroundColor White
+    Write-Host "      Scans all repos for Copilot configuration issues. Generates audit report." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [7] Memory Management" -ForegroundColor White
+    Write-Host "      Central hub for memory operations: verify, centralize, export, import." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [8] Repository Setup" -ForegroundColor White
+    Write-Host "      Setup repos, link/unlink to Copilot, copy agents, generate context packs." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [9] Doctor (diagnosis and repair)" -ForegroundColor White
+    Write-Host "      Health check: validates junctions, gitignore, hooks, repo-cache. Finds & fixes issues." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [E] Local Setup" -ForegroundColor White
+    Write-Host "      One-time: personalizes .copilot-shared after cloning (Bitbucket config, local instructions)." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "ANALYSIS & MONITORING" -ForegroundColor Cyan
+    Write-Host "  [A] Workspace Scan" -ForegroundColor White
+    Write-Host "      Generates architecture map: tech stacks, service ports, APIs, inter-service dependencies." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [B] Token Profile (usage analysis)" -ForegroundColor White
+    Write-Host "      Switches between token usage profiles (balanced vs aggressive) for cost control." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [C] Git Hooks Setup" -ForegroundColor White
+    Write-Host "      Installs pre-commit and commit-msg hooks for automated quality checks." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [D] Extract Support Bundle" -ForegroundColor White
+    Write-Host "      Extracts RCA-critical files from DefenseFlow/Vision support bundles for analysis." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host ""
+    Read-Host "Press Enter to return to main menu"
+}
+
+function Show-HelpMemory {
+    Write-Title "HELP: MEMORY MANAGEMENT COMMANDS"
+    Write-Host ""
+    Write-Host "CORE OPERATIONS" -ForegroundColor Cyan
+    Write-Host "  [1] Verify Central Memory" -ForegroundColor White
+    Write-Host "      Checks all repos for proper central memory configuration." -ForegroundColor DarkGray
+    Write-Host "      Verifies junctions exist and point to correct central locations." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [2] Verify and Repair Central Memory" -ForegroundColor White
+    Write-Host "      Like [1] but also auto-fixes issues found (re-creates junctions, repairs symlinks)." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [3] Centralize Memory" -ForegroundColor White
+    Write-Host "      Migrates memory/learning/cases from individual repos to central location." -ForegroundColor DarkGray
+    Write-Host "      Creates symlinks in repos pointing back to central store." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "BACKUP & RESTORE" -ForegroundColor Cyan
+    Write-Host "  [4] Export Memory" -ForegroundColor White
+    Write-Host "      Backs up all central memory files to a timestamped ZIP archive." -ForegroundColor DarkGray
+    Write-Host "      Use for sharing memory with teammates or as a safety net." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [5] Import Memory" -ForegroundColor White
+    Write-Host "      Restores memory from a previously exported ZIP archive." -ForegroundColor DarkGray
+    Write-Host "      Useful for syncing memory across team members or machines." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host ""
+    Read-Host "Press Enter to return to main menu"
+}
+
+function Show-HelpRepository {
+    Write-Title "HELP: REPOSITORY SETUP COMMANDS"
+    Write-Host ""
+    Write-Host "INITIAL SETUP" -ForegroundColor Cyan
+    Write-Host "  [1] Setup New Repository" -ForegroundColor White
+    Write-Host "      One-time: creates .github/ structure, writes copilot-instructions.md, copies agents." -ForegroundColor DarkGray
+    Write-Host "      Run once per repo after linking to .copilot-shared." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [2] Setup All Repositories" -ForegroundColor White
+    Write-Host "      Runs setup on every repo in workspace that lacks copilot-instructions.md." -ForegroundColor DarkGray
+    Write-Host "      Batch operation for fresh workspace setup." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "LINKING & CONFIGURATION" -ForegroundColor Cyan
+    Write-Host "  [3] Link Repository to Copilot" -ForegroundColor White
+    Write-Host "      Creates junctions from repo to shared skills, instructions, prompts, plans." -ForegroundColor DarkGray
+    Write-Host "      Enables Copilot to access workspace-wide resources." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [4] Link All Repositories" -ForegroundColor White
+    Write-Host "      Links every repo in workspace to Copilot (batch operation)." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [5] Unlink Repository" -ForegroundColor White
+    Write-Host "      Removes junctions: repo becomes standalone, doesn't access shared resources." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [6] Copy Agents to Repository" -ForegroundColor White
+    Write-Host "      Copies latest agent templates to a repo's .github/agents/ directory." -ForegroundColor DarkGray
+    Write-Host "      Use to refresh agents or onboard a new repo." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host "CONTEXT & ANALYSIS" -ForegroundColor Cyan
+    Write-Host "  [7] Repo Mix (context pack for one repo)" -ForegroundColor White
+    Write-Host "      Generates a single markdown file bundling repo structure + file contents." -ForegroundColor DarkGray
+    Write-Host "      Use for sharing repo context or feeding into external analysis." -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  [8] Repo Mix All (context packs for all)" -ForegroundColor White
+    Write-Host "      Generates context packs for every repo in workspace, stores in shared/memory/repo-contexts/." -ForegroundColor DarkGray
+    Write-Host "      Weekly refresh recommended for keeping AI context up-to-date." -ForegroundColor DarkGray
+    Write-Host ""
+    
+    Write-Host ""
+    Read-Host "Press Enter to return to main menu"
+}
+
+
 
 function Start-Console {
     if ($Quick) {
