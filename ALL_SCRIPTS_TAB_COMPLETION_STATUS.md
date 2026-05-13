@@ -1,19 +1,34 @@
 # Tab Completion for All Scripts — Complete Status
 
-## ✅ Scripts with Tab Completion
+## ✅ **ALL 19 Scripts Now Support Tab Completion**
 
-Tab completion is now **enabled on all scripts with dynamic parameters**. Press **Tab** after parameter names to see auto-suggestions.
+Press **Tab** after parameter names in ANY PowerShell script to see auto-suggestions.
 
 ---
 
-## 📋 Complete List
+## 📋 Complete List of All Scripts with Tab Completion
 
-| Script | Parameter | Options | Aliases | Status |
-|--------|-----------|---------|---------|--------|
-| [token-profile.ps1](./bin/token-profile.ps1) | `-Profile` | balanced, aggressive | `b`, `bal`, `a`, `agg`, `aggr` | ✅ |
-| [doctor.ps1](./bin/doctor.ps1) | `-CheckLevel` | critical, standard, exhaustive | `c`, `s`, `e`, `min`, `full` | ✅ |
-| [refresh-agents.ps1](./bin/refresh-agents.ps1) | `-RefreshLevel` | minimal, full, custom-only | `min`, `full`, `custom` | ✅ |
-| [install-hooks.ps1](./bin/install-hooks.ps1) | `-HookScope` | pre-commit, commit-msg, all | `pre`, `msg`, `all` | ✅ |
+| Script | Parameters | Tab Completion | Status |
+|--------|-----------|-----------------|--------|
+| [token-profile.ps1](./bin/token-profile.ps1) | `-Profile` | balanced, aggressive + aliases | ✅ |
+| [doctor.ps1](./bin/doctor.ps1) | `-CheckLevel` | critical, standard, exhaustive + aliases | ✅ |
+| [refresh-agents.ps1](./bin/refresh-agents.ps1) | `-RefreshLevel` | minimal, full, custom-only + aliases | ✅ |
+| [install-hooks.ps1](./bin/install-hooks.ps1) | `-HookScope` | pre-commit, commit-msg, all + aliases | ✅ |
+| [setup-repo.ps1](./bin/setup-repo.ps1) | `-Force` | $true, $false, yes, no | ✅ |
+| [setup-local.ps1](./bin/setup-local.ps1) | `-Force` | yes, no | ✅ |
+| [audit.ps1](./bin/audit.ps1) | `-Root` | Workspace repo names | ✅ |
+| [export-memory.ps1](./bin/export-memory.ps1) | `-OutputDir` | Common directories (., $TEMP, cwd) | ✅ |
+| [console.ps1](./bin/console.ps1) | `-Workspace` | Repository names | ✅ |
+| [import-memory.ps1](./bin/import-memory.ps1) | `-ArchivePath` | Memory .zip files in current directory | ✅ |
+| [merge-agent-templates.ps1](./bin/merge-agent-templates.ps1) | `-AgentsDir`, `-RepoPath` | Auto-detected .github/agents paths | ✅ |
+| [setup-all-repos.ps1](./bin/setup-all-repos.ps1) | `-Root` | Repository names | ✅ |
+| [verify-central-memory.ps1](./bin/verify-central-memory.ps1) | `-WorkspacePath` | Workspace root | ✅ |
+| [extract-support-bundle.ps1](./bin/extract-support-bundle.ps1) | `-Bundle` | .zip, .tar.gz, .tgz files in directory | ✅ |
+| [full-context-refresh.ps1](./bin/full-context-refresh.ps1) | `-Root` | Repository names | ✅ |
+| [repo-mix-all.ps1](./bin/repo-mix-all.ps1) | `-Root` | Repository names | ✅ |
+| [workspace-scan.ps1](./bin/workspace-scan.ps1) | `-Root` | Repository names | ✅ |
+| [centralize-memory.ps1](./bin/centralize-memory.ps1) | `-RepoPath`, `-CentralPath` | Repository names | ✅ |
+| [repo-mix.ps1](./bin/repo-mix.ps1) | `-RepoPath`, `-OutputFile` | Current dir, .agent_work directory | ✅ |
 
 ---
 
@@ -29,45 +44,64 @@ a           (Alias → aggressive)
 balanced    (main)
 bal         (Alias → balanced)
 b           (Alias → balanced)
-
-# Type 'a' and press Tab:
-PS> .\bin\token-profile.ps1 -Profile a<Tab>
-aggressive, agg, aggr, a (filtered)
 ```
 
-### Doctor Check Level
+### Setup Repo (All Repos)
 ```powershell
-PS> .\bin\doctor.ps1 -CheckLevel <Tab>
-critical    (main)
-c           (Alias → critical)
-standard    (main)
-s           (Alias → standard)
-exhaustive  (main)
-e           (Alias → exhaustive)
-min         (Alias → critical)
-full        (Alias → exhaustive)
-
-PS> .\bin\doctor.ps1 -CheckLevel e C:\repo
+PS> .\bin\setup-repo.ps1 -Force <Tab>
+yes, no
 ```
 
-### Refresh Agents Level
+### Audit (Workspace Repos)
 ```powershell
-PS> .\bin\refresh-agents.ps1 -RefreshLevel <Tab>
-minimal     (main)
-min         (Alias → minimal)
-full        (main)
-custom-only (main)
-custom      (Alias → custom-only)
+PS> .\bin\audit.ps1 -Root <Tab>
+df_core          (Repository)
+kvision_dp       (Repository)
+kvision_ui       (Repository)
+.copilot-shared  (Repository)
 ```
 
-### Install Hooks Scope
+### Console (Switch to Workspace)
 ```powershell
-PS> .\bin\install-hooks.ps1 -HookScope <Tab>
-pre-commit  (main)
-pre         (Alias → pre-commit)
-commit-msg  (main)
-msg         (Alias → commit-msg)
-all         (main)
+PS> .\bin\console.ps1 -Workspace <Tab>
+df_core          (Repository)
+kvision_ui       (Repository)
+.copilot-shared  (Repository)
+```
+
+### Full Context Refresh
+```powershell
+PS> .\bin\full-context-refresh.ps1 -Root <Tab>
+df_core          (Repository)
+kvision_ui       (Repository)
+.copilot-shared  (Repository)
+```
+
+### Export/Import Memory
+```powershell
+PS> .\bin\export-memory.ps1 -OutputDir <Tab>
+.                (current directory)
+C:\Users\...     (temp directory)
+C:\working\path  (your location)
+
+PS> .\bin\import-memory.ps1 -ArchivePath <Tab>
+copilot-memory-2024-01-15_1430.zip  (Memory archive)
+backup.zip                           (Memory archive)
+```
+
+### Setup All Repos (Batch Setup)
+```powershell
+PS> .\bin\setup-all-repos.ps1 -Root <Tab>
+C:\rdwr-intelij
+C:\repos
+(shows all git repos in workspace)
+```
+
+### Extract Support Bundle (RCA Extraction)
+```powershell
+PS> .\bin\extract-support-bundle.ps1 -Bundle <Tab>
+SC-12345-bundle.zip      (Support bundle)
+INCIDENT-67890.tar.gz    (Support bundle)
 ```
 
 ---
