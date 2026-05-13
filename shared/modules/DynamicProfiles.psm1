@@ -244,11 +244,56 @@ function Load-WorkspaceConfig {
     return $config
 }
 
+function Get-DynamicCompleter {
+    <#
+    .SYNOPSIS
+        Get an ArgumentCompleter scriptblock for a dynamic parameter.
+        Use this to enable tab completion in any script.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$ProfileName,
+        [Parameter(Mandatory)][string]$WorkspaceRoot
+    )
+
+    # Return a scriptblock that can be used as ArgumentCompleter
+    $completerBlock = {
+        param($wordToComplete, $commandAst, $cursorPosition)
+        
+        try {
+            # These are captured from the outer scope
+            $opts = Get-DynamicOptions -ProfileName $using:ProfileName -WorkspaceRoot $using:WorkspaceRoot
+            $allOptions = @() + $opts.List + ($opts.Aliases.Keys | ForEach-Object { $_ })
+            
+            # Filter based on what user typed
+            $matches = $allOptions | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object
+            
+            # Return as CompletionResult objects with descriptions
+            $matches | ForEach-Object {
+                if ($_ -in $opts.List) {
+                    # Main option
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+                } else {
+                    # Alias - show what it expands to
+                    $expands = $opts.Aliases[$_]
+                    [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', "Alias → $expands")
+                }
+            }
+        } catch {
+            # Silent fail - no completions
+        }
+    }
+    
+    return $completerBlock
+}
+
+
+
+
 Export-ModuleMember -Function @(
     'Get-DynamicOptions',
+    'Get-DynamicCompleter',
     'Expand-Alias',
     'Validate-Option',
     'Load-RepoConfig',
     'Load-WorkspaceConfig'
 )
-
