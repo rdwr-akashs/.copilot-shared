@@ -876,13 +876,30 @@ function Handle-MemoryMenu {
         $commandExecuted = $false
         
         switch ($choice) {
-            "1" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory"; $commandExecuted = $true }
-            "2" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify and Repair Central Memory" -Arguments @('-Repair'); $commandExecuted = $true }
-            "3" { Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "centralize-memory.ps1") -Description "Centralize Memory"; $commandExecuted = $true }
+            "1" { 
+                Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify Central Memory"
+                Write-Host ""
+                Write-Host "DONE: Central memory verified in shared/memory/" -ForegroundColor Green
+                $commandExecuted = $true 
+            }
+            "2" { 
+                Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "verify-central-memory.ps1") -Description "Verify and Repair Central Memory" -Arguments @('-Repair')
+                Write-Host ""
+                Write-Host "DONE: Memory verified and repaired in shared/memory/" -ForegroundColor Green
+                $commandExecuted = $true 
+            }
+            "3" { 
+                Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "centralize-memory.ps1") -Description "Centralize Memory"
+                Write-Host ""
+                Write-Host "DONE: All repo memories centralized in shared/memory/" -ForegroundColor Green
+                $commandExecuted = $true 
+            }
             "4" {
                 $outDir = Read-OutputDirectory
                 if ($outDir) {
                     Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "export-memory.ps1") -Description "Export Memory" -Arguments @('-OutputDir', $outDir)
+                    Write-Host ""
+                    Write-Host "DONE: Memory exported to $outDir (portable .zip archive)" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -890,6 +907,8 @@ function Handle-MemoryMenu {
                 $archivePath = Read-ArchiveFile
                 if ($archivePath) {
                     Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "import-memory.ps1") -Description "Import Memory" -Arguments @('-ArchivePath', $archivePath)
+                    Write-Host ""
+                    Write-Host "DONE: Memory imported from archive into shared/memory/" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -925,22 +944,38 @@ function Handle-RepositoryMenu {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "setup-repo.ps1") -Description "Setup Repository" -Arguments @($repoPath)
+                    Write-Host ""
+                    Write-Host "DONE: Repository configured with .local.env, junctions, and hooks" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
-            "2" { Invoke-Script -ScriptPath (Join-Path $BinDir "setup-all-repos.ps1") -Description "Setup All Repositories"; $commandExecuted = $true }
+            "2" { 
+                Invoke-Script -ScriptPath (Join-Path $BinDir "setup-all-repos.ps1") -Description "Setup All Repositories"
+                Write-Host ""
+                Write-Host "DONE: All repositories in workspace configured and linked" -ForegroundColor Green
+                $commandExecuted = $true 
+            }
             "3" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "link-copilot.cmd") -Description "Link Repository" -Arguments @($repoPath)
+                    Write-Host ""
+                    Write-Host "DONE: Repository junctions created (skills, instructions, prompts, plans)" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
-            "4" { Invoke-Script -ScriptPath (Join-Path $BinDir "link-all-copilot.cmd") -Description "Link All Repositories"; $commandExecuted = $true }
+            "4" { 
+                Invoke-Script -ScriptPath (Join-Path $BinDir "link-all-copilot.cmd") -Description "Link All Repositories"
+                Write-Host ""
+                Write-Host "DONE: Junctions created for all workspace repositories" -ForegroundColor Green
+                $commandExecuted = $true 
+            }
             "5" {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "unlink-copilot.cmd") -Description "Unlink Repository" -Arguments @($repoPath)
+                    Write-Host ""
+                    Write-Host "DONE: Repository junctions removed" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -948,6 +983,8 @@ function Handle-RepositoryMenu {
                 $repoPath = Read-PathWithCompletion "Enter repository path"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "copy-agents.cmd") -Description "Copy Agents to Repository" -Arguments @($repoPath)
+                    Write-Host ""
+                    Write-Host "DONE: Agent templates copied to .github/agents/" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -955,6 +992,8 @@ function Handle-RepositoryMenu {
                 $repoPath = Read-PathWithCompletion "Enter repository path (relative to workspace)"
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix.ps1") -Description "Repo Mix" -Arguments @('-RepoPath', $repoPath)
+                    Write-Host ""
+                    Write-Host "DONE: Repository merged with workspace templates and agents" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -964,6 +1003,8 @@ function Handle-RepositoryMenu {
                 $args = @()
                 if ($fullDumps -eq 'y' -or $fullDumps -eq 'Y') { $args += '-FullDumps' }
                 Invoke-Script -ScriptPath (Join-Path $BinDir "repo-mix-all.ps1") -Description "Repo Mix All" -Arguments $args
+                Write-Host ""
+                Write-Host "DONE: All repositories merged with workspace templates and agents" -ForegroundColor Green
                 $commandExecuted = $true
             }
             "H" { Show-HelpRepository }
