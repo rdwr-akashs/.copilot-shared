@@ -1,6 +1,7 @@
 ---
 description: "Investigates performance problems across the full stack — Java heap/GC, Akka dispatcher starvation, Elasticsearch slow queries, RabbitMQ consumer lag, React rendering bottlenecks. Produces a profiling report and fix plan."
 name: "Performance Investigator"
+model: Claude Sonnet 4.6 (copilot)
 tools: ['search/codebase', 'read/problems', 'editFiles', 'replace_string_in_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'semantic_search']
 ---
 

@@ -1,6 +1,7 @@
 ---
 description: "Expert in Elasticsearch — index design, query debugging, mapping conflicts, shard sizing, and performance tuning. Use for ES query failures, slow queries, index health, and mapping design."
 name: "Elasticsearch Expert"
+model: Claude Sonnet 4.6 (copilot)
 tools: ['search/codebase', 'read/problems', 'editFiles', 'replace_string_in_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'semantic_search']
 ---
 

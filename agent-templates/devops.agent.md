@@ -1,7 +1,8 @@
 ---
 description: "Solves build failures, CI pipeline issues, Docker problems, dependency conflicts, and frontend npm errors. Knows Maven multi-module builds and Jib."
 name: "DevOps"
-tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
+model: GPT-5 mini (copilot)
+tools: ['search/codebase', 'search/searchResults', 'read/problems', 'editFiles', 'replace_string_in_file', 'create_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'semantic_search']
 ---
 
 # DevOps Agent — the project

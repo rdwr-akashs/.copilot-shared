@@ -1,6 +1,7 @@
 ---
 description: "Expert in Akka actor systems — actor hierarchy design, supervision strategies, message protocol design, deadletter debugging, and mailbox/dispatcher tuning."
 name: "Akka Expert"
+model: Claude Sonnet 4.6 (copilot)
 tools: ['search/codebase', 'read/problems', 'editFiles', 'replace_string_in_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'semantic_search']
 ---
 

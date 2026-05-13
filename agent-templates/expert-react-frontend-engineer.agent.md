@@ -1,7 +1,8 @@
 ---
 description: "Expert React frontend engineer for the frontend apps. Specializes in React 16.13.1, styled-components, webpack/microbundle, and the webui-design-system component library used across all versioned <frontend-app> UIs."
 name: "Frontend"
-tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
+model: Claude Haiku 4.5 (copilot)
+tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'run_subagent', 'semantic_search']
 ---
 
 # Frontend Agent — the project

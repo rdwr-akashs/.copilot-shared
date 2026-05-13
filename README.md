@@ -23,6 +23,28 @@ Edit once — every linked repo sees the change instantly via filesystem junctio
 
 ---
 
+## 🔄 Central Memory (Cases, Bugs, Learning)
+
+All repos share **cases**, **bugs**, and **learning** documentation centralized in `.copilot-shared/shared/`:
+
+```powershell
+# Verify all repos are properly synced to central memory
+.copilot-shared\bin\verify-central-memory.ps1
+
+# Auto-repair any unlinked repos
+.copilot-shared\bin\verify-central-memory.ps1 -Repair
+```
+
+**Guides:**
+- [**CENTRAL_MEMORY_SYNC_GUIDE.md**](CENTRAL_MEMORY_SYNC_GUIDE.md) — Setup, verification, troubleshooting
+- [**CENTRAL_MEMORY_QUICK_START.md**](CENTRAL_MEMORY_QUICK_START.md) — Quick reference for teams
+- [**CENTRAL_MEMORY_STRUCTURE.md**](CENTRAL_MEMORY_STRUCTURE.md) — Where files live
+- [**AUDIT_CENTRAL_MEMORY_INTEGRATION.md**](AUDIT_CENTRAL_MEMORY_INTEGRATION.md) — System verification (all agents/instructions reviewed ✅)
+
+**Key benefit:** Write a case analysis or bug fix pattern in one repo → instantly available to all repos via filesystem junctions. No manual sync needed.
+
+---
+
 ### Step 0: Set workspace root
 
 All repos live side-by-side under one folder:

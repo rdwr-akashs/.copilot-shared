@@ -171,6 +171,20 @@ Fast-path: Edit → get_errors → done
 | **Simple Edit** | single-file change, config update, rename | Fast-path (no agent) | Fast |
 | **Multi-Task** | 3+ independent items across modules | `dispatching-parallel-agents` skill | Deep |
 
+## Model Budget (Auto-Applied Per Agent)
+
+Each agent file declares its own `model:` — no manual override needed. The mapping is:
+
+| Model | Used By | Why |
+|-------|---------|-----|
+| `Claude Sonnet 4.6 (copilot)` | principal-engineer, squadleader, full-stack-feature, case-investigator, debugger, reviewer, perf-investigator, akka-expert, elasticsearch-expert | Deep reasoning — architecture, RCA, security review |
+| `Claude Haiku 4.5 (copilot)` | developer, tester, gem-code-simplifier, expert-react-frontend-engineer | Pattern-following code generation — 0.33x cost multiplier, fast enough |
+| `GPT-5 mini (copilot)` | story-writer, devops | Template filling and lookup-table diagnosis — 0x premium requests (free) |
+
+**Override rule:** You can always specify a different model in chat with `using <model-name>`. The agent `model:` is the default, not a lock.
+
+---
+
 ## Step 2: Select Mode
 
 ### Fast Mode

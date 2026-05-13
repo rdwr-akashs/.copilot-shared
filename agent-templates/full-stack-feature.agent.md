@@ -1,6 +1,7 @@
 ---
 description: "Orchestrates full-stack feature delivery across Java backend and React frontend. Coordinates PEplan → Tester → Developer → Frontend → Reviewer in a single coherent flow."
 name: "Full-Stack Feature"
+model: Claude Sonnet 4.6 (copilot)
 tools: ['search/codebase', 'read/problems', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'run_subagent', 'semantic_search']
 ---
 

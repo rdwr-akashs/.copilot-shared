@@ -1,6 +1,7 @@
 ---
 description: "Writes and validates Jira stories, sub-tasks, and bugs from feature requirements, bug reports, or verbal descriptions. Produces acceptance criteria in EARS notation, story points estimate, and sub-task breakdown."
 name: "Story Writer"
+model: GPT-5 mini (copilot)
 tools: ['search/codebase', 'read/problems', 'read_file', 'file_search', 'grep_search', 'semantic_search']
 ---
 

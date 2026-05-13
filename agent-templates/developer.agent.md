@@ -1,7 +1,8 @@
 ---
 description: "Implements features and fixes following the project's architecture, conventions, and an architect's plan. Writes production-ready Java/Spring Boot backend code and React frontend code."
 name: "Developer"
-tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
+model: Claude Haiku 4.5 (copilot)
+tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'run_subagent', 'semantic_search']
 ---
 
 # Developer Agent — the project

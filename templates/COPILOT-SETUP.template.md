@@ -198,6 +198,22 @@ store, then delete the locals before re-running `link-copilot.cmd`.
 | Project rules (this repo) | `.github\instructions-local\*.instructions.md` | This repo |
 | Project overview | `.github\copilot-instructions.md` | This repo |
 | An agent (this repo) | `.github\agents\<name>.agent.md` | This repo |
+
+---
+
+## Model Budget — Automatic Per-Agent Model Selection
+
+Each agent in `.github/agents/` declares a `model:` in its frontmatter. This is applied automatically — you don't need to pick a model in the chat.
+
+| Agent | Model | Task type |
+|-------|-------|-----------|
+| principal-engineer, squadleader, full-stack-feature | `Claude Sonnet 4.6 (copilot)` | Architecture, multi-phase planning |
+| case-investigator, debugger, reviewer, perf-investigator, akka-expert, elasticsearch-expert | `Claude Sonnet 4.6 (copilot)` | Deep reasoning: RCA, security, diagnosis |
+| developer, tester, expert-react-frontend-engineer, gem-code-simplifier | `Claude Haiku 4.5 (copilot)` | Pattern-following code generation (0.33x cost) |
+| story-writer, devops | `GPT-5 mini (copilot)` | Template filling, lookup-table fixes (0x — free) |
+
+**To override** for a single request: type `using Claude Sonnet 4.6 (copilot)` in your message.
+**To change permanently** for an agent: edit `model:` in `.github/agents/<name>.agent.md`.
 | Personal preferences | `.github\personal-instructions.md` | You only |
 
 Edits to shared files propagate to every linked repo immediately. After

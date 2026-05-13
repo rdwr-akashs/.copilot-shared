@@ -3,7 +3,8 @@ description: >-
   Reviews code changes for correctness, convention compliance, architecture
   violations, security, and production readiness. Uses a structured checklist.
 name: Reviewer
-tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'vscode/vscodeAPI', 'vscode/extensions', 'web/fetch', 'editFiles', 'insert_edit_into_file', 'replace_string_in_file', 'create_file', 'apply_patch', 'get_terminal_output', 'open_file', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
+model: Claude Sonnet 4.6 (copilot)
+tools: ['search/codebase', 'search/searchResults', 'search/usages', 'read/problems', 'editFiles', 'replace_string_in_file', 'get_terminal_output', 'run_in_terminal', 'get_errors', 'list_dir', 'read_file', 'file_search', 'grep_search', 'validate_cves', 'run_subagent', 'semantic_search']
 ---
 # Reviewer Agent — the project
 
