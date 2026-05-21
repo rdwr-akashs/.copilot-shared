@@ -13,7 +13,7 @@ Press **Tab** after parameter names in ANY PowerShell script to see auto-suggest
 | [token-profile.ps1](./bin/token-profile.ps1) | `-Profile` | balanced, aggressive + aliases | ✅ |
 | [doctor.ps1](./bin/doctor.ps1) | `-CheckLevel` | critical, standard, exhaustive + aliases | ✅ |
 | [refresh-agents.ps1](./bin/refresh-agents.ps1) | `-RefreshLevel` | minimal, full, custom-only + aliases | ✅ |
-| [install-hooks.ps1](./bin/install-hooks.ps1) | `-HookScope` | pre-commit, commit-msg, all + aliases | ✅ |
+
 | [setup-repo.ps1](./bin/setup-repo.ps1) | `-Force` | $true, $false, yes, no | ✅ |
 | [setup-local.ps1](./bin/setup-local.ps1) | `-Force` | yes, no | ✅ |
 | [audit.ps1](./bin/audit.ps1) | `-Root` | Workspace repo names | ✅ |
@@ -197,7 +197,7 @@ param(
 | [bin/token-profile.ps1](./bin/token-profile.ps1) | Example #1: Token profile with completion |
 | [bin/doctor.ps1](./bin/doctor.ps1) | Example #2: Doctor check level with completion |
 | [bin/refresh-agents.ps1](./bin/refresh-agents.ps1) | Example #3: Refresh agents with completion |
-| [bin/install-hooks.ps1](./bin/install-hooks.ps1) | Example #4: Install hooks with completion |
+
 | [bin/TEMPLATE-tab-completion.ps1](./bin/TEMPLATE-tab-completion.ps1) | Developer template for adding completion |
 | [TAB_COMPLETION_GUIDE.md](./TAB_COMPLETION_GUIDE.md) | Detailed guide with examples |
 | [DYNAMIC_VALUES_IMPLEMENTATION.md](./DYNAMIC_VALUES_IMPLEMENTATION.md) | Design doc for dynamic values |
@@ -211,7 +211,7 @@ param(
 .\bin\token-profile.ps1 -Profile <Tab>      # Shows 7 options
 .\bin\doctor.ps1 -CheckLevel <Tab>          # Shows 8 options
 .\bin\refresh-agents.ps1 -RefreshLevel <Tab> # Shows 5 options
-.\bin\install-hooks.ps1 -HookScope <Tab>    # Shows 5 options
+
 
 # Test invalid input
 .\bin\token-profile.ps1 -Profile xyz

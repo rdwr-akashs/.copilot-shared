@@ -461,8 +461,6 @@ powershell -File bin\setup-all-repos.ps1
 | `link-all-copilot.cmd` | Walk every sibling repo under workspace root and run `link-copilot.cmd` on each |
 | `unlink-copilot.cmd <repo-path>` | Remove all `copilot-shared` junctions from a repo (safe — only removes junction points, never deletes files) |
 | `copy-agents.cmd <repo-path>` | Seed `.github/agents/` from `agent-templates/`. Skips any agent file that already exists (won't overwrite customisations) |
-| `install-hooks.cmd <repo-path>` | Install shared git hooks (`commit-msg`, `pre-push`) from `shared/hooks/` into the repo's `.git/hooks/` |
-
 ```cmd
 :: Wire one repo
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\link-copilot.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
@@ -475,9 +473,6 @@ powershell -File bin\setup-all-repos.ps1
 
 :: Seed agents (new repos or after adding a new agent template)
 %COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\copy-agents.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
-
-:: Install git hooks
-%COPILOT_WORKSPACE_ROOT%\.copilot-shared\bin\install-hooks.cmd %COPILOT_WORKSPACE_ROOT%\<repo>
 ```
 
 ---

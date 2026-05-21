@@ -11,7 +11,7 @@
 | 1 | token-profile.ps1 | `-Profile` | Enum + Aliases | ✅ |
 | 2 | doctor.ps1 | `-CheckLevel` | Enum + Aliases | ✅ |
 | 3 | refresh-agents.ps1 | `-RefreshLevel` | Enum + Aliases | ✅ |
-| 4 | install-hooks.ps1 | `-HookScope` | Enum + Aliases | ✅ |
+
 | 5 | setup-repo.ps1 | `-Force` | Boolean (yes/no) | ✅ |
 | 6 | setup-local.ps1 | `-Force` | Boolean (yes/no) | ✅ |
 | 7 | audit.ps1 | `-Root` | Repository names | ✅ |
@@ -68,7 +68,7 @@ copilot-memory-2024-01-15.zip, backup.zip
 - token-profile.ps1 → Profile (balanced/aggressive)
 - doctor.ps1 → CheckLevel (critical/standard/exhaustive)
 - refresh-agents.ps1 → RefreshLevel (minimal/full/custom-only)
-- install-hooks.ps1 → HookScope (pre-commit/commit-msg/all)
+
 
 ### Category 2: Repository Discovery (8 scripts)
 **Smart Auto-Detection** — Scans workspace for git repos

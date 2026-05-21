@@ -32,7 +32,7 @@ Current approach has two issues:
 - `doctor.ps1` - ✅ Already repo-specific (checks `.github/`)
 - `setup-repo.ps1` - ✅ Already repo-specific
 - **NEEDS FIX**: `refresh-agents.ps1` - Should be repo-specific
-- **NEEDS FIX**: `install-hooks.cmd` - Should be repo-specific
+
 - **UNCLEAR**: `generate-skill-index.ps1` - Could be either
 
 ---
@@ -153,7 +153,7 @@ These vary per-repo and should be stored in `.github/`:
 | token-profile.ps1 | Profile | ✅ Yes |
 | doctor.ps1 | CheckLevel | ✅ Yes (minimal/standard/exhaustive) |
 | refresh-agents.ps1 | RefreshLevel | ✅ Yes (minimal/full/custom) |
-| install-hooks.ps1 | HookType | ✅ Yes (pre-commit/commit-msg/all) |
+
 | generate-skill-index.ps1 | IndexType | ✅ Yes |
 
 ### SHARED PARAMETERS (Workspace-wide)
@@ -184,7 +184,7 @@ These are environment-level and belong in `.local.env`:
 ### Phase 3: Update Other Scripts
 - [ ] doctor.ps1 - Read check level from config
 - [ ] refresh-agents.ps1 - Make repo-specific
-- [ ] install-hooks.ps1 - Make repo-specific, store in `.github/`
+
 - [ ] generate-skill-index.ps1 - Read from config
 
 ### Phase 4: Update Templates

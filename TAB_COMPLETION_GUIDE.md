@@ -194,7 +194,7 @@ Reusable helper function that:
 ### Planned Completers
 - [ ] doctor.ps1 - Check level options (critical, standard, exhaustive)
 - [ ] refresh-agents.ps1 - Refresh level options (minimal, full, custom)
-- [ ] install-hooks.ps1 - Hook scope options (pre-commit, commit-msg, all)
+
 - [ ] Any repo-specific config values
 
 ### Enhancement Ideas

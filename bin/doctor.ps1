@@ -193,18 +193,7 @@ if (Test-Path $agentDir) {
     }
 }
 
-# ---- 7. Git hooks ----
-$commitHook = Join-Path $RepoPath '.git\hooks\commit-msg'
-$prePush    = Join-Path $RepoPath '.git\hooks\pre-push'
-if ((Test-Path $commitHook) -and (Test-Path $prePush)) {
-    Pass 'Git hooks installed (commit-msg + pre-push)'
-} elseif (Test-Path (Join-Path $RepoPath '.git')) {
-    Warn 'Git hooks not installed - run install-hooks.cmd'
-} else {
-    Info 'Not a git repo - hooks check skipped'
-}
-
-# ---- 8. Repo-cache freshness ----
+# ---- 7. Repo-cache freshness ----
 $rcFile = Join-Path $ghDir 'repo-cache.md'
 if (Test-Path $rcFile) {
     $days = ((Get-Date) - (Get-Item $rcFile).LastWriteTime).Days
@@ -217,7 +206,7 @@ if (Test-Path $rcFile) {
     Info 'repo-cache.md not generated yet - run acquire-codebase-knowledge skill'
 }
 
-# ---- 9. Personal instructions ----
+# ---- 8. Personal instructions ----
 $piFile = Join-Path $ghDir 'personal-instructions.md'
 if (-not (Test-Path $piFile)) {
     Info 'personal-instructions.md not set - copy from templates/ if you want one'

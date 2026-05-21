@@ -21,7 +21,6 @@
     - bin/token-profile.ps1                      Working example #1
     - bin/doctor.ps1                             Working example #2
     - bin/refresh-agents.ps1                     Working example #3
-    - bin/install-hooks.ps1                      Working example #4
 #>
 
 # ============================================================================

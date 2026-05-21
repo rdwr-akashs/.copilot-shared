@@ -15,16 +15,12 @@
 token-profile: balanced
 
 # Doctor check depth
-# Options: critical (junctions only), standard (includes gitignore/hooks), exhaustive (all checks)
+# Options: critical (junctions only), standard (includes gitignore), exhaustive (all checks)
 doctor-check-level: standard
 
 # Agent refresh behavior
 # Options: minimal (skip if custom), full (overwrite all), custom-only (custom agents only)
 refresh-agents-level: minimal
-
-# Git hook scope
-# Options: pre-commit, commit-msg, all
-install-hooks-scope: all
 
 # Excluded agents (won't be synced)
 # Format: List of agent filenames to skip

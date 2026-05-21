@@ -1,25 +1,20 @@
 ---
 applyTo: '**'
 ---
-# Token Profile: Aggressive (Maximum Savings)
+# Token Profile: Balanced (Default)
 
-This profile minimizes token usage as much as possible. Use when budget is tight.
+This profile reduces token usage while keeping code quality and workflow reliability.
 
 ## Behavior
 
-- Keep responses very short by default.
-- For simple tasks, answer directly with no extra explanation.
-- Read only the minimum required files.
-- Avoid broad context loading, global memory loading, and repo-wide scans unless explicitly requested.
-- Prefer one-pass implementation for low-risk edits.
+- Keep answers concise by default; expand only on request.
+- Prefer targeted file reads and symbol searches over broad scans.
+- Use fast-path execution for simple tasks and one-file edits.
+- Load deep context only when the task is multi-file, cross-repo, or architectural.
+- Keep testing, validation, and correctness steps for code changes.
 
-## Escalation Rules
+## Guardrails
 
-Only switch to deep analysis when one of these is true:
-- Multi-file change is required.
-- API, schema, or architecture changes are required.
-- Regression risk is high or tests fail.
-
-## Trade-off
-
-This profile may reduce detail in explanations. If quality context is needed, switch to the balanced profile.
+- Do not skip necessary checks for bug fixes or risky changes.
+- Do not load large memory/context files unless directly relevant.
+- Ask at most one clarifying question when blocked, then proceed with safe assumptions.

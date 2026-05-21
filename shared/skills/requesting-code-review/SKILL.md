@@ -48,9 +48,25 @@ git diff --staged
 ### 2. Run Automated Checks
 
 **Build Verification:**
+
+⚡ **Optimization Rule:** Always use **targeted builds** on changed modules only — never build the full project unless cross-module impact is confirmed.
+
 ```bash
-./mvnw clean install -DskipTests   # Compilation check across all modules
-./mvnw test                         # Full test suite
+# EFFICIENT — Only compile the changed module (fast ✓)
+cd <changed-module> && ../mvnw compile -q
+# OR
+./mvnw compile -q -pl <changed-module>
+
+# EXAMPLE: Refactoring only service module
+cd service && ../mvnw compile -q
+
+# Full project build ONLY if:
+# - driver-api contract changed (affects all 13 drivers)
+# - Root pom.xml or BOM changed
+# - Multi-module dependency impact suspected
+# THEN use:
+./mvnw clean install -DskipTests   # Full compilation + unit tests (slow ⚠)
+./mvnw test                         # Full test suite (very slow ⚠)
 ```
 
 **Static Analysis (if configured):**
@@ -208,7 +224,7 @@ Review each staged file against these criteria:
 1. `git diff --staged --name-only` — list changed files
 2. Check each file against CRITICAL issues (field injection, business logic in controllers)
 3. Verify driver-api compliance if contract changed
-4. `./mvnw clean install` — full build verification
+4. **Targeted build:** `cd <module> && ../mvnw compile -q` (fast) — only use full build if cross-module impact confirmed
 5. Document findings as CRITICAL / IMPORTANT / MINOR
 
 ## Prompt Template
@@ -223,7 +239,11 @@ JIRA ticket: [CYCON-XXXXX]
 
 - Start with `git diff --staged --name-only` for file list — don't read all files upfront
 - Focus on CRITICAL issues first — skip MINOR issues under time pressure
-- For driver-api changes, verify all 13 driver modules compile: `./mvnw clean install -DskipTests`
+- **Build optimization (critical for speed):**
+  - Default: Use targeted builds `cd <module> && ../mvnw compile -q` (10-15 sec vs 2-5 min)
+  - Only do full project build (`./mvnw clean install -DskipTests`) if driver-api or root-pom changed
+  - Never do full build for isolated refactoring in single modules
+- For driver-api changes, verify all 13 driver modules compile: `./mvnw compile -q` at project root
 
 ## Inter-Skill References
 

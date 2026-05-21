@@ -685,8 +685,7 @@ function Show-MainMenu {
         "9" = "Doctor (diagnosis and repair)"
         "A" = "Workspace Scan"
         "B" = "Token Profile (usage analysis)"
-        "C" = "Git Hooks Setup"
-        "D" = "Extract Support Bundle"
+        "C" = "Extract Support Bundle"
         "E" = "Local Setup"
         "H" = "Help (command reference)"
     }
@@ -797,7 +796,7 @@ function Handle-MainMenu {
         "5" { 
             Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "audit-copilot-assets.ps1") -Description "Audit Copilot Assets"
             Write-Host ""
-            Write-Host "DONE: Audited junctions, hooks, agents, cache files across all repos" -ForegroundColor Green
+            Write-Host "DONE: Audited junctions, agents, cache files across all repos" -ForegroundColor Green
             $commandExecuted = $true 
         }
         "6" {
@@ -815,7 +814,7 @@ function Handle-MainMenu {
         "9" { 
             Handle-RepoAwareCommand -ScriptPath (Join-Path $BinDir "doctor.ps1") -Description "Doctor (Diagnosis and Repair)"
             Write-Host ""
-            Write-Host "DONE: Checked and fixed junctions, gitignore, hooks, agents" -ForegroundColor Green
+            Write-Host "DONE: Checked and fixed junctions, gitignore, agents" -ForegroundColor Green
             $commandExecuted = $true 
         }
         "A" { 
@@ -831,12 +830,6 @@ function Handle-MainMenu {
             $commandExecuted = $true 
         }
         "C" { 
-            Invoke-Script -ScriptPath (Join-Path $BinDir "install-hooks.cmd") -Description "Git Hooks Setup"
-            Write-Host ""
-            Write-Host "DONE: Git hooks installed in .git/hooks/ (pre-push, commit-msg)" -ForegroundColor Green
-            $commandExecuted = $true 
-        }
-        "D" { 
             Invoke-Script -ScriptPath (Join-Path $BinDir "extract-support-bundle.ps1") -Description "Extract Support Bundle"
             Write-Host ""
             Write-Host "DONE: Support bundle extracted to current directory" -ForegroundColor Green
@@ -947,7 +940,7 @@ function Handle-RepositoryMenu {
                 if ($repoPath) {
                     Invoke-Script -ScriptPath (Join-Path $BinDir "setup-repo.ps1") -Description "Setup Repository" -Arguments @($repoPath)
                     Write-Host ""
-                    Write-Host "DONE: Repository configured with .local.env, junctions, and hooks" -ForegroundColor Green
+                    Write-Host "DONE: Repository configured with .local.env and junctions" -ForegroundColor Green
                     $commandExecuted = $true
                 }
             }
@@ -1061,7 +1054,7 @@ function Show-HelpMainMenu {
     Write-Host "      Setup repos, link/unlink to Copilot, copy agents, generate context packs." -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "  [9] Doctor (diagnosis and repair)" -ForegroundColor White
-    Write-Host "      Health check: validates junctions, gitignore, hooks, repo-cache. Finds & fixes issues." -ForegroundColor DarkGray
+    Write-Host "      Health check: validates junctions, gitignore, repo-cache. Finds & fixes issues." -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "  [E] Local Setup" -ForegroundColor White
     Write-Host "      One-time: personalizes .copilot-shared after cloning (Bitbucket config, local instructions)." -ForegroundColor DarkGray
@@ -1074,10 +1067,7 @@ function Show-HelpMainMenu {
     Write-Host "  [B] Token Profile (usage analysis)" -ForegroundColor White
     Write-Host "      Switches between token usage profiles (balanced vs aggressive) for cost control." -ForegroundColor DarkGray
     Write-Host ""
-    Write-Host "  [C] Git Hooks Setup" -ForegroundColor White
-    Write-Host "      Installs pre-commit and commit-msg hooks for automated quality checks." -ForegroundColor DarkGray
-    Write-Host ""
-    Write-Host "  [D] Extract Support Bundle" -ForegroundColor White
+    Write-Host "  [C] Extract Support Bundle" -ForegroundColor White
     Write-Host "      Extracts RCA-critical files from DefenseFlow/Vision support bundles for analysis." -ForegroundColor DarkGray
     Write-Host ""
     
@@ -1168,7 +1158,7 @@ function Start-Console {
     
     do {
         Show-MainMenu
-        $validOptions = @("1", "R", "r", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "E", "e", "0")
+        $validOptions = @("1", "R", "r", "2", "3", "4", "5", "6", "7", "8", "9", "A", "a", "B", "b", "C", "c", "D", "d", "0")
         $choice = Read-MenuChoice -Prompt "Enter your choice" -ValidOptions $validOptions
         $continue = Handle-MainMenu -Choice $choice
     } while ($continue)

@@ -48,7 +48,7 @@ Per-repository overrides created by `setup-repo.ps1`:
 token-profile: balanced           # or aggressive
 doctor-check-level: standard      # or critical/exhaustive
 refresh-agents-level: minimal     # or full/custom-only
-install-hooks-scope: all          # or pre-commit/commit-msg
+
 ```
 
 ---
@@ -152,7 +152,7 @@ ERROR: Invalid profile 'xyz'.
 ### Phase 2: Ready to implement
 - [ ] Update `doctor.ps1` - Add check level options
 - [ ] Update `refresh-agents.ps1` - Make repo-specific
-- [ ] Update `install-hooks.ps1` - Make repo-specific
+
 
 ### Phase 3: Extensibility  
 - [ ] Use config for other tools (e.g., audit depth, memory location)

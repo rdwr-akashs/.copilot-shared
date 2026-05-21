@@ -72,13 +72,7 @@ foreach ($dir in $dirs) {
     if (Test-Path $rcFile) {
         $days = ((Get-Date) - (Get-Item $rcFile).LastWriteTime).Days
         $rcAge = "${days}d"
-    } else {
-        $rcAge = 'missing'
     }
-
-    # Check hooks
-    $commitHook = Join-Path $dir.FullName '.git\hooks\commit-msg'
-    $hasHooks = Test-Path $commitHook
 
     # Check agents
     $agentCount = 0
@@ -87,7 +81,7 @@ foreach ($dir in $dirs) {
         $agentCount = @(Get-ChildItem -Path $agentDir -Filter '*.agent.md' -ErrorAction SilentlyContinue).Count
     }
 
-    $status = if ($hasCopilot -and $junctionOk -eq 4 -and $hasHooks) { 'OK' }
+    $status = if ($hasCopilot -and $junctionOk -eq 4) { 'OK' }
               elseif ($hasCopilot) { 'PARTIAL' }
               else { 'MISSING' }
 
